@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "127248616649",
+    "project_id": "instant-doctor-a4e4c",
+    "storage_bucket": "instant-doctor-a4e4c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:127248616649:android:eb0f9fd488205b86651118",
+        "android_client_info": {
+          "package_name": "com.instantdoctor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "127248616649-1k6h7gqq43a6aqn8aihkhdv31ic6h1gd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDMGvffD_GkXSpeW4MpLnol_xuiQ_6oAmU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "127248616649-1k6h7gqq43a6aqn8aihkhdv31ic6h1gd.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "127248616649-5r7ghf08ltfeid47hqovf8efdh4dk247.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.instantDoctor"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

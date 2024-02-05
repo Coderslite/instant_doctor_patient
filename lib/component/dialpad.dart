@@ -1,0 +1,85 @@
+import 'package:flutter/material.dart';
+import 'package:nb_utils/nb_utils.dart';
+
+class CalculatorDialpad extends StatelessWidget {
+  final Function(String) onDigitPressed;
+  final Function() onDeletePressed;
+
+  CalculatorDialpad(
+      {required this.onDigitPressed, required this.onDeletePressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildDigitButton('7', context),
+            _buildDigitButton('8', context),
+            _buildDigitButton('9', context),
+          ],
+        ),
+        SizedBox(height: 16.0),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildDigitButton('4', context),
+            _buildDigitButton('5', context),
+            _buildDigitButton('6', context),
+          ],
+        ),
+        SizedBox(height: 16.0),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildDigitButton('1', context),
+            _buildDigitButton('2', context),
+            _buildDigitButton('3', context),
+          ],
+        ),
+        SizedBox(height: 16.0),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildDigitButton('0', context),
+            _buildDigitButton('.', context),
+            _buildDeleteButton(),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDigitButton(String digit, BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => onDigitPressed(digit),
+      style: ElevatedButton.styleFrom(
+        shape: CircleBorder(),
+        padding: EdgeInsets.all(30.0),
+        primary: context.cardColor,
+      ),
+      child: Text(
+        digit,
+        style: boldTextStyle(size: 20),
+      ),
+    );
+  }
+
+  Widget _buildDeleteButton() {
+    return ElevatedButton(
+      onPressed: onDeletePressed,
+      style: ElevatedButton.styleFrom(
+        shape: CircleBorder(),
+        padding: EdgeInsets.all(16.0),
+        primary: Colors.redAccent,
+      ),
+      child: Icon(
+        Icons.backspace,
+        color: Colors.white,
+        size: 24.0,
+      ),
+    );
+  }
+}
