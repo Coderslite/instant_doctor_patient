@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/controllers/FirebaseMessaging.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../services/get_weekday.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class BookingController extends GetxController {
   List<DateTime> nextTwoWeeks = [];
@@ -16,11 +18,13 @@ class BookingController extends GetxController {
   RxString complain = ''.obs;
   RxBool isLoading = false.obs;
   TimeOfDay? time;
+  RxInt price = 0.obs;
+  RxString package = ''.obs;
+  RxString duration = ''.obs;
 
   List<String> availableMonths = [];
 
   late StreamController<void> updateStreamController;
-
 
   Future<bool> handleBookAppointment({
     required docId,
@@ -41,10 +45,21 @@ class BookingController extends GetxController {
           docId: docId,
           userId: userId,
           complain: complain.value,
+          price: price.value,
+          package: package.value,
           startTime: startTime);
-      selectedDate = null;
-      complain.value = '';
-      time = null;
+      if (res) {
+        selectedDate = null;
+        complain.value = '';
+        time = null;
+        price.value = 0;
+        package.value = '';
+        duration.value = '';
+        tz.TZDateTime scheduledTime = tz.TZDateTime.from(dateTime, tz.local);
+        FirebaseMessagings().handleScheduleNotification(scheduledTime,
+            "Appointment Update", "Its time for your scheduled appointment");
+      }
+
       return res;
     } catch (err) {
       toast(err.toString());

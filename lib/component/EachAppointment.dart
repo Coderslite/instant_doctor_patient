@@ -24,6 +24,7 @@ Padding eachAppointment(
           if (snapshot.hasData) {
             return Card(
               elevation: 2,
+              color: context.cardColor,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(

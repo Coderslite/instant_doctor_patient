@@ -6,11 +6,15 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 import '../AppLocalizations.dart';
 import '../constant/color.dart';
 import '../constant/constants.dart';
+import '../services/getVideoCallKeys.dart';
 
 class SettingsController extends GetxController {
   Rx<bool> isDarkMode = false.obs;
   String selectedLanguage = defaultLanguage;
   AppLocalizations? appLocale;
+
+  int? appId;
+  String appSign = '';
 
   bool panelOpened = false;
   var panelController = PanelController();
@@ -52,5 +56,13 @@ class SettingsController extends GetxController {
       shadowColorGlobal = Colors.black12;
       setStatusBarColor(kPrimaryLight);
     }
+  }
+
+  handleGetVideoCallKeys() async {
+    var data = await getVideoCallKeys();
+    appId = data.appId!;
+    appSign = data.appSign!;
+    print("app Id $appId");
+    print("app Sign $appSign");
   }
 }

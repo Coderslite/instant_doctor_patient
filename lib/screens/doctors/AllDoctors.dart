@@ -96,7 +96,7 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                               return Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 2),
-                                child: eachDoctor(doctor: doctor).onTap(
+                                child: eachDoctor(doctor: doctor,context: context).onTap(
                                   () {
                                  SingleDoctorScreen(doctor: doctor,).launch(context);
                                   },

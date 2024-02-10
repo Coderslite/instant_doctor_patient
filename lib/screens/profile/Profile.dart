@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/AuthenticationController.dart';
+import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../component/ProfileImage.dart';
@@ -69,7 +70,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   1.height,
-                  profileImage(UserModel(), 100, 100).center(),
+                  StreamBuilder<UserModel>(
+                      stream: userService.getProfile(
+                          userId: userController.userId.value),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          var data = snapshot.data;
+                          return profileImage(data, 100, 100).center();
+                        }
+                        return CircleAvatar(
+                          radius: 100,
+                          child: Icon(Icons.person),
+                        );
+                      }),
                   10.height,
                   Container(
                     width: double.infinity,
@@ -83,107 +96,152 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fit: BoxFit.cover,
                           opacity: 0.4,
                         )),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Name",
-                                  style: secondaryTextStyle(
-                                      size: 14, color: white),
-                                ),
-                                Text(
-                                  "Ossai Abraham",
-                                  style: boldTextStyle(size: 14, color: white),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Age",
-                                  style: secondaryTextStyle(
-                                      size: 14, color: white),
-                                ),
-                                Text(
-                                  "25yrs",
-                                  style: boldTextStyle(size: 14, color: white),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Height",
-                                  style: secondaryTextStyle(
-                                      size: 14, color: white),
-                                ),
-                                Text(
-                                  "6ft",
-                                  style: boldTextStyle(size: 14, color: white),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Height",
-                                  style: secondaryTextStyle(
-                                      size: 14, color: white),
-                                ),
-                                Text(
-                                  "6ft",
-                                  style: boldTextStyle(size: 14, color: white),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Height",
-                                  style: secondaryTextStyle(
-                                      size: 14, color: white),
-                                ),
-                                Text(
-                                  "6ft",
-                                  style: boldTextStyle(size: 14, color: white),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                    child: StreamBuilder<UserModel>(
+                        stream: userService.getProfile(
+                            userId: userController.userId.value),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            var data = snapshot.data!;
+                            bool profileCompleted =
+                                data.bloodGroup.validate().isNotEmpty &&
+                                    data.height.validate().isNotEmpty &&
+                                    data.weight.validate().isNotEmpty &&
+                                    data.dob != null &&
+                                    data.genotype.validate().isNotEmpty &&
+                                    data.phoneNumber.validate().isNotEmpty;
+
+                            return !profileCompleted
+                                ? Column(
+                                    children: [
+                                      Text(
+                                        "Please complete your profile setup",
+                                        style: primaryTextStyle(color: white),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          const PersonalProfileScreen()
+                                              .launch(context);
+                                        },
+                                        child: Text(
+                                          "Complete Profile ",
+                                          style: primaryTextStyle(color: black),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Name",
+                                                style: secondaryTextStyle(
+                                                    size: 14, color: white),
+                                              ),
+                                              Text(
+                                                "${data.firstName} ${data.lastName}",
+                                                style: boldTextStyle(
+                                                    size: 14, color: white),
+                                              ),
+                                            ],
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Age",
+                                                style: secondaryTextStyle(
+                                                    size: 14, color: white),
+                                              ),
+                                              Text(
+                                                "${(DateTime.now().difference(data.dob!.toDate())).inDays ~/ 365} yrs",
+                                                style: boldTextStyle(
+                                                    size: 14, color: white),
+                                              ),
+                                            ],
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Blood Group",
+                                                style: secondaryTextStyle(
+                                                    size: 14, color: white),
+                                              ),
+                                              Text(
+                                                data.bloodGroup.validate(),
+                                                style: boldTextStyle(
+                                                    size: 14, color: white),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Weight",
+                                                style: secondaryTextStyle(
+                                                    size: 14, color: white),
+                                              ),
+                                              Text(
+                                                "${data.weight.validate()} ft",
+                                                style: boldTextStyle(
+                                                    size: 14, color: white),
+                                              ),
+                                            ],
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Height",
+                                                style: secondaryTextStyle(
+                                                    size: 14, color: white),
+                                              ),
+                                              Text(
+                                                "${data.height.validate()} ft",
+                                                style: boldTextStyle(
+                                                    size: 14, color: white),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                          }
+                          return const CircularProgressIndicator(
+                            color: white,
+                          ).center();
+                        }),
                   ),
                   20.height,
                   profileOption("Personal Information", "personal information",
                       () {
-                    PersonalProfileScreen().launch(context);
+                    const PersonalProfileScreen().launch(context);
                   }),
                   profileOption("Privacy", "Security Settings", () {}),
                   profileOption("Policy", "Read about our policy", () {}),
                   profileOption("Get Help", "Contact us", () {}),
                   profileOption("About Us", "About Instant Doctor", () {}),
-                  profileOption("Ringtone", "About Instant Doctor", () {
-                    // handlePlayRingtone();
-                  }),
-                  profileOption("Ringtone", "About Instant Doctor", () {
-                    // handleStopRingtone();
-                  }),
                   10.height,
                   Text(
                     version,
@@ -212,6 +270,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
       child: Card(
+        color: context.cardColor,
         child: Padding(
           padding: const EdgeInsets.all(10.0),
           child: Row(

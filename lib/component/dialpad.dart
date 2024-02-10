@@ -43,8 +43,8 @@ class CalculatorDialpad extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            _buildEmptyButton(),
             _buildDigitButton('0', context),
-            _buildDigitButton('.', context),
             _buildDeleteButton(),
           ],
         ),
@@ -57,8 +57,8 @@ class CalculatorDialpad extends StatelessWidget {
       onPressed: () => onDigitPressed(digit),
       style: ElevatedButton.styleFrom(
         shape: CircleBorder(),
-        padding: EdgeInsets.all(30.0),
-        primary: context.cardColor,
+        padding: EdgeInsets.all(24.0),
+        backgroundColor: context.cardColor,
       ),
       child: Text(
         digit,
@@ -72,14 +72,21 @@ class CalculatorDialpad extends StatelessWidget {
       onPressed: onDeletePressed,
       style: ElevatedButton.styleFrom(
         shape: CircleBorder(),
-        padding: EdgeInsets.all(16.0),
-        primary: Colors.redAccent,
+        padding: EdgeInsets.all(20.0),
+        backgroundColor: Colors.redAccent,
       ),
       child: Icon(
         Icons.backspace,
         color: Colors.white,
         size: 24.0,
       ),
+    );
+  }
+
+  Widget _buildEmptyButton() {
+    return Container(
+      width: 72,
+      height: 72,
     );
   }
 }

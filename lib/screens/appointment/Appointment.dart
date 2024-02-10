@@ -25,8 +25,6 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   AppointmentService appointmentService = AppointmentService();
   UserController userController = Get.put(UserController());
 
- 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,6 +86,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                                     ChatInterface(
                                       appointmentId: appointment.id!,
                                       docId: appointment.doctorId!,
+                                      videocallToken:
+                                          appointment.videocallToken.validate(),
                                     ).launch(context);
                                   });
                                 });

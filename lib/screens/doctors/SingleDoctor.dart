@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
+import 'package:instant_doctor/controllers/BookingController.dart';
+import 'package:instant_doctor/screens/appointment/AppointmentPricing.dart';
 import 'package:instant_doctor/screens/doctors/BookAppointment.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -20,6 +23,36 @@ class SingleDoctorScreen extends StatefulWidget {
 class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
   bool isOpened = false;
   var controller = PanelController();
+  BookingController bookingController = Get.put(BookingController());
+  bool isLoading = true; // Add a loading state
+
+  @override
+  void initState() {
+    super.initState();
+    handleCheck();
+  }
+
+  // Use didChangeDependencies to perform asynchronous tasks
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    handleCheck();
+  }
+
+  handleCheck() async {
+    if (bookingController.price.value < 1) {
+      await Future.delayed(const Duration(seconds: 1));
+      // Launch screen only if it's not already loading
+      if (mounted && isLoading) {
+        setState(() {
+          isLoading = false;
+        });
+        toast("please select appointment package");
+        const AppointmentPricingScreen(fromDocScreen: true).launch(context);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,8 +101,8 @@ class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
                     ),
                     child: SingleChildScrollView(
                       physics: isOpened
-                          ? AlwaysScrollableScrollPhysics()
-                          : NeverScrollableScrollPhysics(),
+                          ? const AlwaysScrollableScrollPhysics()
+                          : const NeverScrollableScrollPhysics(),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -236,16 +269,24 @@ class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
                                 .isNotEmpty),
                           ),
                           20.height,
-                          AppButton(
-                            text: "Book Appointment",
-                            onTap: () {
-                              BookAppointmentScreen(
-                                doctor: widget.doctor,
-                              ).launch(context);
-                            },
-                            color: kPrimary,
-                            textColor: white,
-                            width: double.infinity,
+                          Obx(
+                            () => AppButton(
+                              text: bookingController.price > 0
+                                  ? "Book Appointment"
+                                  : "Select Package",
+                              onTap: () {
+                                bookingController.price > 0
+                                    ? BookAppointmentScreen(
+                                        doctor: widget.doctor,
+                                      ).launch(context)
+                                    : const AppointmentPricingScreen(
+                                            fromDocScreen: true)
+                                        .launch(context);
+                              },
+                              color: kPrimary,
+                              textColor: white,
+                              width: double.infinity,
+                            ),
                           ),
                           20.height,
                         ],

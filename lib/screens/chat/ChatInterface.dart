@@ -16,14 +16,19 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import '../../component/IsOnline.dart';
 import 'ImagePreview.dart';
+import 'VideoCall.dart';
 
 class ChatInterface extends StatefulWidget {
   final String docId;
 
   final String appointmentId;
+  final String videocallToken;
 
   const ChatInterface(
-      {super.key, required this.appointmentId, required this.docId});
+      {super.key,
+      required this.appointmentId,
+      required this.docId,
+      required this.videocallToken});
 
   @override
   State<ChatInterface> createState() => _ChatInterfaceState();
@@ -159,6 +164,8 @@ class _ChatInterfaceState extends State<ChatInterface> {
                           ),
                         ).onTap(() {
                           // const MyCall().launch(context);
+                          VideoCall(appointmentId: widget.appointmentId)
+                              .launch(context);
                         }),
                         5.width,
                         SizedBox(

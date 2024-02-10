@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/services/TransactionService.dart';
+import 'package:instant_doctor/services/format_number.dart';
 
 import '../constant/constants.dart';
 import '../controllers/ChatController.dart';
@@ -18,6 +19,8 @@ class AppointmentService {
     required String docId,
     required String userId,
     required String complain,
+    required int price,
+    required String package,
     required Timestamp startTime,
   }) async {
     var data = {
@@ -26,27 +29,30 @@ class AppointmentService {
       "status": "Pending",
       "complain": complain,
       "startTime": startTime,
+      "price": price,
+      "package": package,
       "createdAt": Timestamp.now(),
     };
 
-    var debitResult = await walletService.debitUser(
-        userId: userId, amount: APPOINTMENT_CHARGE);
+    var debitResult =
+        await walletService.debitUser(userId: userId, amount: price);
     if (debitResult) {
       var result = await appointmentCollection.add(data);
       await appointmentCollection.doc(result.id).update({
         "id": result.id,
       });
       await transactionService.newTransaction(
-          title: "$APPOINTMENT_CHARGE was charged for your booked appointment",
+          title:
+              "${formatAmount(price)} was charged for your booked appointment",
           userId: userId,
           type: TransactionType.debit,
-          amount: APPOINTMENT_CHARGE);
+          amount: price);
       var token = await userService.getUserToken(userId: docId);
       await notificationService.newNotification(
           userId: userId,
           type: NotificatonType.appointment,
           title:
-              "NGN $APPOINTMENT_CHARGE was charged for your booked appointment",
+              "${formatAmount(price)} was charged for your booked appointment",
           tokens: [token],
           isPushNotification: true);
       await notificationService.newNotification(

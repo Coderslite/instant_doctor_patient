@@ -13,11 +13,10 @@ class PaymentController extends GetxController {
   WalletService walletService = WalletService();
   UserController userController = Get.put(UserController());
   handleTopUp(BuildContext context) async {
- 
     try {
       await walletService.topUp(
         userId: userController.userId.value,
-        amount: double.parse(amount.string),
+        amount: int.parse(amount.string),
       );
       toast("Top up successful");
       amount.value = '0';

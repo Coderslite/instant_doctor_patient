@@ -47,8 +47,11 @@ class _MyDoctorsState extends State<MyDoctors> {
                 child: Column(
                   children: [
                     for (int x = 0; x < 5; x++)
-                      eachDoctor(doctor: UserModel()).onTap(() {
-                        SingleDoctorScreen(doctor: UserModel(),).launch(context);
+                      eachDoctor(doctor: UserModel(), context: context)
+                          .onTap(() {
+                        SingleDoctorScreen(
+                          doctor: UserModel(),
+                        ).launch(context);
                       })
                   ],
                 ),

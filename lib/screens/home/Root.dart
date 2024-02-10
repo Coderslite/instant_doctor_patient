@@ -40,7 +40,6 @@ class RootState extends State<Root> with WidgetsBindingObserver {
         userId: userController.userId.value, token: token);
   }
 
-
   handleOnline() async {
     await userService.updateStatus(
         userId: userController.userId.value, status: ONLINE);
@@ -69,7 +68,8 @@ class RootState extends State<Root> with WidgetsBindingObserver {
         break;
       case AppLifecycleState.inactive:
         // App is in an inactive state (e.g., during a phone call)
-        await userService.updateStatus(userId: userController.userId.value, status: OFFLINE);
+        await userService.updateStatus(
+            userId: userController.userId.value, status: OFFLINE);
 
         break;
       case AppLifecycleState.detached:
@@ -77,6 +77,9 @@ class RootState extends State<Root> with WidgetsBindingObserver {
         await userService.updateStatus(
             userId: userController.userId.value, status: ONLINE);
 
+        break;
+      case AppLifecycleState.hidden:
+        // TODO: Handle this case.
         break;
     }
   }
@@ -116,7 +119,7 @@ class RootState extends State<Root> with WidgetsBindingObserver {
   getFooter() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-      height: 59,
+      height: 63,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(30),
         child: BottomNavigationBar(

@@ -1,14 +1,18 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:day_night_time_picker/day_night_time_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/screens/appointment/AppointmentPricing.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
+import 'package:instant_doctor/services/format_number.dart';
 import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../constant/color.dart';
 import '../controllers/BookingController.dart';
+import '../services/formatDate.dart';
 import '../services/get_weekday.dart';
 import 'SuccessAppointment.dart';
 
@@ -17,7 +21,10 @@ class DateBooking2 extends StatefulWidget {
   final PageController pageController;
   final String docId;
   const DateBooking2(
-      {super.key, required this.panelOpened, required this.pageController, required this.docId});
+      {super.key,
+      required this.panelOpened,
+      required this.pageController,
+      required this.docId});
 
   @override
   State<DateBooking2> createState() => _DateBooking2State();
@@ -36,6 +43,8 @@ class _DateBooking2State extends State<DateBooking2> {
 
   Time _time = Time(hour: 11, minute: 30, second: 20);
   bool iosStyle = true;
+
+  bool isClickedSchedule = false;
 
   void onTimeChanged(Time newTime) {
     setState(() {
@@ -180,37 +189,144 @@ class _DateBooking2State extends State<DateBooking2> {
               color: kPrimary,
             ).center().visible(bookingController.isLoading.value),
             AppButton(
-              text: "Book Appointment",
+              text: bookingController.price > 0
+                  ? "Book Appointment"
+                  : "Select Package",
               onTap: () async {
-                if (bookingController.selectedDate != null) {
-                  Navigator.of(context)
-                      .push(
-                    await showPicker(
-                      showSecondSelector: false,
-                      context: context,
-                      value: _time,
-                      onChange: onTimeChanged,
-                      minuteInterval: TimePickerInterval.FIVE,
-                    ),
-                  )
-                      .then((value) async {
-                    if (value != null) {
-                      var result =
-                          await bookingController.handleBookAppointment(
-                              docId:widget. docId,
-                              userId: userController.userId.value,
-                              context: context);
-                      if (result) {
-                        successAppointement(context);
+                if (bookingController.price > 0) {
+                  if (bookingController.selectedDate != null) {
+                    Navigator.of(context)
+                        .push(
+                      await showPicker(
+                        showSecondSelector: false,
+                        context: context,
+                        value: _time,
+                        onChange: onTimeChanged,
+                        minuteInterval: TimePickerInterval.FIVE,
+                      ),
+                    )
+                        .then((value) async {
+                      if (value != null) {
+                        showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (context) {
+                              DateTime dateTime = DateTime(
+                                  bookingController.selectedDate!.year,
+                                  bookingController.selectedDate!.month,
+                                  bookingController.selectedDate!.day,
+                                  bookingController.time!.hour,
+                                  bookingController.time!.minute);
+                              return AlertDialog(
+                                content: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Appointment Summary",
+                                      style: boldTextStyle(
+                                          size: 20, color: kPrimary),
+                                    ),
+                                    20.height,
+                                    Text(
+                                      "Price:",
+                                      style: primaryTextStyle(size: 14),
+                                    ),
+                                    Text(
+                                      formatAmount(
+                                          bookingController.price.value),
+                                      style: boldTextStyle(size: 16),
+                                    ),
+                                    20.height,
+                                    Text(
+                                      "Start Time:",
+                                      style: primaryTextStyle(size: 14),
+                                    ),
+                                    Text(
+                                      formatDate(dateTime),
+                                      style: boldTextStyle(size: 16),
+                                    ),
+                                    20.height,
+                                    Text(
+                                      "Duration:",
+                                      style: primaryTextStyle(size: 14),
+                                    ),
+                                    Text(
+                                      bookingController.duration.value,
+                                      style: boldTextStyle(size: 16),
+                                    ),
+                                    20.height,
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: fireBrick,
+                                            ),
+                                            child: Text(
+                                              "Cancel",
+                                              style: primaryTextStyle(
+                                                  color: white),
+                                            )),
+                                        TextButton(
+                                                onPressed: () async {
+                                                  try {
+                                                    Navigator.pop(context);
+                                                    isClickedSchedule = true;
+                                                    setState(() {});
+                                                    var result =
+                                                        await bookingController
+                                                            .handleBookAppointment(
+                                                                docId: widget
+                                                                    .docId,
+                                                                userId:
+                                                                    userController
+                                                                        .userId
+                                                                        .value,
+                                                                context:
+                                                                    context);
+                                                    if (result) {
+                                                      successAppointement(
+                                                          context);
+                                                    } else {
+                                                      toast(
+                                                          "Something went wrong");
+                                                    }
+                                                  } finally {
+                                                    isClickedSchedule = false;
+                                                    setState(() {});
+                                                  }
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: kPrimary,
+                                                ),
+                                                child: Text(
+                                                  "Proceed",
+                                                  style: primaryTextStyle(),
+                                                ))
+                                            .visible(!isClickedSchedule &&
+                                                bookingController.price > 0)
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              );
+                            });
                       } else {
-                        toast("Something went wrong");
+                        toast("time was not selected");
                       }
-                    } else {
-                      toast("time was not selected");
-                    }
-                  });
+                    });
+                  } else {
+                    toast("please select a fixed date");
+                  }
                 } else {
-                  toast("please select a fixed date");
+                  const AppointmentPricingScreen(fromDocScreen: true)
+                      .launch(context);
                 }
               },
               color: kPrimary,
@@ -229,6 +345,17 @@ class _DateBooking2State extends State<DateBooking2> {
                 style: primaryTextStyle(),
               ),
             ),
+            TextButton.icon(
+              onPressed: () {
+                const AppointmentPricingScreen(fromDocScreen: true)
+                    .launch(context);
+              },
+              icon: const Icon(Icons.swap_horiz),
+              label: Text(
+                "Change Package",
+                style: primaryTextStyle(),
+              ),
+            )
           ],
         ),
       ),

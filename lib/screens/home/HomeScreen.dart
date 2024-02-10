@@ -5,6 +5,7 @@ import 'package:instant_doctor/controllers/UserController.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/NotificationModel.dart';
 import 'package:instant_doctor/models/UserModel.dart';
+import 'package:instant_doctor/screens/appointment/AppointmentPricing.dart';
 import 'package:instant_doctor/screens/doctors/AllDoctors.dart';
 import 'package:instant_doctor/screens/doctors/SingleDoctor.dart';
 import 'package:instant_doctor/screens/healthtips/HealthTipsHome.dart';
@@ -32,7 +33,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final SettingsController settingsController = Get.find();
   UserController userController = Get.put(UserController());
-
 
   @override
   void didChangeDependencies() {
@@ -130,9 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const Icon(
                           Icons.notifications_active,
                           color: kPrimary,
-                        ).onTap(() {
-                          const NotificationScreen().launch(context);
-                        }),
+                        ),
                         Positioned(
                             top: -4,
                             right: 0,
@@ -144,12 +142,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                   if (snapshot.hasData) {
                                     var data = snapshot.data;
                                     return Container(
-                                      padding: const EdgeInsets.all(5),
+                                      padding: const EdgeInsets.all(3),
                                       decoration: const BoxDecoration(
                                           shape: BoxShape.circle,
                                           color: fireBrick),
                                       child: Text(
-                                        "${data!.length}",
+                                        data!.length > 9
+                                            ? "9+"
+                                            : data.length.toString(),
+                                        textAlign: TextAlign.center,
                                         style: boldTextStyle(
                                             color: white, size: 10),
                                       ).center(),
@@ -158,7 +159,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   return const Text("");
                                 }))
                       ],
-                    )
+                    ).onTap(() {
+                      const NotificationScreen().launch(context);
+                    })
                   ],
                 ),
                 Expanded(
@@ -195,7 +198,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 "Medication Tracker",
                                 () {
                                   // const MedicationTracker().launch(context);
-                                  IntroMedicationTracker().launch(context);
+                                  const IntroMedicationTracker()
+                                      .launch(context);
                                 },
                               ),
                               services(
@@ -211,7 +215,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 "book_session.png",
                                 "Book Session",
                                 () {
-                                  const AllDoctorsScreen().launch(context);
+                                  // const AllDoctorsScreen().launch(context);
+                                  const AppointmentPricingScreen(
+                                          fromDocScreen: false)
+                                      .launch(context);
                                 },
                               ),
                             ],
@@ -307,7 +314,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 return Column(
                                   children: [
                                     for (int x = 0; x < data!.length; x++)
-                                      eachDoctor(doctor: data[x]).onTap(() {
+                                      eachDoctor(
+                                              doctor: data[x], context: context)
+                                          .onTap(() {
                                         SingleDoctorScreen(
                                           doctor: data[x],
                                         ).launch(context);

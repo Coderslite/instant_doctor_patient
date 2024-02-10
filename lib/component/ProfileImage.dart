@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -13,8 +14,8 @@ ClipOval profileImage(UserModel? data, double width, double height) {
       width: width,
       height: height,
       child: data!.photoUrl.validate().isNotEmpty
-          ? Image.asset(
-              data.photoUrl!,
+          ? CachedNetworkImage(
+              imageUrl: data.photoUrl!,
               fit: BoxFit.cover,
             )
           : Icon(

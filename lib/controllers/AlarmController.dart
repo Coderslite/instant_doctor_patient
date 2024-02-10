@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/models/MedicationModel.dart';
@@ -9,6 +10,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:workmanager/workmanager.dart';
 
 import '../constant/color.dart';
+import '../main.dart';
 
 class AlarmController extends GetxController {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -72,12 +74,12 @@ class AlarmController extends GetxController {
 
   Future<void> _scheduleAlarmForTime(
       DateTime date, TimeOfDay time, MedicationModel medicationModel) async {
-    // tz.TZDateTime scheduledTime = tz.TZDateTime.from(
-    //     date.add(Duration(
-    //       hours: time.hour,
-    //       minutes: time.minute,
-    //     )),
-    //     tz.local);
+    tz.TZDateTime scheduledTime = tz.TZDateTime.from(
+        date.add(Duration(
+          hours: time.hour,
+          minutes: time.minute,
+        )),
+        tz.local);
 
     var newDate = date.add(Duration(
       hours: time.hour,
@@ -92,9 +94,9 @@ class AlarmController extends GetxController {
 
     // Convert the duration to seconds
     int seconds = difference.inSeconds;
-    Workmanager().registerOneOffTask(
-        "${UniqueKey().hashCode}", "MedicationTracker",
-        initialDelay: Duration(seconds: seconds));
+    // Workmanager().registerOneOffTask(
+    //     "${UniqueKey().hashCode}", "MedicationTracker",
+    //     initialDelay: Duration(seconds: seconds));
 
     // FlutterBackgroundService().invoke(
     //   "medication",
@@ -109,43 +111,45 @@ class AlarmController extends GetxController {
     //   initialDelay: Duration(seconds: seconds),
     // );
 
-    // const AndroidNotificationDetails androidPlatformChannelSpecifics =
-    //     AndroidNotificationDetails(
-    //   'com.instantdoctor',
-    //   'Instant Doctor',
-    //   channelShowBadge: true,
-    //   importance: Importance.max,
-    //   priority: Priority.high,
-    //   showWhen: true,
-    //   playSound: true,
-    //   ongoing: true,
-    //   colorized: true,
-    //   color: kPrimary,
-    //   enableLights: true,
-    //   // audioAttributesUsage: AudioAttributesUsage.alarm,
-    //   sound: RawResourceAndroidNotificationSound('tone1'),
-    // );
-    // const NotificationDetails platformChannelSpecifics =
-    //     NotificationDetails(android: androidPlatformChannelSpecifics);
-    // await flutterLocalNotificationsPlugin.zonedSchedule(
-    //   UniqueKey().hashCode, // Notification ID
-    //   'Medication Reminder', // Notification title
-    //   'It\'s time to take your  medication!', // Notification body
-    //   scheduledTime, // Scheduled date and time
-    //   platformChannelSpecifics,
-    //   uiLocalNotificationDateInterpretation:
-    //       UILocalNotificationDateInterpretation.absoluteTime,
-    //   androidAllowWhileIdle: true,
-    //   androidScheduleMode:
-    //       AndroidScheduleMode.exactAllowWhileIdle, // New parameter
-    //   payload: jsonEncode(medicationModel.toJson()),
-    // );
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'com.instantdoctor',
+      'Instant Doctor',
+      channelShowBadge: true,
+      importance: Importance.max,
+      priority: Priority.high,
+      showWhen: true,
+      playSound: true,
+      ongoing: true,
+      colorized: true,
+      color: kPrimary,
+      enableLights: true,
+      // audioAttributesUsage: AudioAttributesUsage.alarm,
+      sound: RawResourceAndroidNotificationSound('tone1'),
+    );
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      UniqueKey().hashCode, // Notification ID
+      'Medication Reminder', // Notification title
+      'It\'s time to take your  medication!', // Notification body
+      scheduledTime, // Scheduled date and time
+      platformChannelSpecifics,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      androidAllowWhileIdle: true,
+      androidScheduleMode:
+          AndroidScheduleMode.exactAllowWhileIdle, // New parameter
+      payload: jsonEncode(medicationModel.toJson()),
+    );
   }
+
+
 
   Future<void> displayNotification() async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'com.instantdoctor',
+      'com.instantdoctor.medication',
       'Instant Doctor',
       channelShowBadge: true,
       importance: Importance.max,

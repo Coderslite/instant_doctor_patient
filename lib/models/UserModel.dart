@@ -7,13 +7,20 @@ class UserModel {
   String? email;
   String? phoneNumber;
   String? photoUrl;
+  String? maritalStatus;
+  Timestamp? dob;
+  String? height;
+  String? weight;
+  String? bloodGroup;
+  String? genotype;
+  String? surgicalHistory;
   String? speciality;
   String? status;
-  double? amount;
+  int? amount;
   int? experience;
-  String? bio;
   bool? isAvailable;
   List? workingHours;
+  String? bio;
   String? state;
   Timestamp? lastSeen;
   String? token;
@@ -24,15 +31,22 @@ class UserModel {
       this.email,
       this.phoneNumber,
       this.photoUrl,
+      this.maritalStatus,
+      this.dob,
+      this.height,
+      this.weight,
+      this.bloodGroup,
+      this.genotype,
+      this.surgicalHistory,
       this.speciality,
       this.status,
       this.amount,
       this.lastSeen,
       this.token,
       this.experience,
-      this.bio,
       this.isAvailable,
       this.workingHours,
+      this.bio,
       this.state});
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -43,15 +57,24 @@ class UserModel {
       email: json['email'],
       phoneNumber: json['phoneNumber'],
       photoUrl: json['photoUrl'],
+      maritalStatus: json['maritalStatus'],
+      dob:json['dob'],
+      height: json['height'],
+      weight: json['weight'],
+      bloodGroup: json['bloodGroup'],
+      genotype: json['genotype'],
+      surgicalHistory: json['surgicalHistory'],
       speciality: json['specialization'],
       status: json['status'],
-      amount: json['amount'],
+      amount: json['amount'] != null
+          ? int.tryParse(json['amount'].toString())
+          : null,
       lastSeen: json['lastSeen'],
       token: json['token'],
       experience: json['experience'],
-      bio: json['bio'],
       isAvailable: json['isAvailable'],
       workingHours: json['workingHour'],
+      bio: json['bio'],
       state: json['stateOfOrigin'],
     );
   }

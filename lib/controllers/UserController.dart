@@ -7,4 +7,5 @@ class UserController extends GetxController {
   UserModel? userModel;
   RxString userId = ''.obs;
   RxString token = ''.obs;
+  RxString videocallToken = ''.obs;
 }

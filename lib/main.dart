@@ -1,17 +1,15 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/controllers/AlarmController.dart';
-import 'package:instant_doctor/services/BackgroundService.dart';
 import 'package:instant_doctor/services/DoctorService.dart';
 import 'package:instant_doctor/services/NotificationService.dart';
 import 'package:instant_doctor/services/TransactionService.dart';
@@ -20,7 +18,6 @@ import 'package:nb_utils/nb_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
-import 'AppLocalizations.dart';
 import 'AppTheme.dart';
 import 'constant/color.dart';
 import 'constant/constants.dart';
@@ -46,12 +43,11 @@ User? user = FirebaseAuth.instance.currentUser;
 // Initialize Flutter Local Notifications Plugin
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
-
+  var firebaseStorage = FirebaseStorage.instance;
 AlarmController alarmController = Get.put(AlarmController());
 // BackgroundService backgroundService = BackgroundService();
 
-@pragma(
-    'vm:entry-point') // Mandatory if the App is obfuscated or using Flutter 3.1+
+@pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     alarmController.displayNotification();
@@ -60,11 +56,15 @@ void callbackDispatcher() {
 }
 
 @pragma('vm:entry-point')
+void alarmNotification() {
+  alarmController.displayNotification();
+}
+
+@pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   FirebaseMessagings().displayLocalNotification(message);
 }
-
 
 Future<void> handleCheckMedication() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -93,12 +93,12 @@ Future<void> initializeApp() async {
   //  await FirebaseAnalytics().logEvent(name: 'app_start');
   await initMethod();
   FirebaseMessagings().handleInit();
-  // backgroundService.initializeService();
   Workmanager().initialize(
       callbackDispatcher, // The top level function, aka callbackDispatcher
       isInDebugMode:
-          true // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+          false // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
       );
+  settingsController.handleGetVideoCallKeys();
 }
 
 Future<void> main() async {
@@ -162,11 +162,6 @@ class _MyAppState extends State<MyApp> {
             : ThemeMode.light,
         locale: Locale(settingsController.selectedLanguage),
         supportedLocales: LanguageDataModel.languageLocales(),
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate
-        ],
         localeResolutionCallback: (locale, supportedLocales) => locale,
         home: const SplashScreen(),
         builder: scrollBehaviour(),

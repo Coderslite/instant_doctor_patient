@@ -59,7 +59,7 @@ Container card(BuildContext context) {
                   if (snapshot.hasData) {
                     var data = snapshot.data;
                     return Text(
-                      "\NGN ${formatAmount(data!.amount.validate().toInt())}",
+                      formatAmount(data!.amount.validate().toInt()),
                       style: boldTextStyle(
                         size: 20,
                         color: white,

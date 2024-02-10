@@ -15,6 +15,7 @@ import '../../models/UserModel.dart';
 import '../../services/format_number.dart';
 import '../../services/greetings.dart';
 import 'fund_wallet/FundWallet.dart';
+import 'send_funds/SendFunds.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -105,7 +106,9 @@ class _WalletScreenState extends State<WalletScreen> {
                               walletOption(
                                 "Transfer",
                                 "transfer.png",
-                                () {},
+                                () {
+                                  SendFundScreen().launch(context);
+                                },
                               ),
                               walletOption(
                                 "Receipt",
@@ -150,6 +153,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                             x < snapshot.data!.length;
                                             x++)
                                           eachTransaction(
+                                              context: context,
                                               transaction: transaction![x]),
                                       ],
                                     );

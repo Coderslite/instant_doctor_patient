@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/screens/chat/VideoCall.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../constant/constants.dart';
 import '../models/UserModel.dart';
 import 'IsOnline.dart';
 
-Padding eachDoctor({required UserModel doctor}) {
+Padding eachDoctor({required UserModel doctor, required BuildContext context}) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 2),
     child: Card(
+      color: context.cardColor,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
@@ -68,7 +70,7 @@ Padding eachDoctor({required UserModel doctor}) {
                   style: primaryTextStyle(size: 12),
                 )
               ],
-            )
+            ),
           ],
         ),
       ),

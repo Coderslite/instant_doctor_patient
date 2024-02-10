@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/screens/appointment/AppointmentPricing.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../constant/color.dart';
@@ -63,15 +64,20 @@ class _DateBookingState extends State<DateBooking> {
           ).center().visible(bookingController.isLoading.value),
           AppButton(
             onTap: () {
-              if (bookingController.complain.isEmpty) {
-                toast("please enter complain");
+              if (bookingController.price > 0) {
+                if (bookingController.complain.isEmpty) {
+                  toast("please enter complain");
+                } else {
+                  widget.pageController.nextPage(
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeIn);
+                }
               } else {
-                widget.pageController.nextPage(
-                    duration: Duration(milliseconds: 500),
-                    curve: Curves.easeIn);
+                const AppointmentPricingScreen(fromDocScreen: true)
+                    .launch(context);
               }
             },
-            text: "Continue",
+            text: bookingController.price > 0 ? "Continue" : "Select Package",
             color: kPrimary,
             textColor: white,
             width: double.infinity,

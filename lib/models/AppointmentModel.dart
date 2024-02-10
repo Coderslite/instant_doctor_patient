@@ -8,6 +8,7 @@ class AppointmentModel {
   String? status;
   Timestamp? startTime;
   Timestamp? createdAt;
+  String? videocallToken;
 
   AppointmentModel({
     this.id,
@@ -17,6 +18,7 @@ class AppointmentModel {
     this.status,
     this.startTime,
     this.createdAt,
+    this.videocallToken,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
@@ -27,6 +29,8 @@ class AppointmentModel {
       status: json['status'],
       startTime: json['startTime'],
       createdAt: json['createdAt'],
+      videocallToken: json['videocallToken'],
+
     );
   }
 }
