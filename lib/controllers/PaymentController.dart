@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_paystack/flutter_paystack.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/controllers/UserController.dart';
 import 'package:instant_doctor/screens/home/Root.dart';

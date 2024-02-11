@@ -8,6 +8,7 @@ import 'package:instant_doctor/main.dart';
 import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+import '../component/SuccessAppointment.dart';
 import '../services/get_weekday.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -58,6 +59,7 @@ class BookingController extends GetxController {
         tz.TZDateTime scheduledTime = tz.TZDateTime.from(dateTime, tz.local);
         FirebaseMessagings().handleScheduleNotification(scheduledTime,
             "Appointment Update", "Its time for your scheduled appointment");
+        Get.off(const SuccessScreen());
       }
 
       return res;

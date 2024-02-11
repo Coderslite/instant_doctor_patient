@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:instant_doctor/main.dart';
 
 class ReviewsModel {
   String? id;

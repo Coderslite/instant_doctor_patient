@@ -7,9 +7,6 @@ import 'package:instant_doctor/services/GetUserId.dart';
 
 // Package imports:
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
-
-import '../../constant/constants.dart';
-
 class VideoCall extends StatefulWidget {
   final String appointmentId;
   const VideoCall({Key? key, required this.appointmentId}) : super(key: key);

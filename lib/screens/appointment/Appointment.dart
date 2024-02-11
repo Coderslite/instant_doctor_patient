@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
-import 'package:instant_doctor/controllers/BookingController.dart';
 import 'package:instant_doctor/controllers/UserController.dart';
 import 'package:instant_doctor/models/AppointmentModel.dart';
 import 'package:nb_utils/nb_utils.dart';

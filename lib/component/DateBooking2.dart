@@ -13,6 +13,7 @@ import 'package:nb_utils/nb_utils.dart';
 import '../constant/color.dart';
 import '../controllers/BookingController.dart';
 import '../services/formatDate.dart';
+import '../services/formatDuration.dart';
 import '../services/get_weekday.dart';
 import 'SuccessAppointment.dart';
 
@@ -217,6 +218,10 @@ class _DateBooking2State extends State<DateBooking2> {
                                   bookingController.selectedDate!.day,
                                   bookingController.time!.hour,
                                   bookingController.time!.minute);
+                              var startTime =
+                                  dateTime.difference(DateTime.now());
+                                     var now = Timestamp.now();
+                                   var isExpired = now.compareTo(Timestamp.fromDate(dateTime)) > 0;
                               return AlertDialog(
                                 content: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -257,6 +262,15 @@ class _DateBooking2State extends State<DateBooking2> {
                                       style: boldTextStyle(size: 16),
                                     ),
                                     20.height,
+                                    Text(
+                                      "Begins in:",
+                                      style: primaryTextStyle(size: 14),
+                                    ),
+                                    Text(
+                                   isExpired?"Expired":   formatDuration(startTime),
+                                      style: boldTextStyle(size: 16,color:isExpired? fireBrick:null),
+                                    ),
+                                    20.height,
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
@@ -279,7 +293,7 @@ class _DateBooking2State extends State<DateBooking2> {
                                                     Navigator.pop(context);
                                                     isClickedSchedule = true;
                                                     setState(() {});
-                                                    var result =
+                                        
                                                         await bookingController
                                                             .handleBookAppointment(
                                                                 docId: widget
@@ -290,13 +304,7 @@ class _DateBooking2State extends State<DateBooking2> {
                                                                         .value,
                                                                 context:
                                                                     context);
-                                                    if (result) {
-                                                      successAppointement(
-                                                          context);
-                                                    } else {
-                                                      toast(
-                                                          "Something went wrong");
-                                                    }
+                                                 
                                                   } finally {
                                                     isClickedSchedule = false;
                                                     setState(() {});

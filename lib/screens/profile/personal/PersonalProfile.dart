@@ -24,7 +24,6 @@ class PersonalProfileScreen extends StatefulWidget {
 
 class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
   var controller = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
   bool isUploading = false;
   XFile? file;
   handleChangeImage() async {
@@ -178,12 +177,12 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                 children: [
                   Text(
                     title,
-                    style: boldTextStyle(size: 16),
+                    style: boldTextStyle(size: 14),
                   ),
                   5.height,
                   Text(
                     description,
-                    style: secondaryTextStyle(size: 14),
+                    style: secondaryTextStyle(size: 12),
                   ),
                 ],
               ),
@@ -214,118 +213,161 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
         }
       } else {
         showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: Text(
-                  "Update $title",
-                  style: primaryTextStyle(),
-                ),
-                content: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      DropdownButtonFormField(
-                          style: primaryTextStyle(),
-                          dropdownColor: context.cardColor,
-                          hint: Text(
-                            "Select $title",
-                            style: secondaryTextStyle(),
-                          ),
-                          items: ['Single', 'Married', 'Complicated']
-                              .map((e) => DropdownMenuItem(
-                                    value: e,
-                                    child: Text(
-                                      e,
-                                    ),
-                                  ))
-                              .toList(),
-                          onChanged: (val) {
-                            controller.text = val.toString();
-                          }).visible(key == 'maritalStatus'),
-                      DropdownButtonFormField(
-                          style: primaryTextStyle(),
-                          hint: Text(
-                            "Select $title",
-                            style: secondaryTextStyle(),
-                          ),
-                          dropdownColor: context.cardColor,
-                          items: ['A', 'B', 'AB', 'O']
-                              .map((e) => DropdownMenuItem(
-                                    value: e,
-                                    child: Text(
-                                      e,
-                                    ),
-                                  ))
-                              .toList(),
-                          onChanged: (val) {
-                            controller.text = val.toString();
-                          }).visible(key == 'bloodGroup'),
-                      DropdownButtonFormField(
-                          style: primaryTextStyle(),
-                          hint: Text(
-                            "Select $title",
-                            style: secondaryTextStyle(),
-                          ),
-                          dropdownColor: context.cardColor,
-                          items: ['AA', 'AS', 'SS']
-                              .map((e) => DropdownMenuItem(
-                                    value: e,
-                                    child: Text(
-                                      e,
-                                    ),
-                                  ))
-                              .toList(),
-                          onChanged: (val) {
-                            controller.text = val.toString();
-                          }).visible(key == 'genotype'),
-                      AppTextField(
-                        readOnly: key == 'email',
-                        controller: controller,
-                        textFieldType: TextFieldType.OTHER,
-                      ).visible(key == 'phoneNumber' ||
-                          key == 'height' ||
-                          key == 'weight' ||
-                          key == 'email'),
-                    ],
-                  ),
-                ),
-                actions: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: fireBrick),
-                    onPressed: () {
-                      controller.clear();
-                      Navigator.pop(context);
-                    },
-                    child: Text(
-                      "Close",
-                      style: primaryTextStyle(color: white),
-                    ),
-                  ),
-                  ElevatedButton(
-                      style:
-                          ElevatedButton.styleFrom(backgroundColor: kPrimary),
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          userService.updateProfile(data: {
-                            key: controller.text,
-                          }, userId: userController.userId.value);
-                          controller.clear();
-                          toast("Update Successful");
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: Text(
-                        "Update",
-                        style: primaryTextStyle(
-                          color: white,
-                        ),
-                      )).visible(key != 'email')
-                ],
-              );
-            });
+          context: context,
+          builder: (context) => ProfileUpdateDialog(
+            controller: controller,
+            keey: key,
+            title: title,
+          ),
+        );
       }
     });
+  }
+}
+
+class ProfileUpdateDialog extends StatefulWidget {
+  final TextEditingController controller;
+  final String keey;
+  final String title;
+
+  const ProfileUpdateDialog(
+      {Key? key,
+      required this.controller,
+      required this.keey,
+      required this.title})
+      : super(key: key);
+
+  @override
+  _ProfileUpdateDialogState createState() => _ProfileUpdateDialogState();
+}
+
+class _ProfileUpdateDialogState extends State<ProfileUpdateDialog> {
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        "Update Profile",
+        style: primaryTextStyle(),
+      ),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField(
+                style: primaryTextStyle(),
+                dropdownColor: context.cardColor,
+                hint: Text(
+                  "Select ${widget.title}",
+                  style: secondaryTextStyle(),
+                ),
+                items: ['Single', 'Married', 'Complicated']
+                    .map((e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(
+                            e,
+                          ),
+                        ))
+                    .toList(),
+                onChanged: (val) {
+                  widget.controller.text = val.toString();
+                }).visible(widget.keey == 'maritalStatus'),
+            DropdownButtonFormField(
+                style: primaryTextStyle(),
+                hint: Text(
+                  "Select ${widget.title}",
+                  style: secondaryTextStyle(),
+                ),
+                dropdownColor: context.cardColor,
+                items: [
+                  'A(positive)',
+                  'A(negative)' 'B(positive)',
+                  'B(negative)',
+                  'AB(positive)',
+                  'AB(negative)',
+                  'O(positive)',
+                  'O(negative)',
+                ]
+                    .map((e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(
+                            e,
+                          ),
+                        ))
+                    .toList(),
+                onChanged: (val) {
+                  widget.controller.text = val.toString();
+                }).visible(widget.keey == 'bloodGroup'),
+            DropdownButtonFormField(
+                    style: primaryTextStyle(),
+                    hint: Text(
+                      "Select ${widget.title}",
+                      style: secondaryTextStyle(),
+                    ),
+                    dropdownColor: context.cardColor,
+                    items: ['AA', 'AS', 'SS', 'other']
+                        .map((e) => DropdownMenuItem(
+                              value: e,
+                              child: Text(
+                                e,
+                              ),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      widget.controller.text = val.toString();
+                      setState(() {});
+                    })
+                .visible(widget.keey == 'genotype' &&
+                    widget.controller.text != 'other'),
+            AppTextField(
+              controller: widget.controller,
+              textFieldType: TextFieldType.OTHER,
+            ).visible(
+                widget.keey == 'genotype' && widget.controller.text == 'other'),
+            AppTextField(
+              readOnly: widget.keey == 'email',
+              controller: widget.controller,
+              textFieldType: TextFieldType.OTHER,
+            ).visible(widget.keey == 'phoneNumber' ||
+                widget.keey == 'height' ||
+                widget.keey == 'weight' ||
+                widget.keey == 'email'),
+          ],
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: fireBrick),
+          onPressed: () {
+            widget.controller.clear();
+            Navigator.pop(context);
+          },
+          child: Text(
+            "Close",
+            style: primaryTextStyle(color: white),
+          ),
+        ),
+        ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
+            onPressed: () async {
+              if (_formKey.currentState!.validate()) {
+                userService.updateProfile(data: {
+                  widget.keey: widget.controller.text,
+                }, userId: userController.userId.value);
+                widget.controller.clear();
+                toast("Update Successful");
+                Navigator.pop(context);
+              }
+            },
+            child: Text(
+              "Update",
+              style: primaryTextStyle(
+                color: white,
+              ),
+            )).visible(widget.keey != 'email')
+      ],
+    );
   }
 }

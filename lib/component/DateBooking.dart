@@ -53,6 +53,7 @@ class _DateBookingState extends State<DateBooking> {
               },
               decoration: InputDecoration(
                   filled: true,
+                  fillColor: context.cardColor,
                   labelText: "Enter your complain",
                   labelStyle: primaryTextStyle(color: kPrimary),
                   border: InputBorder.none),

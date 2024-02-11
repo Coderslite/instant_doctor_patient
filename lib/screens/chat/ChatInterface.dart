@@ -1,13 +1,18 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/controllers/ChatController.dart';
+import 'package:instant_doctor/controllers/FirebaseMessaging.dart';
 import 'package:instant_doctor/controllers/UserController.dart';
+import 'package:instant_doctor/function/send_notification.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/AppointmentModel.dart';
 import 'package:instant_doctor/models/UserModel.dart';
@@ -162,11 +167,22 @@ class _ChatInterfaceState extends State<ChatInterface> {
                             "assets/images/video.png",
                             fit: BoxFit.cover,
                           ),
-                        ).onTap(() {
-                          // const MyCall().launch(context);
-                          VideoCall(appointmentId: widget.appointmentId)
-                              .launch(context);
-                        }),
+                        ).onTap(
+                          () async {
+                            // const MyCall().launch(context);
+
+                            var user = await userService.getProfileById(
+                                userId: userController.userId.value);
+                            sendNotification(
+                                [token],
+                                "Incoming Call",
+                                "${user.firstName} ${user.lastName} is call now",
+                                widget.appointmentId,
+                                NotificatonType.call);
+                            VideoCall(appointmentId: widget.appointmentId)
+                                .launch(context);
+                          },
+                        ),
                         5.width,
                         SizedBox(
                           height: 30,

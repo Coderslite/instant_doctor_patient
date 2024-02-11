@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:instant_doctor/controllers/IncomingCallController.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../constant/color.dart';
@@ -13,7 +14,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
-FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
 
 class FirebaseMessagings {
   void displayLocalNotification(RemoteMessage message) async {
@@ -36,6 +37,47 @@ class FirebaseMessagings {
       message.notification!.body,
       platformChannelSpecifics,
       payload: message.data.toString(),
+    );
+  }
+
+  void showIncomingCallNotification(RemoteMessage message) async {
+    var data = message.data;
+    var appointmentId = data['id'];
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'incoming_call_channel_id',
+      'Incoming Call',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: false,
+      enableVibration: false,
+      colorized: true,
+      color: kPrimary,
+      onlyAlertOnce: false,
+      ongoing: true,
+      audioAttributesUsage: AudioAttributesUsage.voiceCommunicationSignalling,
+      actions: [
+        AndroidNotificationAction(
+          'reject',
+          'Reject',
+        ),
+        AndroidNotificationAction(
+          'accept',
+          'Accept Call',
+          cancelNotification: true,
+          showsUserInterface: true,
+        ),
+      ],
+    );
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      1,
+      message.notification!.title,
+      message.notification!.body,
+      platformChannelSpecifics,
+      payload: appointmentId,
     );
   }
 
@@ -84,7 +126,11 @@ class FirebaseMessagings {
           AndroidInitializationSettings('@mipmap/ic_launcher');
       const InitializationSettings initializationSettings =
           InitializationSettings(android: initializationSettingsAndroid);
-      await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+      await flutterLocalNotificationsPlugin.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: notificationTapBackground,
+        onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+      );
       // Request notification permissions
 
       var result = await flutterLocalNotificationsPlugin
@@ -95,13 +141,25 @@ class FirebaseMessagings {
       if (result == true) {
       } else {}
       var prefs = await SharedPreferences.getInstance();
-      var token = await _firebaseMessaging.getToken();
+      var token = await firebaseMessaging.getToken();
       prefs.setString(MESSAGE_TOKEN, token.toString());
+
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        var payload = message.data;
+        if (payload['type'] == 'Call') {
+          IncomingCall().showCalling(payload['id']);
+        }
+      });
+
 
       // Handle incoming messages and display notifications
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        // Display a local notification
-        displayLocalNotification(message);
+        var payload = message.data;
+        if (payload['type'] == 'Call') {
+          IncomingCall().showCalling(payload['id']);
+        } else {
+          displayLocalNotification(message);
+        }
       });
     }
   }

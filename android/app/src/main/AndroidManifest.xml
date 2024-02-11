@@ -15,9 +15,6 @@
     <uses-feature android:name="android.hardware.camera.autofocus" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" /> 
 
-<!-- The Agora SDK requires Bluetooth permissions in case users are using Bluetooth devices.-->
-<uses-permission  android:name="android.permission.BLUETOOTH"  />
-
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <!-- <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/> -->
@@ -110,5 +107,23 @@
         <service 
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
         />
+
+
+<activity
+    android:name="com.github.alezhka.flutter_incoming_call.IncomingCallActivity"
+    android:exported="true"
+    android:theme="@style/Theme.AppCompat"
+    android:screenOrientation="portrait"
+    android:showOnLockScreen="true">
+    <intent-filter>
+        <action android:name="com.github.alezhka.flutter_incoming_call.activity.ACTION_INCOMING_CALL" />
+        <category android:name="android.intent.category.DEFAULT" />
+    </intent-filter>
+</activity>
+
+
+    <receiver android:name="com.github.alezhka.flutter_incoming_call.CallBroadcastReceiver"
+        android:enabled="true"
+        android:exported="false"/>
     </application>
 </manifest>

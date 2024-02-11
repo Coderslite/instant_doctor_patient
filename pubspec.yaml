@@ -70,6 +70,8 @@ dependencies:
   permission_handler:
   zego_uikit_signaling_plugin: ^2.7.0
   zego_uikit_prebuilt_call: ^4.1.9
+  flutter_ringtone_player: ^3.2.0
+  flutter_incoming_call: ^0.1.2
   
   
 

@@ -78,7 +78,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           var data = snapshot.data;
                           return profileImage(data, 100, 100).center();
                         }
-                        return CircleAvatar(
+                        return const CircleAvatar(
                           radius: 100,
                           child: Icon(Icons.person),
                         );

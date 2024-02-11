@@ -32,6 +32,7 @@ class NotificatonType {
   static String transaction = "Transaction";
   static String appointment = "Appointment";
   static String medication = "Medication";
+  static String call = "Call";
 }
 
 const APPOINTMENT_CHARGE = 100;

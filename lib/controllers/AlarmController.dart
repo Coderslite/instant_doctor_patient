@@ -1,16 +1,13 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/models/MedicationModel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:workmanager/workmanager.dart';
 
 import '../constant/color.dart';
-import '../main.dart';
 
 class AlarmController extends GetxController {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -93,7 +90,7 @@ class AlarmController extends GetxController {
     print("seconds $difference");
 
     // Convert the duration to seconds
-    int seconds = difference.inSeconds;
+    // int seconds = difference.inSeconds;
     // Workmanager().registerOneOffTask(
     //     "${UniqueKey().hashCode}", "MedicationTracker",
     //     initialDelay: Duration(seconds: seconds));

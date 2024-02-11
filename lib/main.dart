@@ -8,8 +8,10 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/controllers/AlarmController.dart';
+import 'package:instant_doctor/screens/chat/VideoCall.dart';
 import 'package:instant_doctor/services/DoctorService.dart';
 import 'package:instant_doctor/services/NotificationService.dart';
 import 'package:instant_doctor/services/TransactionService.dart';
@@ -22,6 +24,7 @@ import 'AppTheme.dart';
 import 'constant/color.dart';
 import 'constant/constants.dart';
 import 'controllers/FirebaseMessaging.dart';
+import 'controllers/IncomingCallController.dart';
 import 'controllers/SettingController.dart';
 import 'firebase_options.dart';
 import 'screens/splash_screen/splash_screen.dart';
@@ -43,9 +46,10 @@ User? user = FirebaseAuth.instance.currentUser;
 // Initialize Flutter Local Notifications Plugin
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
-  var firebaseStorage = FirebaseStorage.instance;
+var firebaseStorage = FirebaseStorage.instance;
 AlarmController alarmController = Get.put(AlarmController());
 // BackgroundService backgroundService = BackgroundService();
+GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -63,7 +67,30 @@ void alarmNotification() {
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  FirebaseMessagings().displayLocalNotification(message);
+  var payload = message.data;
+  if (payload['type'] == 'Call') {
+    FirebaseMessagings().showIncomingCallNotification(message);
+  } else {
+    FirebaseMessagings().displayLocalNotification(message);
+  }
+}
+
+@pragma('vm:entry-point')
+Future<void> notificationTapBackground(
+    NotificationResponse notificationResponse) async {
+  final String? payload = notificationResponse.payload;
+
+  switch (notificationResponse.actionId) {
+    case 'accept':
+      // Handle accept action
+      IncomingCall().showCalling(payload.toString());
+
+      print('Accepted call');
+      break;
+    case 'reject':
+      print('Rejected call');
+      break;
+  }
 }
 
 Future<void> handleCheckMedication() async {

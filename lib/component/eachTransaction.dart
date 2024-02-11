@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:instant_doctor/services/TransactionService.dart';
+import 'package:instant_doctor/services/format_number.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../models/TransactionModel.dart';
@@ -54,8 +55,8 @@ Padding eachTransaction(
             ),
             Text(
               transaction.transactionType == TransactionType.debit.toString()
-                  ? "-NGN ${transaction.amount}"
-                  : "NGN ${transaction.amount}",
+                  ? "-${formatAmount(transaction.amount!)}"
+                  : "${formatAmount(transaction.amount!)}",
               style: boldTextStyle(
                 color: transaction.transactionType ==
                         TransactionType.debit.toString()
