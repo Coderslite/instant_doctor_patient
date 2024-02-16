@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
@@ -26,20 +28,20 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
       priceOptions(
           name: "Basic",
           image: "basic.png",
-          price: 1000,
-          duration: "30 mins",
+          price: 5000,
+          duration: 30 * 60,
           desc: "Chat with Doctor for 30 minutes"),
       priceOptions(
           name: "Standard",
           image: "standard.png",
-          price: 1500,
-          duration: "1 hour",
+          price: 9500,
+          duration: (30 * 2) * 60,
           desc: "Chat with Doctor for 1 hour"),
       priceOptions(
           name: "Special",
           image: "special.png",
-          price: 2000,
-          duration: "1 hour 30 mins",
+          price: 14000,
+          duration: (30 * 3) * 60,
           desc: "Chat with Doctor for 1 hour with 30 minutes added."),
     ];
     return Scaffold(
@@ -66,7 +68,8 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
               Expanded(
                 child: GridView.count(
                   mainAxisSpacing: 20,
-                  crossAxisCount: 2,
+                  physics: BouncingScrollPhysics(),
+                  crossAxisCount: 1,
                   children: prices,
                 ),
               ),
@@ -110,7 +113,7 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
       {required String name,
       required String image,
       required int price,
-      required String duration,
+      required int duration,
       required String desc}) {
     return Obx(() {
       var x = bookingController.package.value;
@@ -148,7 +151,7 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
                     formatAmount(price),
                     style: boldTextStyle(
                       color: white,
-                      size: 20,
+                      size: 30,
                     ),
                   ),
                   10.height,

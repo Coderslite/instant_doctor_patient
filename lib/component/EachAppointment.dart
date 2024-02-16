@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/main.dart';
@@ -7,7 +6,6 @@ import 'package:nb_utils/nb_utils.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../constant/color.dart';
 import '../models/AppointmentModel.dart';
-import '../services/formatDuration.dart';
 import 'IsOnline.dart';
 import 'TimeRemaining.dart';
 

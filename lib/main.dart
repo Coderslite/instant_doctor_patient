@@ -8,16 +8,16 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/controllers/AlarmController.dart';
 import 'package:instant_doctor/screens/chat/VideoCall.dart';
 import 'package:instant_doctor/services/DoctorService.dart';
+import 'package:instant_doctor/services/HealthTipService.dart';
 import 'package:instant_doctor/services/NotificationService.dart';
+import 'package:instant_doctor/services/ReferralService.dart';
 import 'package:instant_doctor/services/TransactionService.dart';
 import 'package:instant_doctor/services/WalletService.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'AppTheme.dart';
@@ -50,6 +50,10 @@ var firebaseStorage = FirebaseStorage.instance;
 AlarmController alarmController = Get.put(AlarmController());
 // BackgroundService backgroundService = BackgroundService();
 GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+IncomingCall incomingCall = IncomingCall();
+
+ReferralService referralService = ReferralService();
+HealthTipService healthTipService = HealthTipService();
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -66,10 +70,15 @@ void alarmNotification() {
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   var payload = message.data;
   if (payload['type'] == 'Call') {
+    var appointmentId = payload['id'];
+    var prefs = await SharedPreferences.getInstance();
+    prefs.setString('AppointmentId', appointmentId);
     FirebaseMessagings().showIncomingCallNotification(message);
+    // incomingCall.showCalling(appointmentId);
   } else {
     FirebaseMessagings().displayLocalNotification(message);
   }
@@ -78,17 +87,15 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 @pragma('vm:entry-point')
 Future<void> notificationTapBackground(
     NotificationResponse notificationResponse) async {
-  final String? payload = notificationResponse.payload;
-
   switch (notificationResponse.actionId) {
     case 'accept':
-      // Handle accept action
-      IncomingCall().showCalling(payload.toString());
-
-      print('Accepted call');
+      VideoCall(
+        appointmentId: notificationResponse.payload.toString(),
+      );
       break;
     case 'reject':
       print('Rejected call');
+      FirebaseMessagings().cancelNotification();
       break;
   }
 }

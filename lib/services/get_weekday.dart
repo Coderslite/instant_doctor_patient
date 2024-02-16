@@ -1,5 +1,4 @@
 // Function to calculate the next two weeks' dates based on the selected month
-import 'package:intl/intl.dart';
 
 // Function to generate all future dates of the selected month, excluding past dates
 List<DateTime> generateAvailableDates(selectedMonth) {

@@ -5,9 +5,13 @@ class UserModel {
   String? firstName;
   String? lastName;
   String? email;
+  String? country;
+  String? address;
+  String? currency;
   String? phoneNumber;
   String? photoUrl;
   String? maritalStatus;
+  String? tag;
   Timestamp? dob;
   String? height;
   String? weight;
@@ -29,9 +33,13 @@ class UserModel {
       this.firstName,
       this.lastName,
       this.email,
+      this.country,
+      this.address,
+      this.currency,
       this.phoneNumber,
       this.photoUrl,
       this.maritalStatus,
+      this.tag,
       this.dob,
       this.height,
       this.weight,
@@ -55,10 +63,14 @@ class UserModel {
       firstName: json['firstname'],
       lastName: json['lastname'],
       email: json['email'],
+      country: json['country'],
+      address: json['address'],
+      currency: json['currency'],
       phoneNumber: json['phoneNumber'],
       photoUrl: json['photoUrl'],
       maritalStatus: json['maritalStatus'],
-      dob:json['dob'],
+      dob: json['dob'],
+      tag: json['tag'],
       height: json['height'],
       weight: json['weight'],
       bloodGroup: json['bloodGroup'],

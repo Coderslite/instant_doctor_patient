@@ -1,7 +1,8 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -52,6 +53,7 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Obx(() {
+        // ignore: unused_local_variable
         bool isDarkMode = settingsController.isDarkMode.value;
         return SafeArea(
           child: Padding(
@@ -62,6 +64,13 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     var data = snapshot.data!;
+                    bool profileCompleted =
+                        data.bloodGroup.validate().isNotEmpty &&
+                            data.height.validate().isNotEmpty &&
+                            data.weight.validate().isNotEmpty &&
+                            data.dob != null &&
+                            data.genotype.validate().isNotEmpty &&
+                            data.phoneNumber.validate().isNotEmpty;
                     return SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
                       child: Column(
@@ -88,7 +97,7 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                             alignment: Alignment.topRight,
                             children: [
                               isUploading
-                                  ? CircularProgressIndicator(
+                                  ? const CircularProgressIndicator(
                                       color: kPrimary,
                                     ).center()
                                   : StreamBuilder<UserModel>(
@@ -99,12 +108,12 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                                           var data = snapshot.data;
                                           return profileImage(data, 100, 100);
                                         }
-                                        return CircularProgressIndicator(
+                                        return const CircularProgressIndicator(
                                           color: kPrimary,
                                         ).center();
                                       }),
                               Positioned(
-                                child: Icon(
+                                child: const Icon(
                                   Icons.edit,
                                   color: kPrimary,
                                   size: 14,
@@ -114,6 +123,13 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                               ),
                             ],
                           ).center(),
+                          10.height,
+                          Text(
+                            "Your profile isnt complete yet",
+                            style: primaryTextStyle(
+                              color: coral,
+                            ),
+                          ).center().visible(debugProfileBuildsEnabled),
                           30.height,
                           Text(
                             "Update Information",
@@ -124,6 +140,10 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                           10.height,
                           profileOption("Email", data.email.validate(),
                               key: "email"),
+                          profileOption("First Name", data.firstName.validate(),
+                              key: "firstname"),
+                          profileOption("Last Name", data.lastName.validate(),
+                              key: "lastname"),
                           profileOption(
                               "Phone Number", data.phoneNumber.validate(),
                               key: "phoneNumber"),
@@ -133,6 +153,8 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                                   ? formatDateWithoutTime(data.dob!.toDate())
                                   : "",
                               key: "dob"),
+                          profileOption("Address", data.address.validate(),
+                              key: "address"),
                           profileOption(
                               "Marital Status", data.maritalStatus.validate(),
                               key: "maritalStatus"),
@@ -212,14 +234,18 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
           toast("Date was not selected");
         }
       } else {
-        showDialog(
-          context: context,
-          builder: (context) => ProfileUpdateDialog(
-            controller: controller,
-            keey: key,
-            title: title,
-          ),
-        );
+        if (key == 'currency') {
+          toast("Change you country in order to change you currency");
+        } else {
+          showDialog(
+            context: context,
+            builder: (context) => ProfileUpdateDialog(
+              controller: controller,
+              keey: key,
+              title: title,
+            ),
+          );
+        }
       }
     });
   }
@@ -229,13 +255,15 @@ class ProfileUpdateDialog extends StatefulWidget {
   final TextEditingController controller;
   final String keey;
   final String title;
+  final String? country;
 
-  const ProfileUpdateDialog(
-      {Key? key,
-      required this.controller,
-      required this.keey,
-      required this.title})
-      : super(key: key);
+  const ProfileUpdateDialog({
+    Key? key,
+    required this.controller,
+    required this.keey,
+    required this.title,
+    this.country,
+  }) : super(key: key);
 
   @override
   _ProfileUpdateDialogState createState() => _ProfileUpdateDialogState();
@@ -243,12 +271,26 @@ class ProfileUpdateDialog extends StatefulWidget {
 
 class _ProfileUpdateDialogState extends State<ProfileUpdateDialog> {
   final _formKey = GlobalKey<FormState>();
+  String currency = '';
+
+  final countries = [
+    {"name": "Nigeria", "currency": "NGN"},
+    // {"name": "Ghana", "currency": "GHS"},
+    // {"name": "South Africa", "currency": "ZAR"},
+    // {"name": "Kenya", "currency": "KES"},
+    // {"name": "Egypt", "currency": "EGP"},
+    // {"name": "Morocco", "currency": "MAD"},
+    // {"name": "Algeria", "currency": "DZD"},
+    // {"name": "Tunisia", "currency": "TND"},
+    // {"name": "Ethiopia", "currency": "ETB"},
+    // {"name": "Tanzania", "currency": "TZS"},
+  ];
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-        "Update Profile",
+        "Update  ${widget.title}",
         style: primaryTextStyle(),
       ),
       content: Form(
@@ -283,7 +325,8 @@ class _ProfileUpdateDialogState extends State<ProfileUpdateDialog> {
                 dropdownColor: context.cardColor,
                 items: [
                   'A(positive)',
-                  'A(negative)' 'B(positive)',
+                  'A(negative)',
+                  'B(positive)',
                   'B(negative)',
                   'AB(positive)',
                   'AB(negative)',
@@ -321,6 +364,25 @@ class _ProfileUpdateDialogState extends State<ProfileUpdateDialog> {
                     })
                 .visible(widget.keey == 'genotype' &&
                     widget.controller.text != 'other'),
+            DropdownButtonFormField(
+                style: primaryTextStyle(),
+                hint: Text(
+                  "Select ${widget.title}",
+                  style: secondaryTextStyle(),
+                ),
+                dropdownColor: context.cardColor,
+                items: countries
+                    .map((e) => DropdownMenuItem(
+                          value: e,
+                          child: Text(
+                            e['name']!,
+                          ),
+                        ))
+                    .toList(),
+                onChanged: (val) {
+                  widget.controller.text = val!['name'].toString();
+                  currency = val['currency'].toString();
+                }).visible(widget.keey == 'country'),
             AppTextField(
               controller: widget.controller,
               textFieldType: TextFieldType.OTHER,
@@ -330,10 +392,32 @@ class _ProfileUpdateDialogState extends State<ProfileUpdateDialog> {
               readOnly: widget.keey == 'email',
               controller: widget.controller,
               textFieldType: TextFieldType.OTHER,
-            ).visible(widget.keey == 'phoneNumber' ||
-                widget.keey == 'height' ||
-                widget.keey == 'weight' ||
-                widget.keey == 'email'),
+              decoration: InputDecoration(
+                  hintText: widget.keey == 'height'
+                      ? "Hight value in fts"
+                      : widget.keey == 'weight'
+                          ? "Weight value in kg"
+                          : "",
+                  suffixIcon: widget.keey == 'height'
+                      ? Text(
+                          "fts",
+                          style: primaryTextStyle(),
+                        )
+                      : widget.keey == 'weight'
+                          ? Text(
+                              "kg",
+                              style: primaryTextStyle(),
+                            )
+                          : null),
+            ).visible(
+              widget.keey == 'phoneNumber' ||
+                  widget.keey == 'height' ||
+                  widget.keey == 'weight' ||
+                  widget.keey == 'email' ||
+                  widget.keey == 'address' ||
+                  widget.keey == 'firstname' ||
+                  widget.keey == 'lastname',
+            ),
           ],
         ),
       ),
@@ -353,12 +437,25 @@ class _ProfileUpdateDialogState extends State<ProfileUpdateDialog> {
             style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
             onPressed: () async {
               if (_formKey.currentState!.validate()) {
-                userService.updateProfile(data: {
-                  widget.keey: widget.controller.text,
-                }, userId: userController.userId.value);
-                widget.controller.clear();
-                toast("Update Successful");
-                Navigator.pop(context);
+                if (currency.isNotEmpty) {
+                  userController.currency.value = currency;
+                  var prefs = await SharedPreferences.getInstance();
+                  prefs.setString('currency', currency);
+                  userService.updateProfile(data: {
+                    widget.keey: widget.controller.text,
+                    "currency": currency,
+                  }, userId: userController.userId.value);
+                  widget.controller.clear();
+                  toast("Update Successful");
+                  Navigator.pop(context);
+                } else {
+                  userService.updateProfile(data: {
+                    widget.keey: widget.controller.text,
+                  }, userId: userController.userId.value);
+                  widget.controller.clear();
+                  toast("Update Successful");
+                  Navigator.pop(context);
+                }
               }
             },
             child: Text(

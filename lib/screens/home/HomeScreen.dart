@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
-import 'package:instant_doctor/controllers/UserController.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/NotificationModel.dart';
 import 'package:instant_doctor/models/UserModel.dart';
@@ -11,17 +10,18 @@ import 'package:instant_doctor/screens/doctors/SingleDoctor.dart';
 import 'package:instant_doctor/screens/healthtips/HealthTipsHome.dart';
 import 'package:instant_doctor/screens/medication/IntroMedicationTracker.dart';
 import 'package:instant_doctor/screens/notification/Notification.dart';
-import 'package:instant_doctor/services/UserService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../component/ProfileImage.dart';
 import '../../component/eachDoctor.dart';
 import '../../component/eachService.dart';
+import '../../controllers/FirebaseMessaging.dart';
 import '../../controllers/SettingController.dart';
 import '../../models/category_model.dart';
+import '../../services/GetUserId.dart';
 import '../../services/greetings.dart';
+import '../chat/VideoCall.dart';
 import '../lap_result/UploadLabResult.dart';
-import '../medication/MedicationTracker.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -32,15 +32,26 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final SettingsController settingsController = Get.find();
-  UserController userController = Get.put(UserController());
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
   }
 
+  checkForInitialMessage(context) async {
+    var prefs = await SharedPreferences.getInstance();
+    var appointmentId = prefs.getString('AppointmentId').toString();
+    if (appointmentId != 'null' && appointmentId != '') {
+      VideoCall(appointmentId: appointmentId).launch(context);
+      FirebaseMessagings().cancelNotification();
+    } else {
+      toast(appointmentId);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    checkForInitialMessage(context);
     List<Categories> categories = [
       Categories(
         name: "Health Tips",
@@ -88,7 +99,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Obx(() {
-            bool isDarkMode = settingsController.isDarkMode.value;
             return Column(
               children: [
                 Row(

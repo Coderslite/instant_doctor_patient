@@ -13,6 +13,7 @@ import '../services/get_weekday.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class BookingController extends GetxController {
+  RxString backgroundAppointmentId = ''.obs;
   List<DateTime> nextTwoWeeks = [];
   String? selectedMonth;
   DateTime? selectedDate;
@@ -21,7 +22,7 @@ class BookingController extends GetxController {
   TimeOfDay? time;
   RxInt price = 0.obs;
   RxString package = ''.obs;
-  RxString duration = ''.obs;
+  RxInt duration = 0.obs;
 
   List<String> availableMonths = [];
 
@@ -41,21 +42,25 @@ class BookingController extends GetxController {
         return false;
       }
       // Convert DateTime to Firebase Timestamp
+      var endDate = dateTime.add(Duration(seconds: duration.value));
       Timestamp startTime = Timestamp.fromDate(dateTime);
+      Timestamp endTime = Timestamp.fromDate(endDate);
       var res = await appointmentService.createAppointment(
-          docId: docId,
-          userId: userId,
-          complain: complain.value,
-          price: price.value,
-          package: package.value,
-          startTime: startTime);
+        docId: docId,
+        userId: userId,
+        complain: complain.value,
+        price: price.value,
+        package: package.value,
+        startTime: startTime,
+        endTime: endTime,
+      );
       if (res) {
         selectedDate = null;
         complain.value = '';
         time = null;
         price.value = 0;
         package.value = '';
-        duration.value = '';
+        duration.value = 0;
         tz.TZDateTime scheduledTime = tz.TZDateTime.from(dateTime, tz.local);
         FirebaseMessagings().handleScheduleNotification(scheduledTime,
             "Appointment Update", "Its time for your scheduled appointment");

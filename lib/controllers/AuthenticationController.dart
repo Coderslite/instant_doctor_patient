@@ -43,7 +43,7 @@ class AuthenticationController extends GetxController {
     return userRef;
   }
 
-  handleGoogleSignin(BuildContext context) async {
+  handleGoogleSignin(BuildContext context, {required String referredBy}) async {
     try {
       googleSignin.value = true;
 
@@ -62,12 +62,17 @@ class AuthenticationController extends GetxController {
           userController.userId.value = result.user!.uid;
 
           await AuthenticationService().addUser(
-              firstname: userCred.displayName!,
-              lastname: '',
-              email: userCred.email,
-              phoneNumber: '',
-              gender: '',
-              uid: result.user!.uid);
+            firstname: userCred.displayName!,
+            lastname: '',
+            email: userCred.email,
+            phoneNumber: '',
+            gender: '',
+            uid: result.user!.uid,
+          );
+          if (referredBy.isNotEmpty) {
+            await referralService.newReferral(
+                userId: userController.userId.value, referredBy: referredBy);
+          }
         }
 
         Root().launch(context);
@@ -107,16 +112,19 @@ class AuthenticationController extends GetxController {
     required String password,
     required String phoneNumber,
     required String gender,
+    required String referredBy,
     required BuildContext context,
   }) async {
     isLoading.value = true;
     var result = await authenticationService.createUser(
-        firstname: firstname,
-        lastname: lastname,
-        phoneNumber: phoneNumber,
-        email: email,
-        gender: gender,
-        password: password);
+      firstname: firstname,
+      lastname: lastname,
+      phoneNumber: phoneNumber,
+      email: email,
+      gender: gender,
+      password: password,
+      referredBy: referredBy,
+    );
     if (result) {
       isLoading.value = false;
       SuccessSignUp().launch(context);

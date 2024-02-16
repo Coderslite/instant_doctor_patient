@@ -46,7 +46,7 @@ class SettingsController extends GetxController {
       defaultLoaderBgColorGlobal = scaffoldSecondaryDark;
       appButtonBackgroundColorGlobal = appButtonColorDark;
       shadowColorGlobal = Colors.white12;
-      setStatusBarColor(kPrimaryLight);
+      setStatusBarColor(Colors.transparent, systemNavigationBarColor: null);
     } else {
       textPrimaryColorGlobal = textPrimaryColor;
       textSecondaryColorGlobal = textSecondaryColor;
@@ -54,7 +54,7 @@ class SettingsController extends GetxController {
       defaultLoaderBgColorGlobal = Colors.white;
       appButtonBackgroundColorGlobal = Colors.white;
       shadowColorGlobal = Colors.black12;
-      setStatusBarColor(kPrimaryLight);
+      setStatusBarColor(Colors.transparent, systemNavigationBarColor: null);
     }
   }
 

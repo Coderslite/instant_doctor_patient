@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:instant_doctor/component/eachDoctor.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/models/UserModel.dart';

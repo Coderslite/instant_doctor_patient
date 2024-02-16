@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:instant_doctor/services/BaseService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
-import '../main.dart';
 import '../models/MedicationModel.dart';
 
 class MedicationService extends BaseService {
@@ -98,7 +97,7 @@ class MedicationService extends BaseService {
       }
       allMedications
           .add(jsonEncode(medicationModel.toJson())); // Fix this line as well
-      var res = prefs.setStringList(
+     prefs.setStringList(
         'medications',
         allMedications,
       );

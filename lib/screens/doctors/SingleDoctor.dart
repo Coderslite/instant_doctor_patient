@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
+import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/screens/appointment/AppointmentPricing.dart';
 import 'package:instant_doctor/screens/doctors/BookAppointment.dart';
+import 'package:instant_doctor/screens/profile/personal/PersonalProfile.dart';
+import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -269,25 +272,48 @@ class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
                                 .isNotEmpty),
                           ),
                           20.height,
-                          Obx(
-                            () => AppButton(
-                              text: bookingController.price > 0
-                                  ? "Book Appointment"
-                                  : "Select Package",
-                              onTap: () {
-                                bookingController.price > 0
-                                    ? BookAppointmentScreen(
-                                        doctor: widget.doctor,
-                                      ).launch(context)
-                                    : const AppointmentPricingScreen(
-                                            fromDocScreen: true)
-                                        .launch(context);
-                              },
-                              color: kPrimary,
-                              textColor: white,
-                              width: double.infinity,
-                            ),
-                          ),
+                          StreamBuilder<UserModel>(
+                              stream: userService.getProfile(
+                                  userId: userController.userId.value),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  var data = snapshot.data!;
+                                  bool profileCompleted = data.bloodGroup
+                                          .validate()
+                                          .isNotEmpty &&
+                                      data.height.validate().isNotEmpty &&
+                                      data.weight.validate().isNotEmpty &&
+                                      data.dob != null &&
+                                      data.genotype.validate().isNotEmpty &&
+                                      data.phoneNumber.validate().isNotEmpty;
+                                  return Obx(() {
+                                    var d = bookingController.complain.value;
+                                    return AppButton(
+                                      text: !profileCompleted
+                                          ? "Please complete profile"
+                                          : bookingController.price > 0
+                                              ? "Book Appointment"
+                                              : "Select Package",
+                                      onTap: () {
+                                        !profileCompleted
+                                            ? PersonalProfileScreen()
+                                                .launch(context)
+                                            : bookingController.price > 0
+                                                ? BookAppointmentScreen(
+                                                    doctor: widget.doctor,
+                                                  ).launch(context)
+                                                : const AppointmentPricingScreen(
+                                                        fromDocScreen: true)
+                                                    .launch(context);
+                                      },
+                                      color: kPrimary,
+                                      textColor: white,
+                                      width: double.infinity,
+                                    );
+                                  });
+                                }
+                                return CircularProgressIndicator().center();
+                              }),
                           20.height,
                         ],
                       ),

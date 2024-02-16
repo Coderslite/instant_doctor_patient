@@ -1,10 +1,14 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/main.dart';
+import 'package:instant_doctor/models/HealthTipModel.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import '../../component/Accordion.dart';
+import 'package:timeago/timeago.dart' as timeago;
+import 'SingleTips.dart';
 
 class HealthTipsHome extends StatefulWidget {
   final String tipsType;
@@ -34,6 +38,9 @@ class _HealthTipsHomeState extends State<HealthTipsHome> {
         },
         child: SlidingUpPanel(
           controller: settingsController.panelController,
+          parallaxEnabled: true,
+          parallaxOffset: 0.5,
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
           onPanelOpened: () {
             setState(() {
               settingsController.panelOpened = true;
@@ -44,7 +51,6 @@ class _HealthTipsHomeState extends State<HealthTipsHome> {
               settingsController.panelOpened = false;
             });
           },
-          maxHeight: MediaQuery.of(context).size.height,
           minHeight: MediaQuery.of(context).size.height / 1.6,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(30),
@@ -72,7 +78,7 @@ class _HealthTipsHomeState extends State<HealthTipsHome> {
                     ).onTap(() {
                       settingsController.panelController.open();
                     }),
-                    Icon(
+                    const Icon(
                       Icons.arrow_upward,
                       size: 14,
                       color: Color(0XFF8A99B1),
@@ -98,19 +104,37 @@ class _HealthTipsHomeState extends State<HealthTipsHome> {
                 10.height,
                 Expanded(
                   child: RefreshIndicator(
-                   onRefresh: () async {
-                      Future.delayed(Duration(seconds: 2));
+                    onRefresh: () async {
+                      Future.delayed(const Duration(seconds: 2));
                       return;
                     },
-                    child: ListView.builder(
-                        itemCount: 20,
-                        physics: settingsController.panelOpened
-                            ? BouncingScrollPhysics()
-                            : NeverScrollableScrollPhysics(),
-                        itemBuilder: (context, index) {
-                          return widget.tipsType == 'FAQ'
-                              ? healthTipAccordion()
-                              : healthTipCard();
+                    child: StreamBuilder<List<HealthTipModel>>(
+                        stream: healthTipService.getHealthTips(
+                            type: widget.tipsType == 'Health Tips'
+                                ? 'General'
+                                : widget.tipsType == 'Women Health'
+                                    ? 'Women'
+                                    : 'Men'),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            var data = snapshot.data!;
+                            if (data.isEmpty) {
+                              return Text(
+                                "No Tips Available",
+                                style: boldTextStyle(),
+                              ).center();
+                            }
+                            return ListView.builder(
+                                itemCount: data.length,
+                                physics: settingsController.panelOpened
+                                    ? const BouncingScrollPhysics()
+                                    : const NeverScrollableScrollPhysics(),
+                                itemBuilder: (context, index) {
+                                  var tip = data[index];
+                                  return healthTipCard(data: tip);
+                                });
+                          }
+                          return CircularProgressIndicator().center();
                         }),
                   ),
                 )
@@ -126,7 +150,12 @@ class _HealthTipsHomeState extends State<HealthTipsHome> {
             ),
             child: Column(
               children: [
-                90.height,
+                30.height,
+                Row(
+                  children: [
+                    BackButton(),
+                  ],
+                ),
                 Text(
                   widget.tipsType == 'FAQ'
                       ? 'Frequently Asked Questions'
@@ -162,10 +191,11 @@ class _HealthTipsHomeState extends State<HealthTipsHome> {
     );
   }
 
-  Padding healthTipCard() {
+  healthTipCard({required HealthTipModel data}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Card(
+        color: context.cardColor,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
@@ -173,8 +203,8 @@ class _HealthTipsHomeState extends State<HealthTipsHome> {
               SizedBox(
                 height: 50,
                 width: 50,
-                child: Image.asset(
-                  "assets/images/heart.png",
+                child: CachedNetworkImage(
+                  imageUrl: data.image.validate(),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -185,7 +215,7 @@ class _HealthTipsHomeState extends State<HealthTipsHome> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "Matters of the heart",
+                      data.title.validate(),
                       style: boldTextStyle(size: 15),
                     ),
                     10.height,
@@ -201,7 +231,7 @@ class _HealthTipsHomeState extends State<HealthTipsHome> {
                             ),
                             5.width,
                             Text(
-                              "3 mins ago",
+                              timeago.format(data.createdAt!.toDate()),
                               style: secondaryTextStyle(size: 12),
                             ),
                           ],
@@ -214,7 +244,7 @@ class _HealthTipsHomeState extends State<HealthTipsHome> {
                             ),
                             5.width,
                             Text(
-                              "1k views",
+                              "${data.views.validate()} Views",
                               style: secondaryTextStyle(size: 12),
                             ),
                           ],
@@ -228,6 +258,10 @@ class _HealthTipsHomeState extends State<HealthTipsHome> {
           ),
         ),
       ),
-    );
+    ).onTap(() {
+      SingleTipScreen(
+        tip: data,
+      ).launch(context);
+    });
   }
 }

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -10,7 +12,8 @@ import '../../constant/color.dart';
 import '../../controllers/AuthenticationController.dart';
 
 class EmailScreen extends StatefulWidget {
-  const EmailScreen({super.key});
+  final String? userId;
+  const EmailScreen({super.key, this.userId});
 
   @override
   State<EmailScreen> createState() => _EmailScreenState();
@@ -65,11 +68,11 @@ class _EmailScreenState extends State<EmailScreen> {
                     AppTextField(
                       controller: emailController,
                       textFieldType: TextFieldType.EMAIL,
-                      textStyle: primaryTextStyle(color: black),
+                      textStyle: primaryTextStyle(),
                       decoration: InputDecoration(
                         label: Text(
                           "Email Address",
-                          style: primaryTextStyle(color: black),
+                          style: primaryTextStyle(),
                         ),
                         contentPadding: const EdgeInsetsDirectional.symmetric(
                             vertical: 10, horizontal: 10),
@@ -98,6 +101,7 @@ class _EmailScreenState extends State<EmailScreen> {
                               .handleCheckEmail(emailController.text)) {
                             SignUpScreen(
                               email: emailController.text,
+                              referredBy: widget.userId,
                             ).launch(context);
                           } else {
                             toast("email already exist");
@@ -119,7 +123,7 @@ class _EmailScreenState extends State<EmailScreen> {
                       width: double.infinity,
                       color: white,
                       onTap: () {
-                        authenticationController.handleGoogleSignin(context);
+                        authenticationController.handleGoogleSignin(context,referredBy:widget.userId.validate());
                       },
                       child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,

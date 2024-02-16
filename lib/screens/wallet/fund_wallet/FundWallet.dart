@@ -7,7 +7,6 @@ import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/controllers/UserController.dart';
 import 'package:instant_doctor/main.dart';
-import 'package:instant_doctor/screens/wallet/currency/Currency.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../../component/dialpad.dart';
@@ -58,7 +57,7 @@ class _FundWalletScreenState extends State<FundWalletScreen> {
       ..amount = double.parse(paymentController.amount.value).toInt() * 100
       ..reference = 'ref ${DateTime.now().microsecondsSinceEpoch}'
       // or ..accessCode = _getAccessCodeFrmInitialization()
-      ..currency = paymentController.currency.value
+      ..currency = userController.currency.value
       ..email = email;
 
     CheckoutResponse response = await plugin.checkout(context1,
@@ -117,20 +116,12 @@ class _FundWalletScreenState extends State<FundWalletScreen> {
                       child: Row(
                         children: [
                           Text(
-                            paymentController.currency.value.isEmpty
-                                ? "Currency"
-                                : paymentController.currency.value,
+                            userController.currency.value,
                             style: primaryTextStyle(),
                           ),
                         ],
                       ),
-                    ).onTap(() async {
-                      var cur = await const CurrencyScreen().launch(context);
-                      if (cur != null) {
-                        paymentController.currency.value = cur;
-                      }
-                      setState(() {});
-                    }),
+                    )
                   ],
                 ),
                 Row(
@@ -142,7 +133,7 @@ class _FundWalletScreenState extends State<FundWalletScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            paymentController.currency.value,
+                            userController.currency.value,
                             style: secondaryTextStyle(
                               size: 14,
                               // color: kPrimary,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:instant_doctor/screens/chat/VideoCall.dart';
+import 'package:instant_doctor/component/ProfileImage.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../constant/constants.dart';
@@ -24,10 +24,7 @@ Padding eachDoctor({required UserModel doctor, required BuildContext context}) {
                     SizedBox(
                       height: 50,
                       width: 50,
-                      child: Image.asset(
-                        "assets/images/doc1.png",
-                        fit: BoxFit.cover,
-                      ),
+                      child: profileImage(doctor, 40, 40),
                     ),
                     Positioned(
                         right: 2,

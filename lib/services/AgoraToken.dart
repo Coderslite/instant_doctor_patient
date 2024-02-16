@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:instant_doctor/main.dart';
-import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:http/http.dart' as http;
 
 Future<String> getAgoraToken({required String appointmentId}) async {

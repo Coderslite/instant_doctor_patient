@@ -4,13 +4,11 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/controllers/ChatController.dart';
-import 'package:instant_doctor/controllers/FirebaseMessaging.dart';
 import 'package:instant_doctor/controllers/UserController.dart';
 import 'package:instant_doctor/function/send_notification.dart';
 import 'package:instant_doctor/main.dart';
@@ -176,7 +174,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
                             sendNotification(
                                 [token],
                                 "Incoming Call",
-                                "${user.firstName} ${user.lastName} is call now",
+                                "${user.firstName} ${user.lastName} is calling now",
                                 widget.appointmentId,
                                 NotificatonType.call);
                             VideoCall(appointmentId: widget.appointmentId)

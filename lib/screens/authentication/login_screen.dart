@@ -1,10 +1,10 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/controllers/AuthenticationController.dart';
 import 'package:instant_doctor/screens/authentication/email_screen.dart';
 import 'package:instant_doctor/screens/authentication/forgot_password.dart';
-import 'package:instant_doctor/screens/home/Root.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:nb_utils/nb_utils.dart';
 
@@ -67,12 +67,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     20.height,
                     AppTextField(
                       textFieldType: TextFieldType.EMAIL,
-                      textStyle: primaryTextStyle(color: black),
+                      textStyle: primaryTextStyle(),
                       controller: emailController,
+                      autoFillHints: [AutofillHints.email],
                       decoration: InputDecoration(
                         label: Text(
                           "Email Address",
-                          style: primaryTextStyle(color: black),
+                          style: primaryTextStyle(),
                         ),
                         contentPadding: const EdgeInsetsDirectional.symmetric(
                             vertical: 10, horizontal: 10),
@@ -93,11 +94,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: passwordController,
                       isPassword: true,
                       obscuringCharacter: "*",
-                      textStyle: primaryTextStyle(color: black),
+                      textStyle: primaryTextStyle(),
+                      autoFillHints: [AutofillHints.password],
                       decoration: InputDecoration(
                         label: Text(
                           "Password",
-                          style: primaryTextStyle(color: black),
+                          style: primaryTextStyle(),
                         ),
                         contentPadding: const EdgeInsetsDirectional.symmetric(
                             vertical: 10, horizontal: 10),
@@ -123,12 +125,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: double.infinity,
                         color: kPrimary,
                         textColor: whiteColor,
-                        onTap: () {
+                        onTap: () async {
                           if (_formKey.currentState!.validate()) {
-                            authenticationController.handleSignIn(
+                            await authenticationController.handleSignIn(
                                 email: emailController.text,
                                 password: passwordController.text,
                                 context: context);
+                            TextInput.finishAutofillContext();
                           }
                         },
                         text: "Continue",

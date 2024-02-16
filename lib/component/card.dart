@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/controllers/UserController.dart';
 import 'package:instant_doctor/models/UserModel.dart';
+import 'package:instant_doctor/screens/profile/wallet_setup/WalletSetup.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../constant/color.dart';
@@ -58,13 +60,22 @@ Container card(BuildContext context) {
                   }
                   if (snapshot.hasData) {
                     var data = snapshot.data;
-                    return Text(
-                      formatAmount(data!.amount.validate().toInt()),
-                      style: boldTextStyle(
-                        size: 20,
-                        color: white,
-                      ),
-                    );
+                    return data!.currency.isEmptyOrNull
+                        ? ElevatedButton(
+                            onPressed: () {
+                              WalletSetupScreen().launch(context);
+                            },
+                            child: Text(
+                              "Complete Setup",
+                              style: boldTextStyle(color: kPrimary),
+                            ))
+                        : Text(
+                            formatAmount(data.amount.validate().toInt()),
+                            style: boldTextStyle(
+                              size: 20,
+                              color: white,
+                            ),
+                          );
                   }
                   return CircularProgressIndicator(
                     color: white,
@@ -90,9 +101,20 @@ Container card(BuildContext context) {
                   style: boldTextStyle(size: 12, color: white),
                 ),
               ],
-            ),
+            ).onTap(() {
+              Clipboard.setData(
+                ClipboardData(text: userController.tag.value),
+              );
+
+              // Show a snackbar to indicate the text has been copied
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Copied'),
+                ),
+              );
+            }),
             Text(
-              userController.userId.value,
+              "@${userController.tag.value}",
               style: boldTextStyle(color: white, size: 16),
             ),
           ],

@@ -12,7 +12,6 @@ import '../../controllers/SettingController.dart';
 import '../../controllers/UserController.dart';
 import '../../main.dart';
 import '../../models/UserModel.dart';
-import '../../services/format_number.dart';
 import '../../services/greetings.dart';
 import 'fund_wallet/FundWallet.dart';
 import 'send_funds/SendFunds.dart';
@@ -34,6 +33,7 @@ class _WalletScreenState extends State<WalletScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Obx(() {
+        // ignore: unused_local_variable
         bool isDarkMode = settingsController.isDarkMode.value;
         return SafeArea(
           child: Padding(
@@ -101,13 +101,23 @@ class _WalletScreenState extends State<WalletScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               walletOption("Top Up", "topup.png", () {
-                                const FundWalletScreen().launch(context);
+                                if (userController.currency.isNotEmpty) {
+                                  const FundWalletScreen().launch(context);
+                                } else {
+                                  toast(
+                                      "Please complete wallet setup to proceed");
+                                }
                               }),
                               walletOption(
                                 "Transfer",
                                 "transfer.png",
                                 () {
-                                  SendFundScreen().launch(context);
+                                  if (userController.currency.isNotEmpty) {
+                                    SendFundScreen().launch(context);
+                                  } else {
+                                    toast(
+                                        "Please complete wallet setup to proceed");
+                                  }
                                 },
                               ),
                               walletOption(

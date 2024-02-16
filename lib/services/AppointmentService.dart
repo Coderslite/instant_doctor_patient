@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/services/TransactionService.dart';
@@ -15,12 +13,20 @@ class AppointmentService {
   ChatController chatController = Get.put(ChatController());
   var appointmentCollection = db.collection("Appointments");
 
+  Future<AppointmentModel> getAppointment(
+      {required String appointmentId}) async {
+    var appointmentRef = await appointmentCollection.doc(appointmentId).get();
+    var appointment = appointmentRef.data();
+    return AppointmentModel.fromJson(appointment!);
+  }
+
   Future<bool> createAppointment({
     required String docId,
     required String userId,
     required String complain,
     required int price,
     required String package,
+    required Timestamp endTime,
     required Timestamp startTime,
   }) async {
     var data = {
@@ -29,6 +35,7 @@ class AppointmentService {
       "status": "Pending",
       "complain": complain,
       "startTime": startTime,
+      "endTime":endTime,
       "price": price,
       "package": package,
       "createdAt": Timestamp.now(),

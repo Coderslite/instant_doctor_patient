@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/AuthenticationController.dart';
+import 'package:instant_doctor/screens/profile/about/About.dart';
+import 'package:instant_doctor/screens/profile/wallet_setup/WalletSetup.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../component/ProfileImage.dart';
+import '../../controllers/ReferController.dart';
 import '../../main.dart';
 import '../../models/UserModel.dart';
 import '../../services/GetAppVersion.dart';
+import '../refer/Refer.dart';
 import '../settings/SettingScreen.dart';
+import 'help/Help.dart';
 import 'personal/PersonalProfile.dart';
+import 'policy/Policy.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -23,6 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String version = '';
   AuthenticationController authenticationController =
       Get.put(AuthenticationController());
+  ReferralController referralController = Get.put(ReferralController());
 
   handleGetVersion() async {
     version = await getAppVersion();
@@ -39,6 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Obx(() {
+        // ignore: unused_local_variable
         bool isDarkMode = settingsController.isDarkMode.value;
         return SafeArea(
           child: Padding(
@@ -238,10 +246,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       () {
                     const PersonalProfileScreen().launch(context);
                   }),
+                  profileOption("Wallet Setup", "Please Complete Wallet Setup",
+                      () {
+                    WalletSetupScreen().launch(context);
+                  }).visible(userController.currency.isEmpty),
+                  profileOption("Refer 💶", "Refer and earn bonus", () {
+                    const ReferScreen().launch(context);
+                  }),
                   profileOption("Privacy", "Security Settings", () {}),
-                  profileOption("Policy", "Read about our policy", () {}),
-                  profileOption("Get Help", "Contact us", () {}),
-                  profileOption("About Us", "About Instant Doctor", () {}),
+                  profileOption("Policy", "Read about our policy", () {
+                    PolicyScreen().launch(context);
+                  }),
+                  profileOption("Get Help", "Contact us", () {
+                    HelpScreen().launch(context);
+                  }),
+                  profileOption("About Us", "About Instant Doctor", () {
+                    AboutScreen(
+                      version: version,
+                    ).launch(context);
+                  }),
                   10.height,
                   Text(
                     version,
@@ -266,7 +289,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  profileOption(String title, String description, VoidCallback ontap) {
+  ClipRRect profileOption(
+      String title, String description, VoidCallback ontap) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
       child: Card(
@@ -297,7 +321,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
-      ),
-    ).onTap(ontap);
+      ).onTap(ontap),
+    );
   }
 }

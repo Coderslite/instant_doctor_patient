@@ -28,6 +28,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Obx(() {
+        // ignore: unused_local_variable
         bool isDarkMode = settingsController.isDarkMode.value;
 
         return SafeArea(

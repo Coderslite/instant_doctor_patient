@@ -2,14 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/main.dart';
+import 'package:instant_doctor/models/UserModel.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:instant_doctor/services/format_number.dart';
 import 'package:nb_utils/nb_utils.dart';
 
-import '../../home/Root.dart';
+import '../../../services/is_email.dart';
 
 class SendFundScreen extends StatefulWidget {
   const SendFundScreen({super.key});
@@ -80,11 +80,11 @@ class _SendFundScreenState extends State<SendFundScreen> {
                       ),
                       20.height,
                       Text(
-                        "Receiver Email",
+                        "Receiver Email / Tag",
                         style: primaryTextStyle(),
                       ),
                       AppTextField(
-                        textFieldType: TextFieldType.EMAIL,
+                        textFieldType: TextFieldType.OTHER,
                         controller: emailController,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
@@ -105,17 +105,24 @@ class _SendFundScreenState extends State<SendFundScreen> {
                       onTap: () async {
                         if (_formKey.currentState!.validate()) {
                           try {
+                            UserModel? user;
                             isSending = true;
                             setState(() {});
-                            var user = await userService.getUserByEmail(
-                                email: emailController.text);
+                            if (isEmail(emailController.text)) {
+                              user = await userService.getUserByEmail(
+                                  email: emailController.text);
+                            } else {
+                              user = await userService.getUserByTag(
+                                  tag: emailController.text);
+                            }
+
                             if (user != null) {
                               showDialog(
                                   context: context,
                                   builder: (context) {
                                     return AlertDialog(
                                       title: Text(
-                                        "Proceed to Send ${formatAmount(int.parse(amountController.text))} to ${user.firstName} ${user.lastName} ?",
+                                        "Proceed to Send ${formatAmount(int.parse(amountController.text))} to ${user!.firstName} ${user.lastName} ?",
                                         style: primaryTextStyle(size: 16),
                                       ),
                                       actions: [
@@ -141,8 +148,8 @@ class _SendFundScreenState extends State<SendFundScreen> {
                                               setState(() {});
                                               var result =
                                                   await walletService.sendFunds(
-                                                      email:
-                                                          emailController.text,
+                                                      email: user!.email
+                                                          .validate(),
                                                       amount: int.parse(
                                                           amountController
                                                               .text),
@@ -168,7 +175,7 @@ class _SendFundScreenState extends State<SendFundScreen> {
                                     );
                                   });
                             } else {
-                              toast("No User with this email");
+                              toast("User not found");
                             }
                           } finally {
                             isSending = false;

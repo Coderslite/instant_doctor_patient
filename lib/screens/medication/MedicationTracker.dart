@@ -5,7 +5,6 @@ import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/MedicationModel.dart';
 import 'package:instant_doctor/screens/medication/ActiveMedication.dart';
 import 'package:instant_doctor/screens/medication/AddMedication.dart';
-import 'package:instant_doctor/screens/medication/CompleteMedication.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../services/GetUserId.dart';

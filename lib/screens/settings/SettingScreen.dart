@@ -18,10 +18,17 @@ class _SettingScreenState extends State<SettingScreen> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            Text(
-              "Settings",
-              style: boldTextStyle(size: 18),
-            ),
+               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  BackButton(),
+                  Text(
+                    "Settings",
+                    style: boldTextStyle(),
+                  ),
+                  Text("   "),
+                ],
+              ),
             20.height,
             SwitchListTile(
               value: settingsController.isDarkMode.value ? true : false,

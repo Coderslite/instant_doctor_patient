@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:instant_doctor/component/Call.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/models/UserModel.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -17,7 +16,6 @@ class BookAppointmentScreen extends StatefulWidget {
 }
 
 class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
-  List<DateTime?> _dates = [];
   bool panelOpened = false;
   var controller = PanelController();
   var pageController = PageController();

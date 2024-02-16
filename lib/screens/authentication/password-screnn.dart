@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/controllers/AuthenticationController.dart';
-import 'package:instant_doctor/screens/authentication/otp_screen.dart';
 import 'package:instant_doctor/screens/authentication/success_reset.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -16,12 +15,14 @@ class PasswordScreen extends StatefulWidget {
   final String? phone;
   final String? email;
   final String? gender;
+  final String? referredBy;
   final bool isResetPassword;
   const PasswordScreen({
     super.key,
     required this.isResetPassword,
     this.firstname,
     this.lastname,
+    this.referredBy,
     this.phone,
     this.email,
     this.gender,
@@ -51,7 +52,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/images/bg1.png"),
+                image: AssetImage("assets/images/bg3.png"),
                 fit: BoxFit.cover,
               ),
             ),
@@ -66,7 +67,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
                       children: [
                         Text(
                           "Almost Done",
-                          style: primaryTextStyle(color: whiteColor),
+                          style: primaryTextStyle(),
                         ),
                       ],
                     ).visible(!widget.isResetPassword),
@@ -78,7 +79,6 @@ class _PasswordScreenState extends State<PasswordScreen> {
                               ? "Reset Password"
                               : "Password",
                           style: boldTextStyle(
-                            color: whiteColor,
                             size: 32,
                             weight: FontWeight.bold,
                           ),
@@ -91,33 +91,27 @@ class _PasswordScreenState extends State<PasswordScreen> {
                       obscuringCharacter: "*",
                       controller: pass1,
                       isPassword: true,
-                      textStyle: primaryTextStyle(size: 14, color: black),
+                      textStyle: primaryTextStyle(
+                        size: 14,
+                      ),
                       decoration: InputDecoration(
-                        filled: true,
-                        fillColor: whiteColor,
                         label: Text(
                           "Password",
-                          style: primaryTextStyle(color: black),
+                          style: primaryTextStyle(),
                         ),
                         contentPadding: const EdgeInsetsDirectional.symmetric(
-                            vertical: 10, horizontal: 10),
+                            vertical: 5, horizontal: 10),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(
-                            color: whiteColor,
-                          ),
-                        ),
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide:
+                                BorderSide(color: context.dividerColor)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(
-                            color: whiteColor,
-                          ),
+                          borderSide: BorderSide(color: context.dividerColor),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(
-                            color: whiteColor,
-                          ),
+                          borderSide: BorderSide(color: context.dividerColor),
                         ),
                       ),
                     ),
@@ -127,33 +121,27 @@ class _PasswordScreenState extends State<PasswordScreen> {
                       obscuringCharacter: "*",
                       isPassword: true,
                       controller: pass2,
-                      textStyle: primaryTextStyle(size: 14, color: black),
+                      textStyle: primaryTextStyle(
+                        size: 14,
+                      ),
                       decoration: InputDecoration(
-                        filled: true,
-                        fillColor: whiteColor,
                         label: Text(
                           "Retype Password",
-                          style: primaryTextStyle(color: black),
+                          style: primaryTextStyle(),
                         ),
                         contentPadding: const EdgeInsetsDirectional.symmetric(
-                            vertical: 10, horizontal: 10),
+                            vertical: 5, horizontal: 10),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(
-                            color: whiteColor,
-                          ),
-                        ),
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide:
+                                BorderSide(color: context.dividerColor)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(
-                            color: whiteColor,
-                          ),
+                          borderSide: BorderSide(color: context.dividerColor),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(
-                            color: whiteColor,
-                          ),
+                          borderSide: BorderSide(color: context.dividerColor),
                         ),
                       ),
                     ),
@@ -161,7 +149,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
                     Row(
                       children: [
                         Checkbox(
-                            activeColor: white,
+                            activeColor: context.dividerColor,
                             checkColor: kPrimary,
                             value: isChecked,
                             onChanged: (val) {
@@ -172,9 +160,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
                           width: MediaQuery.of(context).size.width / 1.3,
                           child: Text(
                             "I agree that all information provided in this section are valid .",
-                            style: primaryTextStyle(
-                              color: whiteColor,
-                            ),
+                            style: primaryTextStyle(),
                           ),
                         )
                       ],
@@ -187,6 +173,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
                         .visible(authenticationController.isLoading.value),
                     AppButton(
                       width: double.infinity,
+                      textColor: white,
                       onTap: () {
                         if (_formKey.currentState!.validate()) {
                           if (pass1.text == pass2.text) {
@@ -199,12 +186,14 @@ class _PasswordScreenState extends State<PasswordScreen> {
                                     password: pass1.text,
                                     phoneNumber: widget.phone!,
                                     gender: widget.gender!,
+                                    referredBy: widget.referredBy.validate(),
                                     context: context);
                           } else {
                             toast("Password does not match");
                           }
                         }
                       },
+                      color: kPrimary,
                       text: "Continue",
                     ).visible(!authenticationController.isLoading.value),
                   ],

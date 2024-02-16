@@ -1,9 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/UserModel.dart';
 import 'package:instant_doctor/services/BaseService.dart';
-import 'package:nb_utils/nb_utils.dart';
 
 class UserService extends BaseService {
   var userCol = db.collection("Users");
@@ -54,6 +52,16 @@ class UserService extends BaseService {
 
   Future<UserModel?> getUserByEmail({required String email}) async {
     var userRef = await userCol.where('email', isEqualTo: email).get();
+    if (userRef.docs.isNotEmpty) {
+      var userData = userRef.docs.first.data();
+      return UserModel.fromJson(userData);
+    } else {
+      return null;
+    }
+  }
+
+    Future<UserModel?> getUserByTag({required String tag}) async {
+    var userRef = await userCol.where('tag', isEqualTo: tag).get();
     if (userRef.docs.isNotEmpty) {
       var userData = userRef.docs.first.data();
       return UserModel.fromJson(userData);

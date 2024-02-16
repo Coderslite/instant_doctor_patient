@@ -6,7 +6,6 @@ import 'package:instant_doctor/services/WalletService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 class PaymentController extends GetxController {
-  var currency = 'NGN'.obs;
   var amount = '0'.obs;
   var isLoading = false.obs;
   WalletService walletService = WalletService();

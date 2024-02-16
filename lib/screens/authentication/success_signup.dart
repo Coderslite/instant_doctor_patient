@@ -28,7 +28,7 @@ class _SuccessSignUpState extends State<SuccessSignUp> {
           padding: const EdgeInsets.all(20),
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage("assets/images/bg5.png"),
+              image: AssetImage("assets/images/bg3.png"),
               fit: BoxFit.cover,
             ),
           ),

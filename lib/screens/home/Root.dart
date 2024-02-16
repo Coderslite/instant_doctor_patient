@@ -1,15 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
-import 'package:instant_doctor/controllers/UserController.dart';
-import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/screens/profile/Profile.dart';
 import 'package:instant_doctor/services/UserService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../constant/constants.dart';
+import '../../services/GetUserId.dart';
 import '../appointment/Appointment.dart';
 import '../wallet/WalletScreen.dart';
 import 'HomeScreen.dart';
@@ -24,9 +22,9 @@ class Root extends StatefulWidget {
 class RootState extends State<Root> with WidgetsBindingObserver {
   int selectedIndex = 0;
   UserService userService = UserService();
-  UserController userController = Get.put(UserController());
   @override
   void initState() {
+      getUserId();
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     handleOnline();

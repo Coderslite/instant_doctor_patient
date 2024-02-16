@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/screens/authentication/password-screnn.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
@@ -6,7 +7,9 @@ import 'package:nb_utils/nb_utils.dart';
 
 class SignUpScreen extends StatefulWidget {
   final String email;
-  const SignUpScreen({super.key, required this.email});
+  final String? referredBy;
+  const SignUpScreen(
+      {super.key, required this.email, required this.referredBy});
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -19,8 +22,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   var firstnameController = TextEditingController();
   var lastnameController = TextEditingController();
   var phoneController = TextEditingController();
+  var referredBy = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    referredBy.text = widget.referredBy.validate();
     return KeyboardDismisser(
       child: Scaffold(
         body: Container(
@@ -29,7 +34,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           padding: const EdgeInsets.all(20),
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage("assets/images/bg1.png"),
+              image: AssetImage("assets/images/bg3.png"),
               fit: BoxFit.cover,
             ),
           ),
@@ -45,7 +50,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     children: [
                       Text(
                         "Please fill in the following details",
-                        style: primaryTextStyle(color: whiteColor),
+                        style: primaryTextStyle(color: context.iconColor),
                       ),
                     ],
                   ),
@@ -55,7 +60,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Text(
                         "Sign Up",
                         style: boldTextStyle(
-                          color: whiteColor,
                           size: 32,
                           weight: FontWeight.bold,
                         ),
@@ -67,88 +71,80 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     enabled: false,
                     textFieldType: TextFieldType.EMAIL,
                     initialValue: widget.email,
-                    textStyle: primaryTextStyle(size: 14, color: black),
+                    textStyle: primaryTextStyle(
+                      size: 14,
+                    ),
                     decoration: InputDecoration(
-                      filled: true,
-                      fillColor: whiteColor,
                       contentPadding: const EdgeInsetsDirectional.symmetric(
-                          vertical: 10, horizontal: 10),
+                          vertical: 5, horizontal: 10),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(color: whiteColor)),
+                          borderSide: BorderSide(color: context.dividerColor)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(
-                          color: whiteColor,
-                        ),
+                        borderSide: BorderSide(color: context.dividerColor),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(
-                          color: whiteColor,
-                        ),
+                        borderSide: BorderSide(color: context.dividerColor),
                       ),
                     ),
                   ),
                   20.height,
                   AppTextField(
                     textFieldType: TextFieldType.NAME,
-                    textStyle: primaryTextStyle(size: 14, color: black),
+                    textStyle: primaryTextStyle(
+                      size: 14,
+                    ),
                     controller: firstnameController,
                     decoration: InputDecoration(
-                      filled: true,
-                      fillColor: whiteColor,
                       label: Text(
                         "Firstname",
-                        style: primaryTextStyle(size: 14, color: black),
+                        style: primaryTextStyle(
+                          size: 14,
+                        ),
                       ),
                       contentPadding: const EdgeInsetsDirectional.symmetric(
                           vertical: 5, horizontal: 10),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(color: whiteColor)),
+                          borderSide: BorderSide(color: context.dividerColor)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(
-                          color: whiteColor,
-                        ),
+                        borderSide: BorderSide(color: context.dividerColor),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(
-                          color: whiteColor,
-                        ),
+                        borderSide: BorderSide(color: context.dividerColor),
                       ),
                     ),
                   ),
                   20.height,
                   AppTextField(
                     textFieldType: TextFieldType.NAME,
-                    textStyle: primaryTextStyle(size: 14, color: black),
+                    textStyle: primaryTextStyle(
+                      size: 14,
+                    ),
                     controller: lastnameController,
                     decoration: InputDecoration(
-                      filled: true,
-                      fillColor: whiteColor,
                       label: Text(
                         "Lastname",
-                        style: primaryTextStyle(size: 14, color: black),
+                        style: primaryTextStyle(
+                          size: 14,
+                        ),
                       ),
                       contentPadding: const EdgeInsetsDirectional.symmetric(
-                          vertical: 10, horizontal: 10),
+                          vertical: 5, horizontal: 10),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(color: whiteColor)),
+                          borderSide: BorderSide(color: context.dividerColor)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(
-                          color: whiteColor,
-                        ),
+                        borderSide: BorderSide(color: context.dividerColor),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(
-                          color: whiteColor,
-                        ),
+                        borderSide: BorderSide(color: context.dividerColor),
                       ),
                     ),
                   ),
@@ -160,31 +156,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       }
                       return null;
                     },
-                    style: primaryTextStyle(size: 14, color: black),
+                    style: primaryTextStyle(
+                      size: 14,
+                    ),
+                    dropdownTextStyle: primaryTextStyle(
+                      size: 14,
+                    ),
                     controller: phoneController,
                     decoration: InputDecoration(
-                      filled: true,
-                      fillColor: whiteColor,
                       label: Text(
                         "Phone Number",
-                        style: primaryTextStyle(size: 14, color: black),
+                        style: primaryTextStyle(
+                          size: 14,
+                        ),
                       ),
                       contentPadding: const EdgeInsetsDirectional.symmetric(
-                          vertical: 10, horizontal: 10),
+                          vertical: 5, horizontal: 10),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(color: whiteColor)),
+                          borderSide: BorderSide(color: context.dividerColor)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(
-                          color: whiteColor,
-                        ),
+                        borderSide: BorderSide(color: context.dividerColor),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(
-                          color: whiteColor,
-                        ),
+                        borderSide: BorderSide(color: context.dividerColor),
                       ),
                     ),
                     initialCountryCode: 'NG',
@@ -195,7 +192,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     children: [
                       Text(
                         "Gender",
-                        style: boldTextStyle(color: whiteColor, size: 14),
+                        style: boldTextStyle(size: 14),
                       ),
                     ],
                   ),
@@ -204,7 +201,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Row(
                         children: [
                           Radio(
-                            activeColor: whiteColor,
+                            activeColor: kPrimary,
                             value: "Male",
                             groupValue: gender,
                             onChanged: (val) {
@@ -214,8 +211,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           Text(
                             "Male",
-                            style:
-                                primaryTextStyle(color: whiteColor, size: 14),
+                            style: primaryTextStyle(size: 14),
                           ),
                         ],
                       ),
@@ -223,7 +219,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Row(
                         children: [
                           Radio(
-                            activeColor: whiteColor,
+                            activeColor: kPrimary,
                             value: "Female",
                             groupValue: gender,
                             onChanged: (val) {
@@ -234,7 +230,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           Text(
                             "Female",
                             style: primaryTextStyle(
-                              color: whiteColor,
                               size: 14,
                             ),
                           ),
@@ -242,6 +237,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ],
                   ),
+
+                  20.height,
+                  AppTextField(
+                    textFieldType: TextFieldType.OTHER,
+                    textStyle: primaryTextStyle(size: 14),
+                    initialValue: widget.referredBy.validate(),
+                    controller:referredBy,
+                    decoration: InputDecoration(
+                      label: Text(
+                        "Referred By",
+                        style: primaryTextStyle(size: 14),
+                      ),
+                      contentPadding: const EdgeInsetsDirectional.symmetric(
+                          vertical: 5, horizontal: 10),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: context.dividerColor)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: context.dividerColor),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide(color: context.dividerColor),
+                      ),
+                    ),
+                  ),
+
                   30.height,
                   SizedBox(
                     width: double.infinity,
@@ -255,9 +278,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             phone: phoneController.text,
                             gender: gender,
                             isResetPassword: false,
+                            referredBy: referredBy.text,
                           ).launch(context);
                         }
                       },
+                      color: kPrimary,
                       text: "Continue",
                     ),
                   ),

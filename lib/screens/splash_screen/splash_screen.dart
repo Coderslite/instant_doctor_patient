@@ -1,13 +1,10 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/main.dart';
-import 'package:instant_doctor/screens/chat/VideoCall.dart';
+import 'package:instant_doctor/screens/authentication/email_screen.dart';
 import 'package:nb_utils/nb_utils.dart';
 
-import '../../controllers/FirebaseMessaging.dart';
-import '../../controllers/IncomingCallController.dart';
 import '../../services/GetUserId.dart';
 import '../home/Root.dart';
 import '../onboarding/onboarding.dart';
@@ -20,6 +17,10 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  FirebaseDynamicLinks dynamicLinks = FirebaseDynamicLinks.instance;
+  String link = 'https://instantdoctor.page.link/refer';
+  String? userId = '';
+
   handleNext() async {
     getUserId();
     Future.delayed(const Duration(seconds: 3)).then((value) {
@@ -31,29 +32,46 @@ class _SplashScreenState extends State<SplashScreen> {
     });
   }
 
-  checkForInitialMessage() async {
-    RemoteMessage? message = await firebaseMessaging.getInitialMessage();
-    if (message != null) {
-      var payload = message.data;
-      toast("there is message");
-      if (payload['type'] == 'Call') {
-        Future.delayed(const Duration(seconds: 3)).then((value) {
-          toast("${payload['id']}");
-          IncomingCall().showCalling(payload['id']);
-          // VideoCall(appointmentId: payload['id']).launch(context);
-        });
-      } else {
-        toast("not a call messge");
-      }
+  checkDynamicLink() async {
+    final PendingDynamicLinkData? initialLink =
+        await FirebaseDynamicLinks.instance.getDynamicLink(Uri.parse(link));
+    final Uri? uri = initialLink?.link;
+    final queryParams = uri?.queryParameters;
+    userId = queryParams?['userId'].toString();
+    setState(() {});
+    if (userId != 'null' && userId != null) {
+      Future.delayed(const Duration(seconds: 3)).then((value) {
+        EmailScreen(
+          userId: userId,
+        ).launch(context);
+      });
     } else {
       handleNext();
-      toast("no message gotten");
     }
+  }
+
+  Future<void> initDynamicLinks() async {
+    dynamicLinks.onLink.listen((dynamicLinkData) {
+      print(dynamicLinkData);
+      final Uri uri = dynamicLinkData.link;
+      final queryParams = uri.queryParameters;
+      final referral = queryParams['userId'].toString();
+      if (referral.toString() != 'null') {
+        Future.delayed(const Duration(seconds: 1)).then((value) {
+          EmailScreen(userId: referral).launch(context);
+        });
+      }
+    }).onError((error) {
+      print('onLink error');
+      print(error.message);
+    });
   }
 
   @override
   void initState() {
-    checkForInitialMessage();
+    initDynamicLinks();
+    checkDynamicLink();
+
     super.initState();
   }
 

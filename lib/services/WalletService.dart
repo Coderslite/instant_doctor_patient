@@ -1,4 +1,3 @@
-import 'package:get/get.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/services/BaseService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';

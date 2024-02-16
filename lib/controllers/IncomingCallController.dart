@@ -1,22 +1,27 @@
 import 'package:flutter_incoming_call/flutter_incoming_call.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/screens/chat/VideoCall.dart';
+
+import '../screens/home/Root.dart';
 
 class IncomingCall {
   showCalling(String appointmentId) async {
+    var appointment =
+        await appointmentService.getAppointment(appointmentId: appointmentId);
+    var docId = appointment.doctorId;
+    var doctor = await userService.getProfileById(userId: docId!);
     FlutterIncomingCall.configure(
         appName: 'instant doctor',
         duration: 30000,
         android: ConfigAndroid(
           vibration: true,
-          ringtonePath: 'default',
           channelId: 'calls',
           channelName: 'Calls channel name',
           channelDescription: 'Calls channel description',
         ),
         ios: ConfigIOS(
           iconName: 'AppIcon40x40',
-          ringtonePath: null,
           includesCallsInRecents: false,
           supportsVideo: true,
           maximumCallGroups: 2,
@@ -31,6 +36,7 @@ class IncomingCall {
         }
         if (event.action == CallAction.decline) {
           FlutterIncomingCall.endCall(appointmentId);
+          Get.off(Root());
         }
       } else if (event is HoldEvent) {
         // IOS
@@ -44,6 +50,12 @@ class IncomingCall {
     });
 
     FlutterIncomingCall.displayIncomingCall(
-        appointmentId, 'Incoming Call...', '', '', HandleType.generic, true);
+        "${doctor.id}",
+        'Incoming Call from ${doctor.firstName}  ${doctor.lastName}...',
+        doctor.photoUrl ??
+            "https://www.pngarts.com/files/5/Avatar-Face-Transparent.png",
+        '',
+        HandleType.generic,
+        true);
   }
 }

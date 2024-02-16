@@ -72,6 +72,10 @@ dependencies:
   zego_uikit_prebuilt_call: ^4.1.9
   flutter_ringtone_player: ^3.2.0
   flutter_incoming_call: ^0.1.2
+  firebase_dynamic_links: ^5.4.13
+  share_plus: ^7.2.2
+  avatar_glow: ^3.0.1
+  url_launcher: ^6.2.4
   
   
 
@@ -88,7 +92,14 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
-  change_app_package_name: 
+  change_app_package_name:
+  flutter_launcher_icons: "^0.13.1"
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/images/logo2.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

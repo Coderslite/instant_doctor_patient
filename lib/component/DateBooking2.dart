@@ -15,7 +15,6 @@ import '../controllers/BookingController.dart';
 import '../services/formatDate.dart';
 import '../services/formatDuration.dart';
 import '../services/get_weekday.dart';
-import 'SuccessAppointment.dart';
 
 class DateBooking2 extends StatefulWidget {
   final bool panelOpened;
@@ -220,8 +219,10 @@ class _DateBooking2State extends State<DateBooking2> {
                                   bookingController.time!.minute);
                               var startTime =
                                   dateTime.difference(DateTime.now());
-                                     var now = Timestamp.now();
-                                   var isExpired = now.compareTo(Timestamp.fromDate(dateTime)) > 0;
+                              var now = Timestamp.now();
+                              var isExpired =
+                                  now.compareTo(Timestamp.fromDate(dateTime)) >
+                                      0;
                               return AlertDialog(
                                 content: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -258,8 +259,9 @@ class _DateBooking2State extends State<DateBooking2> {
                                       style: primaryTextStyle(size: 14),
                                     ),
                                     Text(
-                                      bookingController.duration.value,
-                                      style: boldTextStyle(size: 16),
+                                      formatDuration(Duration(
+                                          seconds: bookingController
+                                              .duration.value)),
                                     ),
                                     20.height,
                                     Text(
@@ -267,8 +269,12 @@ class _DateBooking2State extends State<DateBooking2> {
                                       style: primaryTextStyle(size: 14),
                                     ),
                                     Text(
-                                   isExpired?"Expired":   formatDuration(startTime),
-                                      style: boldTextStyle(size: 16,color:isExpired? fireBrick:null),
+                                      isExpired
+                                          ? "Expired"
+                                          : formatDuration(startTime),
+                                      style: boldTextStyle(
+                                          size: 16,
+                                          color: isExpired ? fireBrick : null),
                                     ),
                                     20.height,
                                     Row(
@@ -293,18 +299,15 @@ class _DateBooking2State extends State<DateBooking2> {
                                                     Navigator.pop(context);
                                                     isClickedSchedule = true;
                                                     setState(() {});
-                                        
-                                                        await bookingController
-                                                            .handleBookAppointment(
-                                                                docId: widget
-                                                                    .docId,
-                                                                userId:
-                                                                    userController
-                                                                        .userId
-                                                                        .value,
-                                                                context:
-                                                                    context);
-                                                 
+
+                                                    await bookingController
+                                                        .handleBookAppointment(
+                                                            docId: widget.docId,
+                                                            userId:
+                                                                userController
+                                                                    .userId
+                                                                    .value,
+                                                            context: context);
                                                   } finally {
                                                     isClickedSchedule = false;
                                                     setState(() {});

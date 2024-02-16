@@ -33,7 +33,7 @@ class _UploadLabResultState extends State<UploadLabResult> {
                     color: kPrimary,
                   ),
                   Text(
-                    "Upload Lap Result",
+                    "Upload Lab Result",
                     style: boldTextStyle(color: kPrimary),
                   ),
                   const Text("  "),

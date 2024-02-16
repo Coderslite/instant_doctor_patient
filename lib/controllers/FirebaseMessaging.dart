@@ -45,21 +45,23 @@ class FirebaseMessagings {
     var appointmentId = data['id'];
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'incoming_call_channel_id',
+      'com.instantdoctor_call',
       'Incoming Call',
       importance: Importance.max,
       priority: Priority.high,
-      playSound: false,
-      enableVibration: false,
+      playSound: true,
+      enableVibration: true,
       colorized: true,
       color: kPrimary,
       onlyAlertOnce: false,
+      timeoutAfter: 30000,
       ongoing: true,
-      audioAttributesUsage: AudioAttributesUsage.voiceCommunicationSignalling,
+      sound: RawResourceAndroidNotificationSound('tone1'),
       actions: [
         AndroidNotificationAction(
           'reject',
           'Reject',
+          titleColor: fireBrick,
         ),
         AndroidNotificationAction(
           'accept',
@@ -72,13 +74,26 @@ class FirebaseMessagings {
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
-    await flutterLocalNotificationsPlugin.show(
-      1,
-      message.notification!.title,
-      message.notification!.body,
-      platformChannelSpecifics,
-      payload: appointmentId,
-    );
+    bool canceled = false;
+
+    // Continuously show the notification until it's canceled
+    while (!canceled) {
+      await flutterLocalNotificationsPlugin.show(
+        appointmentId.hashCode,
+        message.notification!.title,
+        message.notification!.body,
+        platformChannelSpecifics,
+        payload: appointmentId,
+      );
+
+      // Check if the notification is still being displayed
+      canceled = await flutterLocalNotificationsPlugin
+          .pendingNotificationRequests()
+          .then((value) => value.isEmpty);
+
+      // Wait for a short period before showing the notification again
+      await Future.delayed(Duration(seconds: 3));
+    }
   }
 
   handleScheduleNotification(
@@ -151,7 +166,6 @@ class FirebaseMessagings {
         }
       });
 
-
       // Handle incoming messages and display notifications
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         var payload = message.data;
@@ -162,5 +176,12 @@ class FirebaseMessagings {
         }
       });
     }
+  }
+
+  Future<void> cancelNotification() async {
+    await flutterLocalNotificationsPlugin
+        .cancelAll(); // or specify specific notification ID to cancel
+    var prefs = await SharedPreferences.getInstance();
+    prefs.remove('AppointmentId');
   }
 }
