@@ -183,7 +183,7 @@ class _ReferScreenState extends State<ReferScreen> {
                                 });
                           }
                         }
-                        return CircularProgressIndicator().center();
+                        return const CircularProgressIndicator().center();
                       }),
                 )
               ],

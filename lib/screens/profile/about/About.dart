@@ -30,12 +30,12 @@ class _AboutScreenState extends State<AboutScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  BackButton(),
+                  const BackButton(),
                   Text(
                     "About Us",
                     style: boldTextStyle(),
                   ),
-                  Text("   "),
+                  const Text("   "),
                 ],
               ),
               20.height,
@@ -45,7 +45,7 @@ class _AboutScreenState extends State<AboutScreen> {
                   size: 30,
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 width: 200,
                 child: Divider(
                   height: 5,

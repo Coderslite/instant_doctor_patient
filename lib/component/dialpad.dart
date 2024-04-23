@@ -5,8 +5,8 @@ class CalculatorDialpad extends StatelessWidget {
   final Function(String) onDigitPressed;
   final Function() onDeletePressed;
 
-  CalculatorDialpad(
-      {required this.onDigitPressed, required this.onDeletePressed});
+  const CalculatorDialpad(
+      {super.key, required this.onDigitPressed, required this.onDeletePressed});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class CalculatorDialpad extends StatelessWidget {
             _buildDigitButton('9', context),
           ],
         ),
-        SizedBox(height: 16.0),
+        const SizedBox(height: 16.0),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -30,7 +30,7 @@ class CalculatorDialpad extends StatelessWidget {
             _buildDigitButton('6', context),
           ],
         ),
-        SizedBox(height: 16.0),
+        const SizedBox(height: 16.0),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -39,7 +39,7 @@ class CalculatorDialpad extends StatelessWidget {
             _buildDigitButton('3', context),
           ],
         ),
-        SizedBox(height: 16.0),
+        const SizedBox(height: 16.0),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -56,8 +56,8 @@ class CalculatorDialpad extends StatelessWidget {
     return ElevatedButton(
       onPressed: () => onDigitPressed(digit),
       style: ElevatedButton.styleFrom(
-        shape: CircleBorder(),
-        padding: EdgeInsets.all(24.0),
+        shape: const CircleBorder(),
+        padding: const EdgeInsets.all(24.0),
         backgroundColor: context.cardColor,
       ),
       child: Text(
@@ -71,11 +71,11 @@ class CalculatorDialpad extends StatelessWidget {
     return ElevatedButton(
       onPressed: onDeletePressed,
       style: ElevatedButton.styleFrom(
-        shape: CircleBorder(),
-        padding: EdgeInsets.all(20.0),
+        shape: const CircleBorder(),
+        padding: const EdgeInsets.all(20.0),
         backgroundColor: Colors.redAccent,
       ),
-      child: Icon(
+      child: const Icon(
         Icons.backspace,
         color: Colors.white,
         size: 24.0,
@@ -84,7 +84,7 @@ class CalculatorDialpad extends StatelessWidget {
   }
 
   Widget _buildEmptyButton() {
-    return Container(
+    return const SizedBox(
       width: 72,
       height: 72,
     );

@@ -15,7 +15,7 @@ class _BioDataState extends State<BioData> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
             alignment: Alignment.bottomCenter,
             image: AssetImage("assets/images/bg6.png"),
@@ -31,12 +31,12 @@ class _BioDataState extends State<BioData> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    BackButton(),
+                    const BackButton(),
                     Text(
                       "Biodata",
                       style: boldTextStyle(color: kPrimary),
                     ),
-                    Text("   "),
+                    const Text("   "),
                   ],
                 ),
                 Expanded(child: Container())

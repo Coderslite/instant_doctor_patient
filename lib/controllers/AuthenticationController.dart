@@ -75,7 +75,7 @@ class AuthenticationController extends GetxController {
           }
         }
 
-        Root().launch(context);
+        const Root().launch(context);
       }
     } catch (error) {
       print(error);
@@ -97,7 +97,7 @@ class AuthenticationController extends GetxController {
       var prefs = await SharedPreferences.getInstance();
       prefs.setString("userId", value.user!.uid);
       userController.userId.value = value.user!.uid;
-      Root().launch(context);
+      const Root().launch(context);
       toast("Login Successful");
     }).catchError((err) {
       isLoading.value = false;
@@ -127,7 +127,7 @@ class AuthenticationController extends GetxController {
     );
     if (result) {
       isLoading.value = false;
-      SuccessSignUp().launch(context);
+      const SuccessSignUp().launch(context);
     } else {
       isLoading.value = false;
       toast("Something went wrong");

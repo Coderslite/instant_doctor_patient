@@ -21,12 +21,12 @@ class _SettingScreenState extends State<SettingScreen> {
                Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  BackButton(),
+                  const BackButton(),
                   Text(
                     "Settings",
                     style: boldTextStyle(),
                   ),
-                  Text("   "),
+                  const Text("   "),
                 ],
               ),
             20.height,

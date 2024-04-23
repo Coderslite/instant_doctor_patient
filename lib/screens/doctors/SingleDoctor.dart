@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/component/ProfileImage.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
 import 'package:instant_doctor/main.dart';
@@ -146,16 +147,8 @@ class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
                                               ),
                                             ],
                                           ),
-                                          width: 100,
-                                          height: 120,
-                                          child: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(40),
-                                            child: Image.asset(
-                                              "assets/images/doc1.png",
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
+                                          child: profileImage(
+                                              widget.doctor, 100, 100),
                                         ),
                                       ),
                                       Positioned(
@@ -296,7 +289,7 @@ class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
                                               : "Select Package",
                                       onTap: () {
                                         !profileCompleted
-                                            ? PersonalProfileScreen()
+                                            ? const PersonalProfileScreen()
                                                 .launch(context)
                                             : bookingController.price > 0
                                                 ? BookAppointmentScreen(
@@ -312,7 +305,8 @@ class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
                                     );
                                   });
                                 }
-                                return CircularProgressIndicator().center();
+                                return const CircularProgressIndicator()
+                                    .center();
                               }),
                           20.height,
                         ],
@@ -363,15 +357,7 @@ class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
                                   ),
                                 ],
                               ),
-                              width: 100,
-                              height: 120,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(40),
-                                child: Image.asset(
-                                  "assets/images/doc1.png",
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
+                              child: profileImage(widget.doctor, 100, 100),
                             ),
                           ),
                           Positioned(

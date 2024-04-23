@@ -18,7 +18,6 @@ import 'package:instant_doctor/services/ReferralService.dart';
 import 'package:instant_doctor/services/TransactionService.dart';
 import 'package:instant_doctor/services/WalletService.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:workmanager/workmanager.dart';
 
 import 'AppTheme.dart';
 import 'constant/color.dart';
@@ -57,10 +56,10 @@ HealthTipService healthTipService = HealthTipService();
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    alarmController.displayNotification();
-    return Future.value(true);
-  });
+  // Workmanager().executeTask((task, inputData) async {
+  //   alarmController.displayNotification();
+  //   return Future.value(true);
+  // });
 }
 
 @pragma('vm:entry-point')
@@ -94,17 +93,11 @@ Future<void> notificationTapBackground(
       );
       break;
     case 'reject':
-      print('Rejected call');
       FirebaseMessagings().cancelNotification();
       break;
   }
 }
 
-Future<void> handleCheckMedication() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? userToken = prefs.getString(MESSAGE_TOKEN);
-  print(userToken);
-}
 
 Future<void> initializeTheme() async {
   int themeModeIndex = getIntAsync(THEME_MODE_INDEX);
@@ -127,11 +120,11 @@ Future<void> initializeApp() async {
   //  await FirebaseAnalytics().logEvent(name: 'app_start');
   await initMethod();
   FirebaseMessagings().handleInit();
-  Workmanager().initialize(
-      callbackDispatcher, // The top level function, aka callbackDispatcher
-      isInDebugMode:
-          false // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
-      );
+  // Workmanager().initialize(
+  //     callbackDispatcher, // The top level function, aka callbackDispatcher
+  //     isInDebugMode:
+  //         false // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
+  //     );
   settingsController.handleGetVideoCallKeys();
 }
 

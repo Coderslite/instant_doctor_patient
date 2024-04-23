@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
@@ -86,11 +85,11 @@ class _WalletScreenState extends State<WalletScreen> {
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: () async {
-                      Future.delayed(Duration(seconds: 2));
+                      Future.delayed(const Duration(seconds: 2));
                       return;
                     },
                     child: SingleChildScrollView(
-                      physics: BouncingScrollPhysics(),
+                      physics: const BouncingScrollPhysics(),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -113,7 +112,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                 "transfer.png",
                                 () {
                                   if (userController.currency.isNotEmpty) {
-                                    SendFundScreen().launch(context);
+                                    const SendFundScreen().launch(context);
                                   } else {
                                     toast(
                                         "Please complete wallet setup to proceed");
@@ -169,7 +168,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                     );
                                   }
                                 }
-                                return Center(
+                                return const Center(
                                   child: CircularProgressIndicator(
                                     color: kPrimary,
                                   ),

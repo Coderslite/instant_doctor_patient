@@ -35,7 +35,7 @@ class _SuccessPassResetState extends State<SuccessPassReset> {
             20.height,
             AppButton(
               onTap: () {
-                LoginScreen().launch(context);
+                const LoginScreen().launch(context);
               },
               text: "Back to Sign in",
               textColor: kPrimary,

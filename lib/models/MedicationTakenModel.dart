@@ -37,10 +37,10 @@ class MedicationTakenModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'day': day != null ? day!.toDate().toIso8601String() : null,
+      'day': day?.toDate().toIso8601String(),
       'time': _timeOfDayToJson(time),
       'createdAt':
-          createdAt != null ? createdAt!.toDate().toIso8601String() : null,
+          createdAt?.toDate().toIso8601String(),
     };
   }
 

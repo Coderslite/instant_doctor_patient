@@ -23,7 +23,7 @@ class MedicationService extends BaseService {
 
       if (allMedications != null) {
         // Iterate through each saved medication
-        allMedications.forEach((medicationString) {
+        for (var medicationString in allMedications) {
           // Parse the medication string to a MedicationModel object
           MedicationModel medication =
               MedicationModel.fromJson(jsonDecode(medicationString));
@@ -32,7 +32,7 @@ class MedicationService extends BaseService {
           if (medication.userId == userId) {
             medications.add(medication);
           }
-        });
+        }
       }
 
       return medications;

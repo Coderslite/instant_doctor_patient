@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:photo_view/photo_view.dart';
 
@@ -24,7 +23,7 @@ class _ImagePreviewState extends State<ImagePreview> {
           "Preview",
           style: primaryTextStyle(color: kPrimary),
         ),
-        leading: BackButton(
+        leading: const BackButton(
           color: kPrimary,
         ),
       ),
@@ -42,7 +41,7 @@ class _ImagePreviewState extends State<ImagePreview> {
               Expanded(
                 child: PhotoView(
                   backgroundDecoration:
-                      BoxDecoration(color: Colors.transparent),
+                      const BoxDecoration(color: Colors.transparent),
                   imageProvider: CachedNetworkImageProvider(widget.imageUrl),
                 ),
               ),

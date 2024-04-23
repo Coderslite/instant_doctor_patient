@@ -21,12 +21,12 @@ class _HelpScreenState extends State<HelpScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  BackButton(),
+                  const BackButton(),
                   Text(
                     "Get Help",
                     style: boldTextStyle(),
                   ),
-                  Text("   "),
+                  const Text("   "),
                 ],
               ),
               20.height,

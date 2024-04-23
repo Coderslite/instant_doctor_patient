@@ -56,7 +56,7 @@ Padding eachTransaction(
             Text(
               transaction.transactionType == TransactionType.debit.toString()
                   ? "-${formatAmount(transaction.amount!)}"
-                  : "${formatAmount(transaction.amount!)}",
+                  : formatAmount(transaction.amount!),
               style: boldTextStyle(
                 color: transaction.transactionType ==
                         TransactionType.debit.toString()

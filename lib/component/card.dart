@@ -63,7 +63,7 @@ Container card(BuildContext context) {
                     return data!.currency.isEmptyOrNull
                         ? ElevatedButton(
                             onPressed: () {
-                              WalletSetupScreen().launch(context);
+                              const WalletSetupScreen().launch(context);
                             },
                             child: Text(
                               "Complete Setup",
@@ -77,7 +77,7 @@ Container card(BuildContext context) {
                             ),
                           );
                   }
-                  return CircularProgressIndicator(
+                  return const CircularProgressIndicator(
                     color: white,
                   ).center();
                 }),

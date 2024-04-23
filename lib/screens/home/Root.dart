@@ -15,6 +15,8 @@ import 'HomeScreen.dart';
 class Root extends StatefulWidget {
   static String tag = '/Root';
 
+  const Root({super.key});
+
   @override
   RootState createState() => RootState();
 }
@@ -24,7 +26,7 @@ class RootState extends State<Root> with WidgetsBindingObserver {
   UserService userService = UserService();
   @override
   void initState() {
-      getUserId();
+    getUserId();
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     handleOnline();
@@ -98,7 +100,7 @@ class RootState extends State<Root> with WidgetsBindingObserver {
         }
       },
       child: Scaffold(
-        bottomNavigationBar: getFooter(),
+        bottomSheet: getFooter(),
         body: SafeArea(
           child: IndexedStack(
             index: selectedIndex,
@@ -116,8 +118,8 @@ class RootState extends State<Root> with WidgetsBindingObserver {
 
   getFooter() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
-      height: 63,
+      // margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+      // height: 70,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(30),
         child: BottomNavigationBar(

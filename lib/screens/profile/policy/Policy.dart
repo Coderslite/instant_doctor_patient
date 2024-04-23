@@ -28,12 +28,12 @@ class _PolicyScreenState extends State<PolicyScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  BackButton(),
+                  const BackButton(),
                   Text(
                     "Policy",
                     style: boldTextStyle(),
                   ),
-                  Text("   "),
+                  const Text("   "),
                 ],
               ),
               20.height,

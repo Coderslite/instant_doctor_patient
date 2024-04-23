@@ -27,7 +27,7 @@ class MessageStatus {
 
 // const FIREBASE_URL = "https://instant-doctor.onrender.com";
 const FIREBASE_URL =
-    "https://parceldeliverylogistics.com/instantdoctorservice";
+    "https://us-central1-graphe-bible-1fd3f.cloudfunctions.net/api";
 
 class NotificatonType {
   static String chat = "Chat";

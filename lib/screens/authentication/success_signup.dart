@@ -56,7 +56,7 @@ class _SuccessSignUpState extends State<SuccessSignUp> {
                     textColor: whiteColor,
                     onTap: () {
                       if (_formKey.currentState!.validate()) {
-                        Root().launch(context);
+                        const Root().launch(context);
                       }
                     },
                     text: "Continue",

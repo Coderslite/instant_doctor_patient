@@ -80,7 +80,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                                 itemBuilder: (context, index) {
                                   var appointment = snapshot.data![index];
                                   return eachAppointment(
-                                          docId: appointment.doctorId,
+                                          docId:
+                                              appointment.doctorId.validate(),
                                           appointment: appointment)
                                       .onTap(() {
                                     ChatInterface(

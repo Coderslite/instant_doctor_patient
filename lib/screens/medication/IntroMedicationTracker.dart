@@ -19,9 +19,9 @@ class _IntroMedicationTrackerState extends State<IntroMedicationTracker> {
           padding: const EdgeInsets.all(20.0),
           child: Column(
             children: [
-              Row(
+              const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   BackButton(),
                 ],
               ),

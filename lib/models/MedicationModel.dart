@@ -80,14 +80,14 @@ class MedicationModel {
       'color': color,
       'prescription': prescription,
       'startTime':
-          startTime != null ? startTime!.toDate().toIso8601String() : null,
-      'endTime': endTime != null ? endTime!.toDate().toIso8601String() : null,
+          startTime?.toDate().toIso8601String(),
+      'endTime': endTime?.toDate().toIso8601String(),
       'morning': _timeOfDayToJson(morning), // Convert TimeOfDay to Map
       'midDay': _timeOfDayToJson(midDay), // Convert TimeOfDay to Map
       'evening': _timeOfDayToJson(evening), // Convert TimeOfDay to Map
       'interval': interval,
       'createdAt':
-          createdAt != null ? createdAt!.toDate().toIso8601String() : null,
+          createdAt?.toDate().toIso8601String(),
     };
   }
 

@@ -24,7 +24,7 @@ class _TimeRemainingState extends State<TimeRemaining> {
   @override
   void initState() {
     super.initState();
-    timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {});
     });
   }
@@ -38,9 +38,10 @@ class _TimeRemainingState extends State<TimeRemaining> {
   @override
   Widget build(BuildContext context) {
     var startTime = widget.appointment.startTime;
+    var endTime = widget.appointment.endTime;
     var now = Timestamp.now();
-    var isExpired = now.compareTo(startTime!) > 0;
-    var timeRemaining = startTime.toDate().difference(DateTime.now());
+    var isExpired = now.compareTo(endTime!) > 0;
+    var timeRemaining = endTime.toDate().difference(DateTime.now());
 
     return Row(
       children: [

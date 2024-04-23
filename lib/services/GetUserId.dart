@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../controllers/UserController.dart';
 

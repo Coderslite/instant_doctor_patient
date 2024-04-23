@@ -88,7 +88,7 @@ class _EmailScreenState extends State<EmailScreen> {
                       ),
                     ),
                     30.height,
-                    CircularProgressIndicator()
+                    const CircularProgressIndicator()
                         .center()
                         .visible(authenticationController.isLoading.value),
                     AppButton(
@@ -116,7 +116,7 @@ class _EmailScreenState extends State<EmailScreen> {
                       style: secondaryTextStyle(size: 20),
                     ),
                     10.height,
-                    CircularProgressIndicator()
+                    const CircularProgressIndicator()
                         .center()
                         .visible(authenticationController.googleSignin.value),
                     AppButton(

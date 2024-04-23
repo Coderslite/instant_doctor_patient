@@ -29,8 +29,11 @@ class FirebaseMessagings {
       color: kPrimary,
       enableLights: true,
     );
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
+    DarwinNotificationDetails darwinNotificationDetails =
+        const DarwinNotificationDetails();
+    NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: darwinNotificationDetails);
     await flutterLocalNotificationsPlugin.show(
       0,
       message.notification!.title,
@@ -71,8 +74,12 @@ class FirebaseMessagings {
         ),
       ],
     );
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    DarwinNotificationDetails darwinNotificationDetails =
+        const DarwinNotificationDetails();
+    NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: darwinNotificationDetails);
 
     bool canceled = false;
 
@@ -92,7 +99,7 @@ class FirebaseMessagings {
           .then((value) => value.isEmpty);
 
       // Wait for a short period before showing the notification again
-      await Future.delayed(Duration(seconds: 3));
+      await Future.delayed(const Duration(seconds: 3));
     }
   }
 
@@ -115,8 +122,11 @@ class FirebaseMessagings {
       // audioAttributesUsage: AudioAttributesUsage.alarm,
       sound: RawResourceAndroidNotificationSound('tone1'),
     );
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
+    DarwinNotificationDetails darwinNotificationDetails =
+        const DarwinNotificationDetails();
+    NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: darwinNotificationDetails);
     await flutterLocalNotificationsPlugin.zonedSchedule(
       UniqueKey().hashCode, // Notification ID
       title, // Notification title
@@ -139,8 +149,11 @@ class FirebaseMessagings {
 
       const AndroidInitializationSettings initializationSettingsAndroid =
           AndroidInitializationSettings('@mipmap/ic_launcher');
-      const InitializationSettings initializationSettings =
-          InitializationSettings(android: initializationSettingsAndroid);
+      DarwinInitializationSettings darwinInitializationSettings =
+          const DarwinInitializationSettings();
+      InitializationSettings initializationSettings = InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: darwinInitializationSettings);
       await flutterLocalNotificationsPlugin.initialize(
         initializationSettings,
         onDidReceiveNotificationResponse: notificationTapBackground,
@@ -150,8 +163,8 @@ class FirebaseMessagings {
 
       var result = await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()!
-          .requestNotificationsPermission();
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestNotificationsPermission();
 
       if (result == true) {
       } else {}

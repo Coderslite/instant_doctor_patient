@@ -134,7 +134,7 @@ class _HealthTipsHomeState extends State<HealthTipsHome> {
                                   return healthTipCard(data: tip);
                                 });
                           }
-                          return CircularProgressIndicator().center();
+                          return const CircularProgressIndicator().center();
                         }),
                   ),
                 )
@@ -151,7 +151,7 @@ class _HealthTipsHomeState extends State<HealthTipsHome> {
             child: Column(
               children: [
                 30.height,
-                Row(
+                const Row(
                   children: [
                     BackButton(),
                   ],

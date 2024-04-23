@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:intl/intl.dart';

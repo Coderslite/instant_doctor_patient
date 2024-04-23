@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:instant_doctor/component/eachDoctor.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/models/UserModel.dart';
@@ -18,7 +17,7 @@ class _MyDoctorsState extends State<MyDoctors> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
             alignment: Alignment.bottomCenter,
             image: AssetImage("assets/images/bg6.png"),
@@ -33,12 +32,12 @@ class _MyDoctorsState extends State<MyDoctors> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  BackButton(),
+                  const BackButton(),
                   Text(
                     "My Doctors",
                     style: boldTextStyle(color: kPrimary),
                   ),
-                  Text("   "),
+                  const Text("   "),
                 ],
               ),
               Expanded(

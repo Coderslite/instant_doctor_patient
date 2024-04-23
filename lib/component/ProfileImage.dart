@@ -8,7 +8,7 @@ import '../models/UserModel.dart';
 ClipOval profileImage(UserModel? data, double width, double height) {
   return ClipOval(
     child: Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: white,
       ),
       width: width,

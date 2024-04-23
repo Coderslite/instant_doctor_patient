@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
     getUserId();
     Future.delayed(const Duration(seconds: 3)).then((value) {
       if (user != null) {
-        return Root().launch(context);
+        return const Root().launch(context);
       } else {
         return const OnboardingScreen().launch(context);
       }

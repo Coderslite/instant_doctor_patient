@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       textFieldType: TextFieldType.EMAIL,
                       textStyle: primaryTextStyle(),
                       controller: emailController,
-                      autoFillHints: [AutofillHints.email],
+                      autoFillHints: const [AutofillHints.email],
                       decoration: InputDecoration(
                         label: Text(
                           "Email Address",
@@ -95,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       isPassword: true,
                       obscuringCharacter: "*",
                       textStyle: primaryTextStyle(),
-                      autoFillHints: [AutofillHints.password],
+                      autoFillHints: const [AutofillHints.password],
                       decoration: InputDecoration(
                         label: Text(
                           "Password",
@@ -115,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     30.height,
-                    CircularProgressIndicator(
+                    const CircularProgressIndicator(
                       color: kPrimary,
                     )
                         .center()

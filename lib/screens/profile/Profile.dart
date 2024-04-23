@@ -248,17 +248,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   }),
                   profileOption("Wallet Setup", "Please Complete Wallet Setup",
                       () {
-                    WalletSetupScreen().launch(context);
+                    const WalletSetupScreen().launch(context);
                   }).visible(userController.currency.isEmpty),
                   profileOption("Refer 💶", "Refer and earn bonus", () {
                     const ReferScreen().launch(context);
                   }),
                   profileOption("Privacy", "Security Settings", () {}),
                   profileOption("Policy", "Read about our policy", () {
-                    PolicyScreen().launch(context);
+                    const PolicyScreen().launch(context);
                   }),
                   profileOption("Get Help", "Contact us", () {
-                    HelpScreen().launch(context);
+                    const HelpScreen().launch(context);
                   }),
                   profileOption("About Us", "About Instant Doctor", () {
                     AboutScreen(

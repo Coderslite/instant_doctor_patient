@@ -61,7 +61,7 @@ class _SingleTipScreenState extends State<SingleTipScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                BackButton(color: white).marginOnly(top: 10),
+                const BackButton(color: white).marginOnly(top: 10),
                 Text(
                   widget.tip.title.validate(),
                   style: boldTextStyle(
@@ -75,7 +75,7 @@ class _SingleTipScreenState extends State<SingleTipScreen> {
                   glowShape: BoxShape.circle,
                   animate: true,
                   curve: Curves.fastOutSlowIn,
-                  child: CircleAvatar(
+                  child: const CircleAvatar(
                     radius: 20,
                     child: Icon(
                       Icons.arrow_downward,
@@ -95,7 +95,7 @@ class _SingleTipScreenState extends State<SingleTipScreen> {
         panel: Padding(
           padding: const EdgeInsets.all(20.0),
           child: SingleChildScrollView(
-            physics: BouncingScrollPhysics(),
+            physics: const BouncingScrollPhysics(),
             child: StreamBuilder<List<HealthTipModel>>(
                 stream: healthTipService.getHealthTipsByCategory(
                     category: widget.tip.category.validate()),
@@ -178,7 +178,7 @@ class _SingleTipScreenState extends State<SingleTipScreen> {
                       ],
                     );
                   }
-                  return CircularProgressIndicator().center();
+                  return const CircularProgressIndicator().center();
                 }),
           ),
         ),

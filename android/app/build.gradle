@@ -81,5 +81,15 @@ dependencies {
     implementation 'com.android.support:multidex:2.0.1'
     // coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.2.2'
     implementation 'androidx.window:window:1.0.0'
-    implementation 'androidx.window:window-java:1.0.0'    
+    implementation 'androidx.window:window-java:1.0.0'
+
+    // Force specific version of work-runtime
+    implementation ('androidx.work:work-runtime:2.8.1') {
+        // Exclude any transitive dependencies that might bring in different versions of work-runtime
+        exclude group: 'androidx.work'
+    }
+    implementation ('androidx.work:work-runtime-ktx:2.8.1') {
+        // Ensure work-runtime-ktx uses the same version as work-runtime
+        exclude group: 'androidx.work'
+    }
 }

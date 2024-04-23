@@ -68,7 +68,7 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
               Expanded(
                 child: GridView.count(
                   mainAxisSpacing: 20,
-                  physics: BouncingScrollPhysics(),
+                  physics: const BouncingScrollPhysics(),
                   crossAxisCount: 1,
                   children: prices,
                 ),

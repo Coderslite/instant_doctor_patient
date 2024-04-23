@@ -42,7 +42,7 @@ class _UploadLabResultState extends State<UploadLabResult> {
               20.height,
               DottedBorder(
                   borderType: BorderType.RRect,
-                  dashPattern: [10, 5],
+                  dashPattern: const [10, 5],
                   color: kPrimary,
                   radius: const Radius.circular(12),
                   padding: const EdgeInsets.all(6),

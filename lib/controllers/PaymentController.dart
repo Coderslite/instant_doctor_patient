@@ -19,7 +19,7 @@ class PaymentController extends GetxController {
       toast("Top up successful");
       amount.value = '0';
 
-      Root().launch(context);
+      const Root().launch(context);
     } catch (err) {
       toast(err.toString());
     } finally {

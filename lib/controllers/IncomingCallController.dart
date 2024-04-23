@@ -36,7 +36,7 @@ class IncomingCall {
         }
         if (event.action == CallAction.decline) {
           FlutterIncomingCall.endCall(appointmentId);
-          Get.off(Root());
+          Get.off(const Root());
         }
       } else if (event is HoldEvent) {
         // IOS

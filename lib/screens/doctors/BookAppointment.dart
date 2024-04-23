@@ -41,8 +41,8 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             color: kPrimary,
             child: Column(
               children: [
-                Row(
-                  children: const [
+                const Row(
+                  children: [
                     BackButton(),
                   ],
                 ),

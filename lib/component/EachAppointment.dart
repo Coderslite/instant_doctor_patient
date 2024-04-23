@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/component/ProfileImage.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/UserModel.dart';
@@ -10,7 +11,7 @@ import 'IsOnline.dart';
 import 'TimeRemaining.dart';
 
 Padding eachAppointment(
-    {required docId, required AppointmentModel appointment}) {
+    {required String docId, required AppointmentModel appointment}) {
   var date = appointment.createdAt!.toDate();
 
   return Padding(
@@ -31,14 +32,7 @@ Padding eachAppointment(
                     Stack(
                       alignment: Alignment.topRight,
                       children: [
-                        SizedBox(
-                          height: 50,
-                          width: 50,
-                          child: Image.asset(
-                            "assets/images/doc1.png",
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                        profileImage(data, 50, 50),
                         Positioned(
                           child:
                               isOnline(data!.status == ONLINE ? true : false),
@@ -102,7 +96,7 @@ Padding eachAppointment(
                       children: [
                         StreamBuilder<List<AppointmentConversationModel>>(
                             stream: appointmentService.getUnreadChat(
-                                appointment.id!, docId!),
+                                appointment.id.validate(), docId.validate()),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
                                 var data = snapshot.data!.length;

@@ -91,7 +91,7 @@ class ChatController extends GetxController {
               : msgType.value);
       isLoading.value = false;
 
-      sendNotification([token], "New Message", "${messageController.text}",
+      sendNotification([token], "New Message", messageController.text,
           msgId, NotificatonType.chat);
       messageController.clear();
     } finally {

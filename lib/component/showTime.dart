@@ -1,6 +1,5 @@
 import 'package:day_night_time_picker/day_night_time_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 
 class ShowTime extends StatefulWidget {
   const ShowTime({super.key});
@@ -25,8 +24,8 @@ class _ShowTimeState extends State<ShowTime> {
     return    showPicker(
                 context: context,
                 value: _time,
-                sunrise: TimeOfDay(hour: 6, minute: 0), // optional
-                sunset: TimeOfDay(hour: 18, minute: 0), // optional
+                sunrise: const TimeOfDay(hour: 6, minute: 0), // optional
+                sunset: const TimeOfDay(hour: 18, minute: 0), // optional
                 duskSpanInMinutes: 120, // optional
                 onChange: onTimeChanged,
             );

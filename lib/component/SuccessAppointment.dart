@@ -43,7 +43,7 @@ class _SuccessScreenState extends State<SuccessScreen> {
               40.height,
               AppButton(
                 onTap: () {
-                  Root().launch(context);
+                  const Root().launch(context);
                 },
                 text: "Done",
                 width: double.infinity,

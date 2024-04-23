@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:instant_doctor/component/ProfileImage.dart';
 import 'package:instant_doctor/main.dart';
@@ -50,7 +49,7 @@ StreamBuilder eachReferral(
                       ),
                     ),
                     Text(
-                      "${formatAmount(500)}",
+                      formatAmount(500),
                       style: boldTextStyle(
                         color: mediumSeaGreen,
                         size: 12,

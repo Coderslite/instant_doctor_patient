@@ -86,3 +86,5 @@ class BookingController extends GetxController {
     super.onInit();
   }
 }
+
+// sudo gem uninstall ffi && sudo gem install ffi -- --enable-libffi-alloc
