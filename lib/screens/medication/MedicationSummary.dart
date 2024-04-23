@@ -98,6 +98,8 @@ class _MedicationSummaryScreenState extends State<MedicationSummaryScreen> {
                     color: !isChecked ? grey : kPrimary,
                     textColor: white,
                     width: double.infinity,
+                    disabledColor: dimGray,
+                    disabledTextColor: white,
                     enabled: isChecked,
                   ).visible(!medicationController.isLoading.value),
                 ],

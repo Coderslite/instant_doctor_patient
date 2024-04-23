@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:instant_doctor/models/TransactionModel.dart';
 
@@ -15,6 +17,26 @@ class TransactionService {
     return transactionCollection
         .where('userId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
+        .limit(5)
+        .snapshots()
+        .map((event) => event.docs
+            .map((e) => TransactionModel.fromJson(e.data()))
+            .toList());
+  }
+
+  Stream<List<TransactionModel>> getReceivedTransaction(
+      {required String userId}) {
+    return transactionCollection
+        .where('transactionType', isEqualTo: 'Credit')
+        .snapshots()
+        .map((event) => event.docs
+            .map((e) => TransactionModel.fromJson(e.data()))
+            .toList());
+  }
+
+  Stream<List<TransactionModel>> getSentTransaction({required String userId}) {
+    return transactionCollection
+        .where('transactionType', isEqualTo: 'Debit')
         .snapshots()
         .map((event) => event.docs
             .map((e) => TransactionModel.fromJson(e.data()))

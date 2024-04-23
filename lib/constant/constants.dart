@@ -26,8 +26,7 @@ class MessageStatus {
 }
 
 // const FIREBASE_URL = "https://instant-doctor.onrender.com";
-const FIREBASE_URL =
-    "https://parceldeliverylogistics.com/instantdoctorservice";
+const FIREBASE_URL = "https://aurickenergylimited.com/instantdoctor";
 
 class NotificatonType {
   static String chat = "Chat";
@@ -35,5 +34,5 @@ class NotificatonType {
   static String appointment = "Appointment";
   static String medication = "Medication";
   static String call = "Call";
+  static String labResult = "LabResult";
 }
-

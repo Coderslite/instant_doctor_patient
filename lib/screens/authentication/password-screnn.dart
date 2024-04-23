@@ -166,9 +166,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
                       ],
                     ).visible(!widget.isResetPassword),
                     30.height,
-                    CircularProgressIndicator(
-                      color: white,
-                    )
+                    CircularProgressIndicator()
                         .center()
                         .visible(authenticationController.isLoading.value),
                     AppButton(

@@ -56,7 +56,7 @@ class _WalletSetupScreenState extends State<WalletSetupScreen> {
                             ],
                           ),
                           1.height,
-                          profileImage(data, 100, 100).center(),
+                          profileImage(data, 100, 100,context: context).center(),
                           30.height,
                           Text(
                             "Complete Wallet Setup",

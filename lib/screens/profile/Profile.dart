@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/AuthenticationController.dart';
+import 'package:instant_doctor/screens/appointment/reports/AllReports.dart';
+import 'package:instant_doctor/screens/chat/ImagePreview.dart';
 import 'package:instant_doctor/screens/profile/about/About.dart';
 import 'package:instant_doctor/screens/profile/wallet_setup/WalletSetup.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
@@ -83,8 +85,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           userId: userController.userId.value),
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
-                          var data = snapshot.data;
-                          return profileImage(data, 100, 100).center();
+                          var data = snapshot.data!;
+                          return profileImage(data, 100, 100, context: context)
+                              .center();
                         }
                         return const CircleAvatar(
                           radius: 100,
@@ -248,17 +251,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   }),
                   profileOption("Wallet Setup", "Please Complete Wallet Setup",
                       () {
-                    WalletSetupScreen().launch(context);
+                    const WalletSetupScreen().launch(context);
                   }).visible(userController.currency.isEmpty),
                   profileOption("Refer 💶", "Refer and earn bonus", () {
                     const ReferScreen().launch(context);
                   }),
                   profileOption("Privacy", "Security Settings", () {}),
                   profileOption("Policy", "Read about our policy", () {
-                    PolicyScreen().launch(context);
+                    const PolicyScreen().launch(context);
+                  }),
+                  profileOption("Reports", "All Report", () {
+                    const AllReportScreen().launch(context);
                   }),
                   profileOption("Get Help", "Contact us", () {
-                    HelpScreen().launch(context);
+                    const HelpScreen().launch(context);
                   }),
                   profileOption("About Us", "About Instant Doctor", () {
                     AboutScreen(

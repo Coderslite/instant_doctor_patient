@@ -7,7 +7,11 @@ class AppointmentModel {
   String? complaint;
   String? status;
   Timestamp? startTime;
+  Timestamp? endTime;
   Timestamp? createdAt;
+  Timestamp? updatedAt;
+  int? duration;
+  String? package;
   String? videocallToken;
 
   AppointmentModel({
@@ -17,7 +21,11 @@ class AppointmentModel {
     this.complaint,
     this.status,
     this.startTime,
+    this.endTime,
+    this.duration,
+    this.package,
     this.createdAt,
+    this.updatedAt,
     this.videocallToken,
   });
 
@@ -28,9 +36,12 @@ class AppointmentModel {
       doctorId: json['doctorId'],
       status: json['status'],
       startTime: json['startTime'],
+      endTime: json['endTime'],
       createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+      package: json['package'],
+      duration: json['duration'],
       videocallToken: json['videocallToken'],
-
     );
   }
 }

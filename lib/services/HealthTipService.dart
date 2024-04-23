@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/HealthTipModel.dart';
 import 'package:instant_doctor/services/BaseService.dart';

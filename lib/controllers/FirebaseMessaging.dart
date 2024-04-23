@@ -10,7 +10,6 @@ import 'package:nb_utils/nb_utils.dart';
 import '../constant/color.dart';
 import '../constant/constants.dart';
 import '../main.dart';
-import 'package:timezone/timezone.dart' as tz;
 
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -18,7 +17,8 @@ FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
 
 class FirebaseMessagings {
   void displayLocalNotification(RemoteMessage message) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+    AndroidNotification? android = message.notification?.android;
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       'com.instantdoctor',
       'Instant Doctor',
@@ -28,11 +28,38 @@ class FirebaseMessagings {
       colorized: true,
       color: kPrimary,
       enableLights: true,
+      icon: android?.smallIcon,
     );
-    const NotificationDetails platformChannelSpecifics =
+    NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.show(
-      0,
+      message.data.hashCode,
+      message.notification!.title,
+      message.notification!.body,
+      platformChannelSpecifics,
+      payload: message.data.toString(),
+    );
+  }
+
+  void displayScheduleLocalNotification(RemoteMessage message) async {
+    AndroidNotification? android = message.notification?.android;
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'com.instantdoctor.schedule',
+      'Instant Doctor',
+      channelShowBadge: true,
+      importance: Importance.max,
+      priority: Priority.high,
+      colorized: true,
+      color: kPrimary,
+      enableLights: true,
+      icon: android?.smallIcon,
+      sound: RawResourceAndroidNotificationSound('tone1'),
+    );
+    NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+      message.data['id'].hashCode,
       message.notification!.title,
       message.notification!.body,
       platformChannelSpecifics,
@@ -74,60 +101,12 @@ class FirebaseMessagings {
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
-    bool canceled = false;
-
-    // Continuously show the notification until it's canceled
-    while (!canceled) {
-      await flutterLocalNotificationsPlugin.show(
-        appointmentId.hashCode,
-        message.notification!.title,
-        message.notification!.body,
-        platformChannelSpecifics,
-        payload: appointmentId,
-      );
-
-      // Check if the notification is still being displayed
-      canceled = await flutterLocalNotificationsPlugin
-          .pendingNotificationRequests()
-          .then((value) => value.isEmpty);
-
-      // Wait for a short period before showing the notification again
-      await Future.delayed(Duration(seconds: 3));
-    }
-  }
-
-  handleScheduleNotification(
-      tz.TZDateTime scheduledTime, String title, String desc) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'com.instantdoctor.schedule',
-      'Instant Doctor',
-      channelShowBadge: true,
-      importance: Importance.max,
-      priority: Priority.high,
-      showWhen: true,
-      playSound: true,
-      ongoing: true,
-      colorized: true,
-      color: kPrimary,
-      enableLights: true,
-
-      // audioAttributesUsage: AudioAttributesUsage.alarm,
-      sound: RawResourceAndroidNotificationSound('tone1'),
-    );
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      UniqueKey().hashCode, // Notification ID
-      title, // Notification title
-      desc, // Notification body
-      scheduledTime, // Scheduled date and time
+    await flutterLocalNotificationsPlugin.show(
+      appointmentId.hashCode,
+      message.notification!.title,
+      message.notification!.body,
       platformChannelSpecifics,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      androidAllowWhileIdle: true,
-      androidScheduleMode:
-          AndroidScheduleMode.exactAllowWhileIdle, // New parameter
+      payload: appointmentId,
     );
   }
 
@@ -171,6 +150,9 @@ class FirebaseMessagings {
         var payload = message.data;
         if (payload['type'] == 'Call') {
           IncomingCall().showCalling(payload['id']);
+        } else if (payload['type'] == NotificatonType.appointment ||
+            payload['type'] == NotificatonType.medication) {
+          displayScheduleLocalNotification(message);
         } else {
           displayLocalNotification(message);
         }

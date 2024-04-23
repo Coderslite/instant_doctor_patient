@@ -1,6 +1,10 @@
+// ignore_for_file: file_names
+
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/UserController.dart';
@@ -9,6 +13,7 @@ import 'package:nb_utils/nb_utils.dart';
 
 import '../../component/EachAppointment.dart';
 import '../../controllers/SettingController.dart';
+import '../../main.dart';
 import '../../services/AppointmentService.dart';
 import '../chat/ChatInterface.dart';
 
@@ -79,17 +84,73 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                                 physics: const BouncingScrollPhysics(),
                                 itemBuilder: (context, index) {
                                   var appointment = snapshot.data![index];
-                                  return eachAppointment(
-                                          docId: appointment.doctorId,
-                                          appointment: appointment)
-                                      .onTap(() {
-                                    ChatInterface(
-                                      appointmentId: appointment.id!,
-                                      docId: appointment.doctorId!,
-                                      videocallToken:
-                                          appointment.videocallToken.validate(),
-                                    ).launch(context);
-                                  });
+                                  var startTime = appointment.startTime;
+                                  var endTime = appointment.endTime;
+                                  var now = Timestamp.now();
+                                  var isExpired = now.compareTo(endTime!) > 0;
+                                  var isOngoing =
+                                      now.compareTo(startTime!) >= 0 &&
+                                          now.compareTo(endTime) <= 0;
+
+                                  return Slidable(
+                                    enabled: isExpired,
+                                    key: ValueKey(appointment.id.validate()),
+                                    startActionPane: ActionPane(
+                                      // A motion is a widget used to control how the pane animates.
+                                      motion: const ScrollMotion(),
+
+                                      // A pane can dismiss the Slidable.
+                                      dismissible: DismissiblePane(
+                                          onDismissed: () async {
+                                        await appointmentService
+                                            .deleteAppointment(
+                                                appointmentId:
+                                                    appointment.id.validate());
+                                      }),
+
+                                      // All actions are defined in the children parameter.
+                                      children: [
+                                        // A SlidableAction can have an icon and/or a label.
+                                        SlidableAction(
+                                          onPressed: (s) async {
+                                            await appointmentService
+                                                .deleteAppointment(
+                                                    appointmentId: appointment
+                                                        .id
+                                                        .validate());
+                                          },
+                                          backgroundColor:
+                                              const Color(0xFFFE4A49),
+                                          foregroundColor: Colors.white,
+                                          icon: Icons.delete,
+                                          label: 'Delete',
+                                        ),
+                                        // SlidableAction(
+                                        //   onPressed: doNothing,
+                                        //   backgroundColor: Color(0xFF21B7CA),
+                                        //   foregroundColor: Colors.white,
+                                        //   icon: Icons.share,
+                                        //   label: 'Share',
+                                        // ),
+                                      ],
+                                    ),
+                                    child: eachAppointment(
+                                            docId: appointment.doctorId,
+                                            appointment: appointment,
+                                            isExpired: isExpired,
+                                            isOngoing: isOngoing)
+                                        .onTap(() {
+                                      ChatInterface(
+                                        appointmentId: appointment.id!,
+                                        docId: appointment.doctorId!,
+                                        appointment: appointment,
+                                        videocallToken: appointment
+                                            .videocallToken
+                                            .validate(),
+                                        isExpired: isExpired,
+                                      ).launch(context);
+                                    }),
+                                  );
                                 });
                           }
                         }

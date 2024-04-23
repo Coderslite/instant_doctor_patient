@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/component/ProfileImage.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/UserModel.dart';
@@ -9,8 +10,12 @@ import '../models/AppointmentModel.dart';
 import 'IsOnline.dart';
 import 'TimeRemaining.dart';
 
-Padding eachAppointment(
-    {required docId, required AppointmentModel appointment}) {
+Padding eachAppointment({
+  required docId,
+  required AppointmentModel appointment,
+  required bool isExpired,
+  required bool isOngoing,
+}) {
   var date = appointment.createdAt!.toDate();
 
   return Padding(
@@ -31,14 +36,7 @@ Padding eachAppointment(
                     Stack(
                       alignment: Alignment.topRight,
                       children: [
-                        SizedBox(
-                          height: 50,
-                          width: 50,
-                          child: Image.asset(
-                            "assets/images/doc1.png",
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                        profileImage(data, 60, 60, context: context),
                         Positioned(
                           child:
                               isOnline(data!.status == ONLINE ? true : false),
@@ -84,16 +82,10 @@ Padding eachAppointment(
                               ),
                             ],
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text(
-                                "Add Review",
-                                textAlign: TextAlign.right,
-                                style:
-                                    primaryTextStyle(color: orange, size: 12),
-                              ),
-                            ],
+                          AddReviewButton(
+                            appointment: appointment,
+                            isOngoing: isOngoing,
+                            isExpired: isExpired,
                           )
                         ],
                       ),
@@ -102,7 +94,7 @@ Padding eachAppointment(
                       children: [
                         StreamBuilder<List<AppointmentConversationModel>>(
                             stream: appointmentService.getUnreadChat(
-                                appointment.id!, docId!),
+                                appointment.id.validate(), docId!),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
                                 var data = snapshot.data!.length;
@@ -135,4 +127,51 @@ Padding eachAppointment(
           return const Text("");
         }),
   );
+}
+
+class AddReviewButton extends StatefulWidget {
+  final AppointmentModel appointment;
+  final bool isExpired;
+  final bool isOngoing;
+  const AddReviewButton(
+      {super.key,
+      required this.appointment,
+      required this.isExpired,
+      required this.isOngoing});
+
+  @override
+  State<AddReviewButton> createState() => _AddReviewButtonState();
+}
+
+class _AddReviewButtonState extends State<AddReviewButton> {
+  bool isReviewed = true;
+  handleCheck() async {
+    var res = await reviewService.getAppointmentReview(
+        docId: widget.appointment.doctorId.validate(),
+        appointmentId: widget.appointment.id.validate());
+    if (res != null) {
+      isReviewed = true;
+      setState(() {});
+    }
+  }
+
+  @override
+  void initState() {
+    handleCheck();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Text(
+          "Add Review",
+          textAlign: TextAlign.right,
+          style: primaryTextStyle(color: orange, size: 12),
+        ),
+      ],
+    ).visible(widget.isExpired && !widget.isOngoing && !isReviewed);
+  }
 }

@@ -20,7 +20,7 @@ class _SingleTipScreenState extends State<SingleTipScreen> {
   var controller = PanelController();
 
   handleViewTip() {
-    var newView = widget.tip.views! + 1;
+    var newView = widget.tip.views.validate() + 1;
     healthTipService.tipView(tipId: widget.tip.id!, newView: newView);
   }
 
@@ -47,46 +47,51 @@ class _SingleTipScreenState extends State<SingleTipScreen> {
               controller.open();
             }
           },
-          child: Container(
-            height: MediaQuery.of(context).size.height,
-            padding: const EdgeInsets.only(bottom: 60),
-            width: double.infinity,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: NetworkImage(widget.tip.image.validate()),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                BackButton(color: white).marginOnly(top: 10),
-                Text(
-                  widget.tip.title.validate(),
-                  style: boldTextStyle(
-                    size: 35,
-                    color: white,
-                  ),
-                ).center(),
-                AvatarGlow(
-                  startDelay: const Duration(milliseconds: 1000),
-                  glowColor: Colors.white,
-                  glowShape: BoxShape.circle,
-                  animate: true,
-                  curve: Curves.fastOutSlowIn,
-                  child: CircleAvatar(
-                    radius: 20,
-                    child: Icon(
-                      Icons.arrow_downward,
-                      size: 20,
-                    ),
-                  ).onTap(() {
-                    controller.open();
-                  }).center(),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                height: MediaQuery.of(context).size.height,
+                // padding: const EdgeInsets.only(bottom: 60),
+                width: double.infinity,
+                child: CachedNetworkImage(
+                  imageUrl: widget.tip.image.validate(),
+                  fit: BoxFit.cover,
                 ),
-              ],
-            ),
+              ),
+              Positioned(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    BackButton(color: white).marginOnly(top: 10),
+                    Text(
+                      widget.tip.title.validate(),
+                      style: boldTextStyle(
+                        size: 35,
+                        color: white,
+                      ),
+                    ).center(),
+                    AvatarGlow(
+                      startDelay: const Duration(milliseconds: 1000),
+                      glowColor: Colors.white,
+                      glowShape: BoxShape.circle,
+                      animate: true,
+                      curve: Curves.fastOutSlowIn,
+                      child: CircleAvatar(
+                        radius: 20,
+                        child: Icon(
+                          Icons.arrow_downward,
+                          size: 20,
+                        ),
+                      ).onTap(() {
+                        controller.open();
+                      }).center(),
+                    ).paddingOnly(bottom: 30),
+                  ],
+                ),
+              )
+            ],
           ),
         ),
         color: context.cardColor,

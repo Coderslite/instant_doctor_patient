@@ -38,23 +38,30 @@ class _TimeRemainingState extends State<TimeRemaining> {
   @override
   Widget build(BuildContext context) {
     var startTime = widget.appointment.startTime;
+    var endTime = widget.appointment.endTime;
     var now = Timestamp.now();
-    var isExpired = now.compareTo(startTime!) > 0;
+    var isExpired = now.compareTo(endTime!) > 0;
+    var isOngoing =
+        now.compareTo(startTime!) >= 0 && now.compareTo(endTime) <= 0;
     var timeRemaining = startTime.toDate().difference(DateTime.now());
+    var timeRemaining2 = endTime.toDate().difference(DateTime.now());
 
     return Row(
       children: [
-        const Icon(
+        Icon(
           Icons.visibility,
           size: 12,
-          color: dimGray,
+          color: isOngoing ? mediumSeaGreen : dimGray,
         ),
         5.width,
         Text(
-          isExpired
-              ? "Expired Session"
-              : "Starts in ${formatDuration(timeRemaining)}",
-          style: secondaryTextStyle(size: 10),
+          isOngoing
+              ? "Ongoing ${formatDuration(timeRemaining2)}"
+              : isExpired
+                  ? "Expired Session"
+                  : "Starts in ${formatDuration(timeRemaining)}",
+          style: secondaryTextStyle(
+              size: 10, color: isOngoing ? mediumSeaGreen : null),
         ),
       ],
     );

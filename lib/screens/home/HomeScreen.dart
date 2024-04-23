@@ -1,3 +1,7 @@
+// ignore_for_file: file_names
+
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
@@ -8,9 +12,11 @@ import 'package:instant_doctor/screens/appointment/AppointmentPricing.dart';
 import 'package:instant_doctor/screens/doctors/AllDoctors.dart';
 import 'package:instant_doctor/screens/doctors/SingleDoctor.dart';
 import 'package:instant_doctor/screens/healthtips/HealthTipsHome.dart';
+import 'package:instant_doctor/screens/lap_result/LabResult.dart';
 import 'package:instant_doctor/screens/medication/IntroMedicationTracker.dart';
 import 'package:instant_doctor/screens/notification/Notification.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import '../../component/ProfileImage.dart';
 import '../../component/eachDoctor.dart';
@@ -21,7 +27,6 @@ import '../../models/category_model.dart';
 import '../../services/GetUserId.dart';
 import '../../services/greetings.dart';
 import '../chat/VideoCall.dart';
-import '../lap_result/UploadLabResult.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,6 +38,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final SettingsController settingsController = Get.find();
 
+  var notificationKey = GlobalKey();
+  var medicationKey = GlobalKey();
+  var labResultKey = GlobalKey();
+  var bookSessionKey = GlobalKey();
+  var healthKey = GlobalKey();
+  var womenKey = GlobalKey();
+  List<TargetFocus> targetList = [];
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -50,12 +62,89 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void initState() {
+    targetList.addAll([
+      TargetFocus(keyTarget: notificationKey, contents: [
+        TargetContent(
+            child: Column(
+          children: [
+            Text(
+              "Click to view notification",
+              style: primaryTextStyle(
+                color: white,
+              ),
+            ),
+          ],
+        ))
+      ]),
+      TargetFocus(keyTarget: medicationKey, contents: [
+        TargetContent(
+            child: Column(
+          children: [
+            Text(
+              "Click to use our medication tracker system",
+              style: primaryTextStyle(
+                color: white,
+              ),
+            ),
+          ],
+        ))
+      ]),
+      TargetFocus(keyTarget: labResultKey, contents: [
+        TargetContent(
+            child: Column(
+          children: [
+            Text(
+              "Upload your lab / medical result for professional interpretation ",
+              style: primaryTextStyle(
+                color: white,
+              ),
+            ),
+          ],
+        ))
+      ]),
+      TargetFocus(keyTarget: healthKey, contents: [
+        TargetContent(
+            child: Column(
+          children: [
+            Text(
+              "Stay Update with Health Information",
+              style: primaryTextStyle(
+                color: white,
+              ),
+            ),
+          ],
+        ))
+      ]),
+      TargetFocus(keyTarget: womenKey, contents: [
+        TargetContent(
+            child: Column(
+          children: [
+            Text(
+              "View Women Health related tips",
+              style: primaryTextStyle(
+                color: white,
+              ),
+            ),
+          ],
+        ))
+      ]),
+    ]);
+    userController.isFirstTime.value == true
+        ? Future.delayed(Duration.zero, showTutorial)
+        : null;
+
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     checkForInitialMessage(context);
     List<Categories> categories = [
       Categories(
         name: "Health Tips",
         image: "health.png",
+        key: healthKey,
         onTap: () {
           const HealthTipsHome(
             tipsType: "Health Tips",
@@ -66,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Categories(
         name: "Women Health",
         image: "women_health.png",
+        key: womenKey,
         onTap: () {
           const HealthTipsHome(
             tipsType: "Women Health",
@@ -114,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             var data = snapshot.data;
                             return Row(
                               children: [
-                                profileImage(data, 40, 40),
+                                profileImage(data, 40, 40, context: context),
                                 10.width,
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,9 +227,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     Stack(
                       alignment: Alignment.topRight,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.notifications_active,
                           color: kPrimary,
+                          key: notificationKey,
                         ),
                         Positioned(
                             top: -4,
@@ -202,23 +293,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           physics: const BouncingScrollPhysics(),
                           child: Row(
                             children: [
-                              services(
-                                context,
-                                "medication_tracker.png",
-                                "Medication Tracker",
-                                () {
-                                  // const MedicationTracker().launch(context);
-                                  const IntroMedicationTracker()
-                                      .launch(context);
-                                },
-                              ),
+                              services(context, "medication_tracker.png",
+                                  "Medication Tracker", () {
+                                // const MedicationTracker().launch(context);
+                                const IntroMedicationTracker().launch(context);
+                              }, key: medicationKey),
                               services(
                                 context,
                                 "upload.png",
                                 "Upload Lab Result",
                                 () {
-                                  const UploadLabResult().launch(context);
+                                  const LabResultScreen().launch(context);
+                                  // showTutorial();
                                 },
+                                key: labResultKey,
                               ),
                               services(
                                 context,
@@ -230,6 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           fromDocScreen: false)
                                       .launch(context);
                                 },
+                                key: bookSessionKey,
                               ),
                             ],
                           ),
@@ -249,6 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Container(
                                   width: 180,
                                   height: 120,
+                                  key: categories[x].key,
                                   margin: const EdgeInsets.only(right: 15),
                                   padding: const EdgeInsets.only(
                                     left: 20,
@@ -348,5 +438,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  showTutorial() {
+    TutorialCoachMark(targets: targetList).show(context: context);
+    userController.handleFirstTimeUsed();
   }
 }

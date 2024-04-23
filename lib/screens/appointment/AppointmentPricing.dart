@@ -101,6 +101,8 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
                 text: "Proceed",
                 enabled: isChecked && selectedPackage.isNotEmpty,
                 textColor: whiteColor,
+                disabledColor: dimGray,
+                disabledTextColor: white,
               )
             ],
           ),
@@ -149,6 +151,7 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
                 children: [
                   Text(
                     formatAmount(price),
+                    textAlign: TextAlign.center,
                     style: boldTextStyle(
                       color: white,
                       size: 30,
@@ -157,6 +160,7 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
                   10.height,
                   Text(
                     desc,
+                    textAlign: TextAlign.center,
                     style: secondaryTextStyle(size: 12, color: white),
                   )
                 ],

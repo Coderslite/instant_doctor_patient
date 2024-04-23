@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/services/TransactionService.dart';
+import 'package:instant_doctor/services/formatDate.dart';
 import 'package:instant_doctor/services/format_number.dart';
 
 import '../constant/constants.dart';
 import '../controllers/ChatController.dart';
+import '../function/send_notification.dart';
 import '../main.dart';
 import '../models/AppointmentModel.dart';
 import 'UploadFile.dart';
@@ -13,6 +15,66 @@ class AppointmentService {
   ChatController chatController = Get.put(ChatController());
   var appointmentCollection = db.collection("Appointments");
 
+  Future<bool> isDoctorAlreadyBooked({
+    required String docId,
+    required Timestamp startTime,
+    required Timestamp endTime,
+  }) async {
+    try {
+      // Convert Timestamp to DateTime
+      DateTime startDateTime = startTime.toDate();
+      DateTime endDateTime = endTime.toDate();
+
+      // Query appointments for the doctor starting before the specified end time
+      var startQuerySnapshot = await FirebaseFirestore.instance
+          .collection('Appointments')
+          .where('doctorId', isEqualTo: docId)
+          .where('startTime', isLessThan: endTime)
+          .get();
+
+      // Query appointments for the doctor ending after the specified start time
+      var endQuerySnapshot = await FirebaseFirestore.instance
+          .collection('Appointments')
+          .where('doctorId', isEqualTo: docId)
+          .where('endTime', isGreaterThan: startTime)
+          .get();
+
+      // Merge the results of the two queries
+      var querySnapshotDocs = [
+        ...startQuerySnapshot.docs,
+        ...endQuerySnapshot.docs,
+      ];
+
+      // If there are any appointments found, check if they overlap with the specified time range
+      for (var doc in querySnapshotDocs) {
+        Timestamp existingStartTime = doc['startTime'];
+        Timestamp existingEndTime = doc['endTime'];
+
+        // Convert Timestamp to DateTime for existing appointments
+        DateTime existingStartDateTime = existingStartTime.toDate();
+        DateTime existingEndDateTime = existingEndTime.toDate();
+
+        // Check for overlapping appointments
+        if ((existingStartDateTime.isAfter(startDateTime) &&
+                existingStartDateTime.isBefore(endDateTime)) ||
+            (existingEndDateTime.isAfter(startDateTime) &&
+                existingEndDateTime.isBefore(endDateTime)) ||
+            (existingStartDateTime.isBefore(startDateTime) &&
+                existingEndDateTime.isAfter(endDateTime))) {
+          // Overlapping appointments found, so doctor is already booked
+          return true;
+        }
+      }
+
+      // No overlapping appointments found, doctor is available
+      return false;
+    } catch (e) {
+      // Handle any errors, such as Firebase exceptions
+      print('Error checking doctor availability: $e');
+      return false; // Assume doctor is not booked to avoid blocking the appointment
+    }
+  }
+
   Future<AppointmentModel> getAppointment(
       {required String appointmentId}) async {
     var appointmentRef = await appointmentCollection.doc(appointmentId).get();
@@ -20,7 +82,7 @@ class AppointmentService {
     return AppointmentModel.fromJson(appointment!);
   }
 
-  Future<bool> createAppointment({
+  Future<String?> createAppointment({
     required String docId,
     required String userId,
     required String complain,
@@ -35,10 +97,11 @@ class AppointmentService {
       "status": "Pending",
       "complain": complain,
       "startTime": startTime,
-      "endTime":endTime,
+      "endTime": endTime,
       "price": price,
       "package": package,
       "createdAt": Timestamp.now(),
+      "updatedAt": Timestamp.now(),
     };
 
     var debitResult =
@@ -54,28 +117,34 @@ class AppointmentService {
           userId: userId,
           type: TransactionType.debit,
           amount: price);
-      var token = await userService.getUserToken(userId: docId);
+      var doctoken = await userService.getUserToken(userId: docId);
+      var usertoken = await userService.getUserToken(userId: userId);
+      await notificationService.newNotification(
+          userId: docId,
+          type: NotificatonType.appointment,
+          title:
+              "You received an appointment ${formatDate(startTime.toDate())} - ${formatDate(endTime.toDate())}",
+          tokens: [doctoken],
+          isPushNotification: true);
+
       await notificationService.newNotification(
           userId: userId,
           type: NotificatonType.appointment,
           title:
-              "${formatAmount(price)} was charged for your booked appointment",
-          tokens: [token],
+              "You have successful schedule an appointment ${formatDate(startTime.toDate())} - ${formatDate(endTime.toDate())}",
+          tokens: [usertoken],
           isPushNotification: true);
-      await notificationService.newNotification(
-          userId: docId,
-          type: NotificatonType.appointment,
-          title: "You got a new appointment schedule at ${startTime.toDate()}",
-          isPushNotification: false);
-      return true;
+
+      return result.id;
     } else {
-      return false;
+      return null;
     }
   }
 
   Stream<List<AppointmentModel>> getAllAppointment(String userId) {
     return appointmentCollection
         .where("userId", isEqualTo: userId)
+        .orderBy('updatedAt', descending: true)
         .snapshots()
         .map((event) => event.docs
             .map(
@@ -180,6 +249,7 @@ class AppointmentService {
   }
 
   Future<String> sendMessage(appointmentId, data) async {
+    updateAppointmentTime(appointmentId: appointmentId);
     var colRef = await appointmentCollection
         .doc(appointmentId)
         .collection("conversation")
@@ -189,5 +259,27 @@ class AppointmentService {
       "id": colRef.id,
     });
     return colRef.id;
+  }
+
+  Future<void> updateAppointmentTime({required String appointmentId}) async {
+    appointmentCollection.doc(appointmentId).update({
+      "updatedAt": Timestamp.now(),
+    });
+  }
+
+  Future<void> deleteAppointment({required String appointmentId}) async {
+    var chats = await appointmentCollection
+        .doc(appointmentId)
+        .collection("conversation")
+        .get();
+    for (var chat in chats.docs) {
+      await appointmentCollection
+          .doc(appointmentId)
+          .collection("conversation")
+          .doc(chat.id)
+          .delete();
+    }
+    await appointmentCollection.doc(appointmentId).delete();
+    return;
   }
 }

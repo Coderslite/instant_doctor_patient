@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/models/ReferralModel.dart';

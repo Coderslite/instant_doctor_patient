@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:instant_doctor/component/ProfileImage.dart';
+import 'package:instant_doctor/main.dart';
+import 'package:instant_doctor/models/ReviewsModel.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../constant/constants.dart';
@@ -24,7 +26,7 @@ Padding eachDoctor({required UserModel doctor, required BuildContext context}) {
                     SizedBox(
                       height: 50,
                       width: 50,
-                      child: profileImage(doctor, 40, 40),
+                      child: profileImage(doctor, 40, 40, context: context),
                     ),
                     Positioned(
                         right: 2,
@@ -50,24 +52,43 @@ Padding eachDoctor({required UserModel doctor, required BuildContext context}) {
                 ),
               ],
             ),
-            Column(
-              children: [
-                Row(
-                  children: [
-                    for (int y = 0; y < 5; y++)
-                      const Icon(
-                        Icons.star,
-                        size: 12,
-                        color: gold,
-                      )
-                  ],
+            StreamBuilder<List<ReviewsModel>>(
+                stream: reviewService.getDoctorReviews(
+                  docId: doctor.id.validate(),
                 ),
-                Text(
-                  "35 Reviews",
-                  style: primaryTextStyle(size: 12),
-                )
-              ],
-            ),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    var reviews = snapshot.data!;
+                    if (reviews.isNotEmpty) {
+                      double averageRating = 0;
+                      for (final review in reviews) {
+                        final reviewData = review;
+                        final rating = reviewData.rating.validate();
+                        averageRating += rating;
+                      }
+                      averageRating /= reviews.length;
+                      return Column(
+                        children: [
+                          Row(
+                            children: [
+                              for (int y = 0; y < 5; y++)
+                                Icon(
+                                  Icons.star,
+                                  size: 12,
+                                  color: averageRating > y ? gold : Colors.grey,
+                                )
+                            ],
+                          ),
+                          Text(
+                            "${reviews.length} Reviews",
+                            style: primaryTextStyle(size: 12),
+                          ),
+                        ],
+                      );
+                    }
+                  }
+                  return Text("");
+                }),
           ],
         ),
       ),

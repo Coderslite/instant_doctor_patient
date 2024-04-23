@@ -6,6 +6,7 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import '../../component/DateBooking.dart';
 import '../../component/DateBooking2.dart';
+import '../../component/ProfileImage.dart';
 
 class BookAppointmentScreen extends StatefulWidget {
   final UserModel doctor;
@@ -24,8 +25,15 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SlidingUpPanel(
-        color: Colors.transparent,
         controller: controller,
+        isDraggable: false,
+        minHeight: MediaQuery.of(context).size.height / 1.5,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+        color: context.cardColor,
+        backdropColor: context.cardColor,
         onPanelClosed: () {
           panelOpened = false;
           setState(() {});
@@ -34,74 +42,56 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           panelOpened = true;
           setState(() {});
         },
-        maxHeight: MediaQuery.of(context).size.height,
-        minHeight: MediaQuery.of(context).size.height - 250,
-        body: SafeArea(
-          child: Container(
-            color: kPrimary,
-            child: Column(
-              children: [
-                Row(
-                  children: const [
-                    BackButton(),
-                  ],
-                ),
-                Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: SizedBox(
-                        width: 90,
-                        height: 110,
-                        child: Image.asset(
-                          "assets/images/doc1.png",
-                          fit: BoxFit.cover,
-                        ),
+        // maxHeight: MediaQuery.of(context).size.height,
+        body: Container(
+          color: kPrimary,
+          padding: EdgeInsets.all(20),
+          child: Column(
+            children: [
+              10.height,
+              Row(
+                children: const [
+                  BackButton(),
+                ],
+              ),
+              Row(
+                children: [
+                  profileImage(widget.doctor, 120, 120, context: context),
+                  10.width,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "${widget.doctor.firstName} ${widget.doctor.lastName}",
+                        style: boldTextStyle(size: 20, color: white),
                       ),
-                    ),
-                    10.width,
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "${widget.doctor.firstName} ${widget.doctor.lastName}",
-                          style: boldTextStyle(size: 20, color: white),
-                        ),
-                        Text(
-                          widget.doctor.speciality!.validate(),
-                          style: secondaryTextStyle(size: 14, color: white),
-                        ),
-                        5.height,
-                        // Container(
-                        //   padding: const EdgeInsets.all(5),
-                        //   decoration: BoxDecoration(
-                        //       color: white,
-                        //       borderRadius: BorderRadius.circular(5)),
-                        //   child: const Icon(
-                        //     Icons.call,
-                        //     color: mediumSeaGreen,
-                        //     size: 25,
-                        //   ).onTap(() {
-                        //     const MyCall().launch(context);
-                        //   }),
-                        // ),
-                      ],
-                    )
-                  ],
-                ).paddingSymmetric(horizontal: 20, vertical: 20),
-              ],
-            ),
+                      Text(
+                        widget.doctor.speciality!.validate(),
+                        style: secondaryTextStyle(size: 14, color: white),
+                      ),
+                      5.height,
+                      // Container(
+                      //   padding: const EdgeInsets.all(5),
+                      //   decoration: BoxDecoration(
+                      //       color: white,
+                      //       borderRadius: BorderRadius.circular(5)),
+                      //   child: const Icon(
+                      //     Icons.call,
+                      //     color: mediumSeaGreen,
+                      //     size: 25,
+                      //   ).onTap(() {
+                      //     const MyCall().launch(context);
+                      //   }),
+                      // ),
+                    ],
+                  )
+                ],
+              ).paddingSymmetric(horizontal: 20, vertical: 20),
+            ],
           ),
         ),
-        panel: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          decoration: BoxDecoration(
-            color: context.cardColor,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(30),
-              topRight: Radius.circular(30),
-            ),
-          ),
+        panel: Padding(
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             children: [
               30.height,

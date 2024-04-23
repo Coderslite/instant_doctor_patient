@@ -1,4 +1,4 @@
-// ignore_for_file: library_private_types_in_public_api
+// ignore_for_file: library_private_types_in_public_api, file_names, use_build_context_synchronously
 
 import 'dart:io';
 
@@ -9,11 +9,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/models/UserModel.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
-import 'package:instant_doctor/services/UploadFile.dart';
 import 'package:instant_doctor/services/formatDate.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../../component/ProfileImage.dart';
+import '../../../controllers/UploadFileController.dart';
 import '../../../main.dart';
 
 class PersonalProfileScreen extends StatefulWidget {
@@ -25,6 +25,7 @@ class PersonalProfileScreen extends StatefulWidget {
 
 class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
   var controller = TextEditingController();
+  UploadFileController uploadFileController = Get.put(UploadFileController());
   bool isUploading = false;
   XFile? file;
   handleChangeImage() async {
@@ -36,7 +37,7 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
 
         file = result;
         var uploadUrl =
-            await uploadFile(File(file!.path), userController.userId.value);
+            await uploadFileController.uploadProfileImage(File(file!.path));
         await userService.updateProfile(
             data: {"photoUrl": uploadUrl}, userId: userController.userId.value);
         toast("Profile Image Updated");
@@ -47,6 +48,12 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
     } else {
       toast("No image was selected");
     }
+  }
+
+  @override
+  void dispose() {
+    uploadFileController.progress.value = 0.0;
+    super.dispose();
   }
 
   @override
@@ -93,43 +100,60 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                             ],
                           ),
                           1.height,
-                          Stack(
-                            alignment: Alignment.topRight,
-                            children: [
-                              isUploading
-                                  ? const CircularProgressIndicator(
+                          Obx(
+                            () {
+                              var progress =
+                                  uploadFileController.progress.value;
+                              return Stack(
+                                alignment: Alignment.topRight,
+                                children: [
+                                  isUploading
+                                      ? Column(
+                                          children: [
+                                            CircularProgressIndicator(
+                                              color: kPrimary,
+                                              value: progress,
+                                            ).center(),
+                                            Text(
+                                              "Uploading Image",
+                                              style: primaryTextStyle(size: 13),
+                                            ),
+                                          ],
+                                        )
+                                      : StreamBuilder<UserModel>(
+                                          stream: userService.getProfile(
+                                              userId:
+                                                  userController.userId.value),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasData) {
+                                              var data = snapshot.data;
+                                              return profileImage(
+                                                  data, 100, 100,context: context);
+                                            }
+                                            return const CircularProgressIndicator(
+                                              color: kPrimary,
+                                            ).center();
+                                          }),
+                                  Positioned(
+                                    child: const Icon(
+                                      Icons.edit,
                                       color: kPrimary,
-                                    ).center()
-                                  : StreamBuilder<UserModel>(
-                                      stream: userService.getProfile(
-                                          userId: userController.userId.value),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.hasData) {
-                                          var data = snapshot.data;
-                                          return profileImage(data, 100, 100);
-                                        }
-                                        return const CircularProgressIndicator(
-                                          color: kPrimary,
-                                        ).center();
-                                      }),
-                              Positioned(
-                                child: const Icon(
-                                  Icons.edit,
-                                  color: kPrimary,
-                                  size: 14,
-                                ).onTap(() {
-                                  handleChangeImage();
-                                }),
-                              ),
-                            ],
-                          ).center(),
+                                      size: 14,
+                                    ).onTap(() {
+                                      handleChangeImage();
+                                    }),
+                                  ),
+                                ],
+                              ).center();
+                            },
+                          ),
                           10.height,
                           Text(
                             "Your profile isnt complete yet",
                             style: primaryTextStyle(
                               color: coral,
                             ),
-                          ).center().visible(debugProfileBuildsEnabled),
+                          ).center().visible(!profileCompleted),
                           30.height,
                           Text(
                             "Update Information",
@@ -394,7 +418,7 @@ class _ProfileUpdateDialogState extends State<ProfileUpdateDialog> {
               textFieldType: TextFieldType.OTHER,
               decoration: InputDecoration(
                   hintText: widget.keey == 'height'
-                      ? "Hight value in fts"
+                      ? "Height value in fts"
                       : widget.keey == 'weight'
                           ? "Weight value in kg"
                           : "",

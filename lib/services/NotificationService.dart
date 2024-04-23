@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/function/send_notification.dart';
@@ -31,9 +33,7 @@ class NotificationService extends BaseService {
       sendNotification(
           tokens,
           "Instant Doctor",
-          type == NotificatonType.appointment
-              ? "You just received a new appointment schedule"
-              : title,
+          title,
           notRef.id,
           type);
     }

@@ -1,5 +1,8 @@
+// ignore_for_file: file_names, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/component/ProfileImage.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
 import 'package:instant_doctor/main.dart';
@@ -73,8 +76,8 @@ class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
         },
         child: SlidingUpPanel(
             controller: controller,
-            maxHeight: MediaQuery.of(context).size.height,
-            minHeight: MediaQuery.of(context).size.height - 250,
+            isDraggable: false,
+            minHeight: MediaQuery.of(context).size.height / 1.5,
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(24),
               topRight: Radius.circular(24),
@@ -89,6 +92,7 @@ class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
               isOpened = true;
               setState(() {});
             },
+            parallaxEnabled: true,
             panel: Column(
               children: [
                 Expanded(
@@ -102,221 +106,189 @@ class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
                         topRight: Radius.circular(30),
                       ),
                     ),
-                    child: SingleChildScrollView(
-                      physics: isOpened
-                          ? const AlwaysScrollableScrollPhysics()
-                          : const NeverScrollableScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Column(
-                            children: [
-                              60.height,
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const BackButton(),
-                                  Text(
-                                    "Doctor Details",
-                                    style: boldTextStyle(
-                                      size: 18,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Column(
+                          children: [
+                            60.height,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const BackButton(),
+                                Text(
+                                  "Doctor Details",
+                                  style: boldTextStyle(
+                                    size: 18,
+                                  ),
+                                ),
+                                const Text("        "),
+                              ],
+                            ),
+                            10.height,
+                            Row(
+                              children: [
+                                Stack(
+                                  alignment: Alignment.topCenter,
+                                  children: [
+                                    Positioned(
+                                        child: profileImage(
+                                            widget.doctor, 120, 120,
+                                            context: context)),
+                                    Positioned(
+                                      right: 10,
+                                      top: 10,
+                                      child: isOnline(
+                                          widget.doctor.status == ONLINE),
+                                    )
+                                  ],
+                                ),
+                                10.width,
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "${widget.doctor.firstName} ${widget.doctor.lastName}",
+                                      style: boldTextStyle(size: 20),
                                     ),
-                                  ),
-                                  const Text("        "),
-                                ],
-                              ),
-                              10.height,
-                              Row(
-                                children: [
-                                  Stack(
-                                    alignment: Alignment.topCenter,
-                                    children: [
-                                      Positioned(
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius:
-                                                BorderRadius.circular(40),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: dimGray.withOpacity(0.2),
-                                                blurRadius: 5.0,
-                                                spreadRadius: 2.0,
-                                                offset: const Offset(0, 5),
-                                              ),
-                                            ],
-                                          ),
-                                          width: 100,
-                                          height: 120,
-                                          child: ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(40),
-                                            child: Image.asset(
-                                              "assets/images/doc1.png",
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
-                                        ),
+                                    Text(
+                                      widget.doctor.speciality.validate(),
+                                      style: secondaryTextStyle(
+                                        size: 14,
                                       ),
-                                      Positioned(
-                                        right: 10,
-                                        top: 10,
-                                        child: isOnline(
-                                            widget.doctor.status == ONLINE),
-                                      )
-                                    ],
-                                  ),
-                                  10.width,
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "${widget.doctor.firstName} ${widget.doctor.lastName}",
-                                        style: boldTextStyle(size: 20),
-                                      ),
-                                      Text(
-                                        widget.doctor.speciality.validate(),
-                                        style: secondaryTextStyle(
-                                          size: 14,
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                ],
+                                    )
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ).visible(
+                          isOpened,
+                        ),
+                        30.height,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            docDetail(context, "Address",
+                                "${widget.doctor.state}", "address.png"),
+                            docDetail(
+                                context,
+                                "Experience",
+                                "${widget.doctor.experience} Years",
+                                "experience.png"),
+                            docDetail(
+                                context, "4.5", "35 reviews", "rating.png"),
+                          ],
+                        ),
+                        30.height,
+                        Text(
+                          "About Doctor",
+                          style: secondaryTextStyle(size: 18),
+                        ).center(),
+                        10.height,
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 20),
+                          decoration: BoxDecoration(
+                            color: context.cardColor,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: dimGray.withOpacity(0.2),
+                                spreadRadius: 2,
+                                blurRadius: 3,
+                                offset: const Offset(0, 5),
                               ),
+                            ],
+                          ),
+                          child: Text(
+                            "${widget.doctor.bio}",
+                            style: secondaryTextStyle(size: 14),
+                          ),
+                        ),
+                        30.height,
+                        Text(
+                          "Working Hours",
+                          style: secondaryTextStyle(size: 18),
+                        ).center(),
+                        10.height,
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 20),
+                          decoration: BoxDecoration(
+                            color: context.cardColor,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: dimGray.withOpacity(0.2),
+                                spreadRadius: 2,
+                                blurRadius: 3,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (int x = 0;
+                                  x <
+                                      widget.doctor.workingHours
+                                          .validate()
+                                          .length;
+                                  x++)
+                                Text(
+                                  "${widget.doctor.workingHours.validate()[x]}",
+                                  style: secondaryTextStyle(size: 14),
+                                ),
                             ],
                           ).visible(
-                            isOpened,
-                          ),
-                          30.height,
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              docDetail(context, "Address",
-                                  "${widget.doctor.state}", "address.png"),
-                              docDetail(
-                                  context,
-                                  "Experience",
-                                  "${widget.doctor.experience} Years",
-                                  "experience.png"),
-                              docDetail(
-                                  context, "4.5", "35 reviews", "rating.png"),
-                            ],
-                          ),
-                          30.height,
-                          Text(
-                            "About Doctor",
-                            style: secondaryTextStyle(size: 18),
-                          ).center(),
-                          10.height,
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 20),
-                            decoration: BoxDecoration(
-                              color: context.cardColor,
-                              borderRadius: BorderRadius.circular(10),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: dimGray.withOpacity(0.2),
-                                  spreadRadius: 2,
-                                  blurRadius: 3,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              "${widget.doctor.bio}",
-                              style: secondaryTextStyle(size: 14),
-                            ),
-                          ),
-                          30.height,
-                          Text(
-                            "Working Hours",
-                            style: secondaryTextStyle(size: 18),
-                          ).center(),
-                          10.height,
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 20),
-                            decoration: BoxDecoration(
-                              color: context.cardColor,
-                              borderRadius: BorderRadius.circular(10),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: dimGray.withOpacity(0.2),
-                                  spreadRadius: 2,
-                                  blurRadius: 3,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                for (int x = 0;
-                                    x <
-                                        widget.doctor.workingHours
-                                            .validate()
-                                            .length;
-                                    x++)
-                                  Text(
-                                    "${widget.doctor.workingHours.validate()[x]}",
-                                    style: secondaryTextStyle(size: 14),
-                                  ),
-                              ],
-                            ).visible(widget.doctor.workingHours
-                                .validate()
-                                .isNotEmpty),
-                          ),
-                          20.height,
-                          StreamBuilder<UserModel>(
-                              stream: userService.getProfile(
-                                  userId: userController.userId.value),
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData) {
-                                  var data = snapshot.data!;
-                                  bool profileCompleted = data.bloodGroup
-                                          .validate()
-                                          .isNotEmpty &&
-                                      data.height.validate().isNotEmpty &&
-                                      data.weight.validate().isNotEmpty &&
-                                      data.dob != null &&
-                                      data.genotype.validate().isNotEmpty &&
-                                      data.phoneNumber.validate().isNotEmpty;
-                                  return Obx(() {
-                                    var d = bookingController.complain.value;
-                                    return AppButton(
-                                      text: !profileCompleted
-                                          ? "Please complete profile"
+                              widget.doctor.workingHours.validate().isNotEmpty),
+                        ),
+                        20.height,
+                        StreamBuilder<UserModel>(
+                            stream: userService.getProfile(
+                                userId: userController.userId.value),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                var data = snapshot.data!;
+                                bool profileCompleted =
+                                    data.bloodGroup.validate().isNotEmpty &&
+                                        data.height.validate().isNotEmpty &&
+                                        data.weight.validate().isNotEmpty &&
+                                        data.dob != null &&
+                                        data.genotype.validate().isNotEmpty &&
+                                        data.phoneNumber.validate().isNotEmpty;
+                                return Obx(() {
+                                  return AppButton(
+                                    text: !profileCompleted
+                                        ? "Please complete profile"
+                                        : bookingController.price > 0
+                                            ? "Book Appointment"
+                                            : "Select Package",
+                                    onTap: () {
+                                      !profileCompleted
+                                          ? const PersonalProfileScreen()
+                                              .launch(context)
                                           : bookingController.price > 0
-                                              ? "Book Appointment"
-                                              : "Select Package",
-                                      onTap: () {
-                                        !profileCompleted
-                                            ? PersonalProfileScreen()
-                                                .launch(context)
-                                            : bookingController.price > 0
-                                                ? BookAppointmentScreen(
-                                                    doctor: widget.doctor,
-                                                  ).launch(context)
-                                                : const AppointmentPricingScreen(
-                                                        fromDocScreen: true)
-                                                    .launch(context);
-                                      },
-                                      color: kPrimary,
-                                      textColor: white,
-                                      width: double.infinity,
-                                    );
-                                  });
-                                }
-                                return CircularProgressIndicator().center();
-                              }),
-                          20.height,
-                        ],
-                      ),
+                                              ? BookAppointmentScreen(
+                                                  doctor: widget.doctor,
+                                                ).launch(context)
+                                              : const AppointmentPricingScreen(
+                                                      fromDocScreen: true)
+                                                  .launch(context);
+                                    },
+                                    color: kPrimary,
+                                    textColor: white,
+                                    width: double.infinity,
+                                  );
+                                });
+                              }
+                              return const CircularProgressIndicator().center();
+                            }),
+                        20.height,
+                      ],
                     ),
                   ),
                 )
@@ -351,28 +323,8 @@ class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
                         alignment: Alignment.topCenter,
                         children: [
                           Positioned(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(40),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: dimGray.withOpacity(0.5),
-                                    blurRadius: 5.0,
-                                    spreadRadius: 2.0,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              width: 100,
-                              height: 120,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(40),
-                                child: Image.asset(
-                                  "assets/images/doc1.png",
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
+                            child: profileImage(widget.doctor, 120, 120,
+                                context: context),
                           ),
                           Positioned(
                             right: 10,

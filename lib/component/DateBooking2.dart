@@ -299,7 +299,6 @@ class _DateBooking2State extends State<DateBooking2> {
                                                     Navigator.pop(context);
                                                     isClickedSchedule = true;
                                                     setState(() {});
-
                                                     await bookingController
                                                         .handleBookAppointment(
                                                             docId: widget.docId,

@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:package_info/package_info.dart';
 
 Future<String> getAppVersion() async {

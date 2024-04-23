@@ -18,16 +18,6 @@ class _ImagePreviewState extends State<ImagePreview> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: white,
-        title: Text(
-          "Preview",
-          style: primaryTextStyle(color: kPrimary),
-        ),
-        leading: BackButton(
-          color: kPrimary,
-        ),
-      ),
       body: Container(
         decoration: const BoxDecoration(
             color: kPrimary,
@@ -39,6 +29,20 @@ class _ImagePreviewState extends State<ImagePreview> {
         child: SafeArea(
           child: Column(
             children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 20, top: 20, left: 20),
+                child: Row(
+                  children: [
+                    BackButton(),
+                    Text(
+                      "Back",
+                      style: boldTextStyle(
+                        size: 14,
+                      ),
+                    )
+                  ],
+                ),
+              ),
               Expanded(
                 child: PhotoView(
                   backgroundDecoration:

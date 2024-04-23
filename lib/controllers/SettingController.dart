@@ -54,7 +54,7 @@ class SettingsController extends GetxController {
       defaultLoaderBgColorGlobal = Colors.white;
       appButtonBackgroundColorGlobal = Colors.white;
       shadowColorGlobal = Colors.black12;
-      setStatusBarColor(Colors.transparent, systemNavigationBarColor: null);
+      setStatusBarColor(Colors.white, systemNavigationBarColor: null);
     }
   }
 

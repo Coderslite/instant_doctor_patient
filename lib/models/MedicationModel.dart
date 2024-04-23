@@ -39,35 +39,28 @@ class MedicationModel {
       type: json['type'],
       color: json['color'],
       prescription: json['prescription'],
-      startTime: json['startTime'] != null
-          ? Timestamp.fromDate(DateTime.parse(json['startTime']))
-          : null,
-      endTime: json['endTime'] != null
-          ? Timestamp.fromDate(DateTime.parse(json['endTime']))
-          : null,
-      morning: _parseTimeOfDay(json['morning']),
-      midDay: _parseTimeOfDay(json['midDay']),
-      evening: _parseTimeOfDay(json['evening']),
-      interval: json['interval'],
+      startTime: json['startTime'],
+      endTime: json['endTime'],
+      // morning: json['morning'],
+      // midDay: json['midDay'],
+      // evening: json['evening'],
+      // interval: json['interval'],
       createdAt: json['createdAt'] != null
           ? Timestamp.fromDate(DateTime.parse(json['createdAt']))
           : null,
     );
   }
 
-
-
   static TimeOfDay? _parseTimeOfDay(dynamic json) {
-  if (json == null) return null;
-  if (json is String) {
-    final parts = json.split(':');
-    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
-  } else if (json is Map<String, dynamic>) {
-    return TimeOfDay(hour: json['hour'], minute: json['minute']);
+    if (json == null) return null;
+    if (json is String) {
+      final parts = json.split(':');
+      return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    } else if (json is Map<String, dynamic>) {
+      return TimeOfDay(hour: json['hour'], minute: json['minute']);
+    }
+    return null;
   }
-  return null;
-}
-
 
 // Helper method to convert Map to TimeOfDay
 
@@ -79,24 +72,13 @@ class MedicationModel {
       'type': type,
       'color': color,
       'prescription': prescription,
-      'startTime':
-          startTime != null ? startTime!.toDate().toIso8601String() : null,
-      'endTime': endTime != null ? endTime!.toDate().toIso8601String() : null,
-      'morning': _timeOfDayToJson(morning), // Convert TimeOfDay to Map
-      'midDay': _timeOfDayToJson(midDay), // Convert TimeOfDay to Map
-      'evening': _timeOfDayToJson(evening), // Convert TimeOfDay to Map
-      'interval': interval,
-      'createdAt':
-          createdAt != null ? createdAt!.toDate().toIso8601String() : null,
-    };
-  }
-
-  // Helper method to convert TimeOfDay to Map
-  Map<String, dynamic>? _timeOfDayToJson(TimeOfDay? timeOfDay) {
-    if (timeOfDay == null) return null;
-    return {
-      'hour': timeOfDay.hour,
-      'minute': timeOfDay.minute,
+      'startTime': startTime,
+      'endTime': endTime,
+      // "morning": morning,
+      // "midDay": midDay,
+      // "evening": evening,
+      // 'interval': interval,
+      'createdAt': createdAt,
     };
   }
 }

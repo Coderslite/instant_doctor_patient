@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:instant_doctor/models/UserModel.dart';
 import 'package:instant_doctor/services/UserService.dart';
+import 'package:nb_utils/nb_utils.dart';
 
 class UserController extends GetxController {
   UserService userService = UserService();
@@ -10,5 +11,14 @@ class UserController extends GetxController {
   RxString token = ''.obs;
   RxString videocallToken = ''.obs;
   RxString tag = ''.obs;
-  
+  RxBool isFirstTime = false.obs;
+  RxBool isTrialUsed = false.obs;
+
+  handleFirstTimeUsed() async {
+    var prefs = await SharedPreferences.getInstance();
+    prefs.setBool(
+      'isFirstTime',
+      false,
+    );
+  }
 }

@@ -76,6 +76,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(30),
                   child: Card(
+                    color: context.cardColor,
                     child: Padding(
                       padding: const EdgeInsets.all(15.0),
                       child: Column(
@@ -200,6 +201,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(30),
                   child: Card(
+                    color: context.cardColor,
                     child: Padding(
                       padding: const EdgeInsets.all(15.0),
                       child: Column(
@@ -555,18 +557,6 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                     }
                     if (endTime == null) {
                       toast("Please enter medication end time");
-                      return;
-                    }
-                    if (morning == null) {
-                      toast("please select what time in the morning");
-                      return;
-                    }
-                    if (midDay == null) {
-                      toast("please select what time at mid day");
-                      return;
-                    }
-                    if (evening == null) {
-                      toast('please select what time at night');
                       return;
                     }
                     if (_formKey.currentState!.validate()) {

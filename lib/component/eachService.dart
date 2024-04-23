@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
 
-services(BuildContext context, String image, String serviceName,
-    VoidCallback onTap) {
+services(
+    BuildContext context, String image, String serviceName, VoidCallback onTap,
+    {required GlobalKey<State<StatefulWidget>> key}) {
   return Container(
     width: 150,
     height: 120,
+    key: key,
     padding: const EdgeInsets.all(10),
     margin: const EdgeInsets.all(10),
     decoration: BoxDecoration(

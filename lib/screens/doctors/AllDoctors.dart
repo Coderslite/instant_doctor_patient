@@ -31,34 +31,35 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                     "Doctors",
                     style: boldTextStyle(size: 20),
                   ),
-                  const Icon(Icons.sort).onTap(() {
-                    showModalBottomSheet(
-                        backgroundColor: Colors.transparent,
-                        context: context,
-                        builder: (context) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 20, horizontal: 10),
-                            decoration: const BoxDecoration(
-                              color: white,
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(40),
-                                topRight: Radius.circular(40),
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  "Filter Doctors",
-                                  style: boldTextStyle(
-                                    size: 24,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        });
-                  })
+                  Container(),
+                  // const Icon(Icons.sort).onTap(() {
+                  //   showModalBottomSheet(
+                  //       backgroundColor: Colors.transparent,
+                  //       context: context,
+                  //       builder: (context) {
+                  //         return Container(
+                  //           padding: const EdgeInsets.symmetric(
+                  //               vertical: 20, horizontal: 10),
+                  //           decoration: const BoxDecoration(
+                  //             color: white,
+                  //             borderRadius: BorderRadius.only(
+                  //               topLeft: Radius.circular(40),
+                  //               topRight: Radius.circular(40),
+                  //             ),
+                  //           ),
+                  //           child: Column(
+                  //             children: [
+                  //               Text(
+                  //                 "Filter Doctors",
+                  //                 style: boldTextStyle(
+                  //                   size: 24,
+                  //                 ),
+                  //               ),
+                  //             ],
+                  //           ),
+                  //         );
+                  //       });
+                  // })
                 ],
               ),
               10.height,
@@ -96,9 +97,13 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                               return Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 2),
-                                child: eachDoctor(doctor: doctor,context: context).onTap(
+                                child:
+                                    eachDoctor(doctor: doctor, context: context)
+                                        .onTap(
                                   () {
-                                 SingleDoctorScreen(doctor: doctor,).launch(context);
+                                    SingleDoctorScreen(
+                                      doctor: doctor,
+                                    ).launch(context);
                                   },
                                 ),
                               );

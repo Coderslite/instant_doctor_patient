@@ -1,9 +1,12 @@
+// ignore_for_file: file_names, depend_on_referenced_packages
+
 import 'dart:io';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
+import 'package:instant_doctor/controllers/UploadFileController.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:path/path.dart';
 
@@ -17,7 +20,16 @@ class UploadLabResult extends StatefulWidget {
 }
 
 class _UploadLabResultState extends State<UploadLabResult> {
-  LapResultController lapResultController = Get.put(LapResultController());
+  LabResultController labResultController = Get.put(LabResultController());
+  UploadFileController uploadFileController = Get.put(UploadFileController());
+
+  @override
+  void dispose() {
+    uploadFileController.progress.value = 0.0;
+    labResultController.files.value = [];
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,7 +54,7 @@ class _UploadLabResultState extends State<UploadLabResult> {
               20.height,
               DottedBorder(
                   borderType: BorderType.RRect,
-                  dashPattern: [10, 5],
+                  dashPattern: const [10, 5],
                   color: kPrimary,
                   radius: const Radius.circular(12),
                   padding: const EdgeInsets.all(6),
@@ -70,7 +82,12 @@ class _UploadLabResultState extends State<UploadLabResult> {
                         ),
                         AppButton(
                           onTap: () {
-                            lapResultController.handlePickFile();
+                            showModalBottomSheet(
+                                backgroundColor: Colors.transparent,
+                                context: context,
+                                builder: (context) {
+                                  return BDisplay();
+                                });
                           },
                           text: "Choose File",
                           textColor: white,
@@ -88,28 +105,42 @@ class _UploadLabResultState extends State<UploadLabResult> {
                   ),
                 ],
               ),
+              Obx(() {
+                var progress = uploadFileController.progress.value;
+                return LinearProgressIndicator(
+                  value: progress,
+                  color: kPrimary,
+                  backgroundColor: white,
+                );
+              }),
               Expanded(
-                child: Obx(
-                  () => lapResultController.files.isEmpty
+                child: Obx(() {
+                  var r = labResultController.emailCopy.value;
+                  return labResultController.files.isEmpty
                       ? Text(
                           "Opps No Files Yet",
                           style: secondaryTextStyle(color: sandyBrown),
                         )
                       : ListView.builder(
-                          itemCount: lapResultController.files.length,
+                          itemCount: labResultController.files.length,
                           physics: const AlwaysScrollableScrollPhysics(),
                           itemBuilder: (BuildContext context, index) {
-                            File file = lapResultController.files[index];
-                            String fileName = basename(file.path);
+                            var file = labResultController.files[index];
+                            String fileName = basename(file['file'].path);
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               child: Column(
                                 children: [
                                   ListTile(
-                                    leading: Image.asset(
-                                      'assets/images/file.png',
-                                      fit: BoxFit.cover,
-                                    ),
+                                    leading: file['fileType'] == 'Image'
+                                        ? Image.file(
+                                            File(file['file'].path),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.asset(
+                                            'assets/images/file.png',
+                                            fit: BoxFit.cover,
+                                          ),
                                     title: Text(
                                       fileName,
                                       style: primaryTextStyle(),
@@ -120,22 +151,22 @@ class _UploadLabResultState extends State<UploadLabResult> {
                                         color: redColor,
                                       ),
                                       onPressed: () {
-                                        lapResultController
+                                        labResultController
                                             .handleRemoveFile(index);
                                       },
                                     ),
                                   ),
-                                  index + 1 == lapResultController.files.length
+                                  index + 1 == labResultController.files.length
                                       ? Column(
                                           children: [
                                             10.height,
                                             Row(
                                               children: [
                                                 Checkbox(
-                                                    value: lapResultController
+                                                    value: labResultController
                                                         .emailCopy.value,
                                                     onChanged: (val) {
-                                                      lapResultController
+                                                      labResultController
                                                           .emailCopy
                                                           .value = val!;
                                                       setState(() {});
@@ -148,25 +179,108 @@ class _UploadLabResultState extends State<UploadLabResult> {
                                             ),
                                           ],
                                         ).visible(
-                                          lapResultController.files.isNotEmpty)
+                                          labResultController.files.isNotEmpty)
                                       : Container()
                                 ],
                               ),
                             );
                           },
-                        ),
-                ),
+                        );
+                }),
               ),
-              AppButton(
-                onTap: () {},
-                width: double.infinity,
-                text: "Proceed",
-                textColor: white,
-                color: kPrimary,
-              )
+              Obx(() {
+                var isUpload = labResultController.isUpload.value;
+                if (isUpload) {
+                  return CircularProgressIndicator(
+                    color: kPrimary,
+                  ).center();
+                } else {
+                  return AppButton(
+                    onTap: () {
+                      labResultController.handleUploadFiles(context);
+                    },
+                    width: double.infinity,
+                    text: "Proceed",
+                    textColor: white,
+                    color: kPrimary,
+                  );
+                }
+              })
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class BDisplay extends StatefulWidget {
+  const BDisplay({super.key});
+
+  @override
+  State<BDisplay> createState() => _BDisplayState();
+}
+
+class _BDisplayState extends State<BDisplay> {
+  String fileType = '';
+  LabResultController labResultController = Get.put(LabResultController());
+  UploadFileController uploadFileController = Get.put(UploadFileController());
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.scaffoldBackgroundColor,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          20.height,
+          Text(
+            "Select file type",
+            style: boldTextStyle(size: 20),
+          ),
+          10.height,
+          CheckboxListTile(
+              title: Text(
+                "Image",
+                style: primaryTextStyle(),
+              ),
+              value: fileType == 'Image',
+              onChanged: (val) {
+                fileType = "Image";
+                setState(() {});
+              }),
+          CheckboxListTile(
+              title: Text(
+                "Document",
+                style: primaryTextStyle(),
+              ),
+              value: fileType == 'Document',
+              onChanged: (val) {
+                fileType = "Document";
+                setState(() {});
+              }),
+          AppButton(
+            width: double.infinity,
+            margin: EdgeInsets.all(20),
+            onTap: () {
+              if (fileType.isEmptyOrNull) {
+                toast("please select file type");
+              } else {
+                labResultController.handlePickFile(fileType);
+              }
+            },
+            color: kPrimary,
+            textColor: white,
+            text: "Proceed",
+          ),
+          20.height,
+        ],
       ),
     );
   }

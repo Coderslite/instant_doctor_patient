@@ -14,6 +14,7 @@ import '../../main.dart';
 import '../../models/UserModel.dart';
 import '../../services/greetings.dart';
 import 'fund_wallet/FundWallet.dart';
+import 'history/History.dart';
 import 'send_funds/SendFunds.dart';
 
 class WalletScreen extends StatefulWidget {
@@ -53,7 +54,7 @@ class _WalletScreenState extends State<WalletScreen> {
                             var data = snapshot.data;
                             return Row(
                               children: [
-                                profileImage(data, 40, 40),
+                                profileImage(data, 40, 40, context: context),
                                 10.width,
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,7 +141,9 @@ class _WalletScreenState extends State<WalletScreen> {
                               Text(
                                 "See all",
                                 style: secondaryTextStyle(size: 14),
-                              ),
+                              ).onTap(() {
+                                History().launch(context);
+                              }),
                             ],
                           ),
                           20.height,

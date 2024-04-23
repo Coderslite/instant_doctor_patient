@@ -160,11 +160,13 @@ class _FundWalletScreenState extends State<FundWalletScreen> {
                 10.height,
                 Expanded(
                   flex: 3,
+                     
                   child: CalculatorDialpad(
                     onDeletePressed: () {
                       // Handle delete button press
                       if (paymentController.amount.value.isNotEmpty &&
-                          paymentController.amount.value != '0') {
+                          paymentController.am
+                     ount.value != '0') {
                         String lastChar = paymentController.amount.value
                             .substring(
                                 paymentController.amount.value.length - 1);

@@ -1,7 +1,8 @@
+// ignore_for_file: file_names
+
 import 'package:get/get.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../controllers/UserController.dart';
 
@@ -15,6 +16,11 @@ getUserId() async {
     var userProf =
         await userService.getProfileById(userId: userController.userId.value);
     userController.currency.value = userProf.currency.validate();
+    userController.isTrialUsed.value = userProf.isTrialUsed.validate();
+    userController.isFirstTime.value =
+        prefs.getBool('isFirstTime').toString() == 'null'
+            ? true
+            : prefs.getBool('isFirstTime').validate();
     userController.tag.value = userProf.tag.validate();
   }
 }

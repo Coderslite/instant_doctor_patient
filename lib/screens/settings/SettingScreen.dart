@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:nb_utils/nb_utils.dart';
 
@@ -18,20 +19,24 @@ class _SettingScreenState extends State<SettingScreen> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  BackButton(),
-                  Text(
-                    "Settings",
-                    style: boldTextStyle(),
-                  ),
-                  Text("   "),
-                ],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                BackButton(),
+                Text(
+                  "Settings",
+                  style: boldTextStyle(),
+                ),
+                Text("   "),
+              ],
+            ),
             20.height,
             SwitchListTile(
               value: settingsController.isDarkMode.value ? true : false,
+              // activeColor: kPrimary,
+              activeTrackColor: kPrimary,
+              trackOutlineColor: MaterialStateColor.transparent,
+              inactiveTrackColor: kPrimaryLight,
               onChanged: (val) {
                 settingsController.handleChangeTheme();
                 setState(() {});
