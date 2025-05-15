@@ -6,13 +6,12 @@ class UserModel {
   String? lastName;
   String? email;
   String? country;
-  String? address;
   String? currency;
   String? phoneNumber;
   String? photoUrl;
   String? maritalStatus;
   String? tag;
-  Timestamp? dob;
+ Timestamp? dob;
   String? height;
   String? weight;
   String? bloodGroup;
@@ -28,34 +27,40 @@ class UserModel {
   String? state;
   Timestamp? lastSeen;
   String? token;
-  UserModel(
-      {this.id,
-      this.firstName,
-      this.lastName,
-      this.email,
-      this.country,
-      this.address,
-      this.currency,
-      this.phoneNumber,
-      this.photoUrl,
-      this.maritalStatus,
-      this.tag,
-      this.dob,
-      this.height,
-      this.weight,
-      this.bloodGroup,
-      this.genotype,
-      this.surgicalHistory,
-      this.speciality,
-      this.status,
-      this.amount,
-      this.lastSeen,
-      this.token,
-      this.experience,
-      this.isAvailable,
-      this.workingHours,
-      this.bio,
-      this.state});
+  bool? isTrialUsed;
+  GeoPoint? location;
+  String? address;
+  UserModel({
+    this.id,
+    this.firstName,
+    this.lastName,
+    this.email,
+    this.country,
+    this.address,
+    this.location,
+    this.currency,
+    this.phoneNumber,
+    this.photoUrl,
+    this.maritalStatus,
+    this.tag,
+    this.dob,
+    this.height,
+    this.weight,
+    this.bloodGroup,
+    this.genotype,
+    this.surgicalHistory,
+    this.speciality,
+    this.status,
+    this.amount,
+    this.lastSeen,
+    this.token,
+    this.experience,
+    this.isAvailable,
+    this.workingHours,
+    this.bio,
+    this.state,
+    this.isTrialUsed,
+  });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
@@ -65,6 +70,7 @@ class UserModel {
       email: json['email'],
       country: json['country'],
       address: json['address'],
+      location: json['location'] ?? GeoPoint(0, 0),
       currency: json['currency'],
       phoneNumber: json['phoneNumber'],
       photoUrl: json['photoUrl'],
@@ -88,6 +94,7 @@ class UserModel {
       workingHours: json['workingHour'],
       bio: json['bio'],
       state: json['stateOfOrigin'],
+      isTrialUsed: json['isTrialUsed'],
     );
   }
 }

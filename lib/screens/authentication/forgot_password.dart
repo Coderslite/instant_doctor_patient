@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/services/AuthenticationService.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../constant/color.dart';
-import '../../main.dart';
+import '../../services/UserService.dart';
 
 class ForgotPassword extends StatefulWidget {
   const ForgotPassword({super.key});
@@ -14,6 +16,8 @@ class ForgotPassword extends StatefulWidget {
 }
 
 class _ForgotPasswordState extends State<ForgotPassword> {
+  final userService = Get.find<UserService>();
+
   var emailController = TextEditingController();
   bool isSending = false;
   @override
@@ -23,18 +27,19 @@ class _ForgotPasswordState extends State<ForgotPassword> {
         body: Container(
           height: MediaQuery.of(context).size.height,
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
           decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage("assets/images/bg3.png"),
               fit: BoxFit.cover,
+              // colorFilter: ColorFilter.mode(kPrimary, BlendMode.color),
             ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const BackButton(),
+              backButton(context),
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,20 +69,22 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                       contentPadding: const EdgeInsetsDirectional.symmetric(
                           vertical: 10, horizontal: 10),
                       focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(color: kPrimary)),
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: const BorderSide(color: kPrimary),
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(
-                          color: kPrimary,
-                        ),
+                        borderSide: const BorderSide(color: kPrimary),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: const BorderSide(color: kPrimary),
                       ),
                     ),
                   ),
                   10.height,
-                  const CircularProgressIndicator().visible(isSending).center(),
+                 Loader().visible(isSending).center(),
                   AppButton(
-                    color: kPrimary,
                     width: double.infinity,
                     onTap: () async {
                       try {
@@ -100,7 +107,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                       // ).launch(context);
                     },
                     text: "Reset Password",
-                    textColor: white,
+                    textColor: kPrimary,
                   ).visible(!isSending),
                 ],
               ),

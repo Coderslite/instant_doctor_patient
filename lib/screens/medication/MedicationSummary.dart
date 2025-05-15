@@ -7,6 +7,7 @@ import 'package:instant_doctor/screens/medication/MedicationTracker.dart';
 import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+import '../../component/backButton.dart';
 import '../../constant/color.dart';
 import '../../models/MedicationModel.dart';
 
@@ -28,7 +29,7 @@ class _MedicationSummaryScreenState extends State<MedicationSummaryScreen> {
       body: SafeArea(
         child: Obx(
           () => Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(8.0),
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Column(
@@ -36,7 +37,7 @@ class _MedicationSummaryScreenState extends State<MedicationSummaryScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const BackButton(),
+                      backButton(context),
                       Text(
                         "Medication Tracker",
                         style: boldTextStyle(color: kPrimary),
@@ -50,9 +51,6 @@ class _MedicationSummaryScreenState extends State<MedicationSummaryScreen> {
                     style: secondaryTextStyle(size: 14),
                   ),
                   10.height,
-                  eachSummary(
-                      label: "Medication type",
-                      description: widget.medication.type!),
                   eachSummary(
                       label: "Medication  Name",
                       description: widget.medication.name!),
@@ -98,6 +96,8 @@ class _MedicationSummaryScreenState extends State<MedicationSummaryScreen> {
                     color: !isChecked ? grey : kPrimary,
                     textColor: white,
                     width: double.infinity,
+                    disabledColor: dimGray,
+                    disabledTextColor: white,
                     enabled: isChecked,
                   ).visible(!medicationController.isLoading.value),
                 ],

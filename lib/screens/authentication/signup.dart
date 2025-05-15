@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/screens/authentication/password-screnn.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
@@ -35,6 +36,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage("assets/images/bg3.png"),
+              // colorFilter: ColorFilter.mode(kPrimary, BlendMode.color),
               fit: BoxFit.cover,
             ),
           ),
@@ -45,7 +47,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  120.height,
+                  20.height,
+                  Row(
+                    children: [
+                      backButton(context),
+                    ],
+                  ),
+                  100.height,
                   Row(
                     children: [
                       Text(
@@ -79,14 +87,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           vertical: 5, horizontal: 10),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(color: context.dividerColor)),
+                          borderSide: const BorderSide(color: kPrimary)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: context.dividerColor),
+                        borderSide: const BorderSide(color: kPrimary),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: context.dividerColor),
+                        borderSide: const BorderSide(color: kPrimary),
+                      ),
+                      disabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: const BorderSide(color: kPrimary),
                       ),
                     ),
                   ),
@@ -108,14 +120,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           vertical: 5, horizontal: 10),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(color: context.dividerColor)),
+                          borderSide: const BorderSide(color: kPrimary)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: context.dividerColor),
+                        borderSide: const BorderSide(color: kPrimary),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: context.dividerColor),
+                        borderSide: const BorderSide(color: kPrimary),
                       ),
                     ),
                   ),
@@ -137,14 +149,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           vertical: 5, horizontal: 10),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(color: context.dividerColor)),
+                          borderSide: const BorderSide(color: kPrimary)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: context.dividerColor),
+                        borderSide: const BorderSide(color: kPrimary),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: context.dividerColor),
+                        borderSide: const BorderSide(color: kPrimary),
                       ),
                     ),
                   ),
@@ -174,14 +186,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           vertical: 5, horizontal: 10),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(color: context.dividerColor)),
+                          borderSide: const BorderSide(color: kPrimary)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: context.dividerColor),
+                        borderSide: const BorderSide(color: kPrimary),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: context.dividerColor),
+                        borderSide: const BorderSide(color: kPrimary),
                       ),
                     ),
                     initialCountryCode: 'NG',
@@ -242,25 +254,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   AppTextField(
                     textFieldType: TextFieldType.OTHER,
                     textStyle: primaryTextStyle(size: 14),
-                    initialValue: widget.referredBy.validate(),
-                    controller:referredBy,
+                    controller: referredBy,
                     decoration: InputDecoration(
                       label: Text(
-                        "Referred By",
+                        "Referred Code (optional)",
                         style: primaryTextStyle(size: 14),
                       ),
                       contentPadding: const EdgeInsetsDirectional.symmetric(
                           vertical: 5, horizontal: 10),
                       focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(color: context.dividerColor)),
+                          borderSide: const BorderSide(color: kPrimary)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: context.dividerColor),
+                        borderSide: const BorderSide(color: kPrimary),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: context.dividerColor),
+                        borderSide: const BorderSide(color: kPrimary),
                       ),
                     ),
                   ),
@@ -282,7 +293,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ).launch(context);
                         }
                       },
-                      color: kPrimary,
+                      color: white,
+                      textColor: kPrimary,
                       text: "Continue",
                     ),
                   ),

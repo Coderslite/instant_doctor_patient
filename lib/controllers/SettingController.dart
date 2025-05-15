@@ -12,6 +12,8 @@ class SettingsController extends GetxController {
   Rx<bool> isDarkMode = false.obs;
   String selectedLanguage = defaultLanguage;
   AppLocalizations? appLocale;
+  RxInt selectedIndex = 0.obs;
+
 
   int? appId;
   String appSign = '';
@@ -54,7 +56,7 @@ class SettingsController extends GetxController {
       defaultLoaderBgColorGlobal = Colors.white;
       appButtonBackgroundColorGlobal = Colors.white;
       shadowColorGlobal = Colors.black12;
-      setStatusBarColor(Colors.transparent, systemNavigationBarColor: null);
+      setStatusBarColor(transparentColor, systemNavigationBarColor: null);
     }
   }
 

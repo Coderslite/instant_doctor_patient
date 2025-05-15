@@ -1,13 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
-import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/MedicationModel.dart';
 import 'package:instant_doctor/screens/medication/ActiveMedication.dart';
 import 'package:instant_doctor/screens/medication/AddMedication.dart';
+import 'package:instant_doctor/services/MedicationService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+import '../../component/backButton.dart';
 import '../../services/GetUserId.dart';
+import '../../services/LabResultService.dart';
 
 class MedicationTracker extends StatefulWidget {
   const MedicationTracker({super.key});
@@ -17,18 +21,21 @@ class MedicationTracker extends StatefulWidget {
 }
 
 class _MedicationTrackerState extends State<MedicationTracker> {
+  final medicationService = Get.find<MedicationService>();
+  final labResultService = Get.find<LabResultService>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const BackButton(),
+                  backButton(context),
                   Text(
                     "Medication Tracker",
                     style: boldTextStyle(
@@ -47,10 +54,11 @@ class _MedicationTrackerState extends State<MedicationTracker> {
                 ),
               ),
               Expanded(
-                child: FutureBuilder<List<MedicationModel>>(
-                    future: medicationService.getUserMedications(
+                child: StreamBuilder<List<MedicationModel>>(
+                    stream: medicationService.getUserMedications(
                         userId: userController.userId.value),
                     builder: (context, snapshot) {
+                      print(snapshot.error);
                       if (snapshot.hasData) {
                         var data = snapshot.data;
                         if (data!.isEmpty) {
@@ -64,17 +72,41 @@ class _MedicationTrackerState extends State<MedicationTracker> {
                           physics: const BouncingScrollPhysics(),
                           itemBuilder: (context, index) {
                             var medication = data[index];
-                            return Dismissible(
-                              onDismissed: (direction) async {
-                                // Remove dismissed medication from the list
-                                setState(() {
-                                  data.removeAt(index);
-                                });
-                                // Delete the medication from SharedPreferences
-                                medicationService.deleteMedication(
-                                    id: medication.id.toString());
-                              },
-                              key: Key(medication.id.toString()),
+                            return Slidable(
+                              key: ValueKey(medication.id.validate()),
+                              startActionPane: ActionPane(
+                                // A motion is a widget used to control how the pane animates.
+                                motion: const ScrollMotion(),
+
+                                // A pane can dismiss the Slidable.
+                                dismissible:
+                                    DismissiblePane(onDismissed: () async {
+                                  await medicationService.deleteMedication(
+                                      id: medication.id.validate());
+                                }),
+
+                                // All actions are defined in the children parameter.
+                                children: [
+                                  // A SlidableAction can have an icon and/or a label.
+                                  SlidableAction(
+                                    onPressed: (s) async {
+                                      await labResultService.deleteLabResult(
+                                          id: medication.id.validate());
+                                    },
+                                    backgroundColor: const Color(0xFFFE4A49),
+                                    foregroundColor: Colors.white,
+                                    icon: Icons.delete,
+                                    label: 'Delete',
+                                  ),
+                                  // SlidableAction(
+                                  //   onPressed: (s) {},
+                                  //   backgroundColor: kPrimary,
+                                  //   foregroundColor: Colors.white,
+                                  //   icon: Icons.share,
+                                  //   label: 'Edit',
+                                  // ),
+                                ],
+                              ),
                               child: eachMedication(
                                 name: medication.name!,
                                 startTime: medication.startTime!,
@@ -134,6 +166,7 @@ class _MedicationTrackerState extends State<MedicationTracker> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Card(
+        color: context.cardColor,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(

@@ -35,6 +35,7 @@ class _EmailScreenState extends State<EmailScreen> {
           decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage("assets/images/bg3.png"),
+              // colorFilter: ColorFilter.mode(kPrimary, BlendMode.color),
               fit: BoxFit.cover,
             ),
           ),
@@ -49,7 +50,9 @@ class _EmailScreenState extends State<EmailScreen> {
                     SizedBox(
                       width: 100,
                       height: 100,
-                      child: Image.asset("assets/images/logo.png"),
+                      child: Image.asset(
+                        "assets/images/logo.png",
+                      ),
                     ),
                     30.height,
                     Row(
@@ -57,7 +60,6 @@ class _EmailScreenState extends State<EmailScreen> {
                         Text(
                           "Sign Up",
                           style: boldTextStyle(
-                            color: kPrimary,
                             size: 32,
                             weight: FontWeight.bold,
                           ),
@@ -81,20 +83,17 @@ class _EmailScreenState extends State<EmailScreen> {
                             borderSide: const BorderSide(color: kPrimary)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(
-                            color: kPrimary,
-                          ),
+                          borderSide: const BorderSide(color: kPrimary),
                         ),
                       ),
                     ),
                     30.height,
-                    const CircularProgressIndicator()
+                    Loader()
                         .center()
                         .visible(authenticationController.isLoading.value),
                     AppButton(
                       width: double.infinity,
-                      color: kPrimary,
-                      textColor: whiteColor,
+                      textColor: kPrimary,
                       onTap: () async {
                         if (_formKey.currentState!.validate()) {
                           if (await authenticationController
@@ -113,17 +112,20 @@ class _EmailScreenState extends State<EmailScreen> {
                     10.height,
                     Text(
                       "or",
-                      style: secondaryTextStyle(size: 20),
+                      style: secondaryTextStyle(
+                        size: 20,
+                      ),
                     ),
                     10.height,
-                    const CircularProgressIndicator()
+                  Loader()
                         .center()
                         .visible(authenticationController.googleSignin.value),
                     AppButton(
                       width: double.infinity,
                       color: white,
-                      onTap: () {
-                        authenticationController.handleGoogleSignin(context,referredBy:widget.userId.validate());
+                      onTap: () async {
+                        authenticationController.handleGoogleSignin(context,
+                            referredBy: widget.userId.validate());
                       },
                       child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -142,12 +144,12 @@ class _EmailScreenState extends State<EmailScreen> {
                     10.height,
                     RichText(
                       text: TextSpan(
-                        style: primaryTextStyle(color: kPrimary),
+                        style: primaryTextStyle(),
                         text: "Already have an account ? ",
                         children: [
                           TextSpan(
                               text: "Sign In",
-                              style: boldTextStyle(color: kPrimary),
+                              style: boldTextStyle(),
                               recognizer: TapGestureRecognizer()
                                 ..onTap =
                                     () => const LoginScreen().launch(context)),

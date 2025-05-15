@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/component/AnimatedCard.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/AuthenticationController.dart';
 import 'package:instant_doctor/screens/profile/about/About.dart';
+import 'package:instant_doctor/screens/profile/medical/MedicalData.dart';
 import 'package:instant_doctor/screens/profile/wallet_setup/WalletSetup.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -50,7 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         bool isDarkMode = settingsController.isDarkMode.value;
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(8.0),
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Column(
@@ -59,13 +61,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const BackButton(
-                        color: kPrimary,
-                      ),
+                      // backButton(context),
+                      Container(),
                       Text(
                         "Profile",
                         style: boldTextStyle(
-                          size: 16,
+                          size: 18,
                           color: kPrimary,
                         ),
                       ),
@@ -77,14 +78,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       })
                     ],
                   ),
-                  1.height,
+                  10.height,
                   StreamBuilder<UserModel>(
                       stream: userService.getProfile(
                           userId: userController.userId.value),
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
-                          var data = snapshot.data;
-                          return profileImage(data, 100, 100).center();
+                          var data = snapshot.data!;
+                          return profileImage(UserModel(), 100, 100,
+                                  context: context)
+                              .center();
                         }
                         return const CircleAvatar(
                           radius: 100,
@@ -92,32 +95,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         );
                       }),
                   10.height,
-                  Container(
-                    width: double.infinity,
-                    height: 140,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                        color: kPrimary,
-                        borderRadius: BorderRadius.circular(20),
-                        image: const DecorationImage(
-                          image: AssetImage("assets/images/particle.png"),
-                          fit: BoxFit.cover,
-                          opacity: 0.4,
-                        )),
+                  AnimatedCard(
+                    color1: kPrimary,
+                    color2: kPrimaryDark,
                     child: StreamBuilder<UserModel>(
                         stream: userService.getProfile(
                             userId: userController.userId.value),
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             var data = snapshot.data!;
-                            bool profileCompleted =
-                                data.bloodGroup.validate().isNotEmpty &&
-                                    data.height.validate().isNotEmpty &&
-                                    data.weight.validate().isNotEmpty &&
-                                    data.dob != null &&
-                                    data.genotype.validate().isNotEmpty &&
-                                    data.phoneNumber.validate().isNotEmpty;
-
+                            bool profileCompleted = data.dob != null &&
+                                data.address.validate().isNotEmpty;
                             return !profileCompleted
                                 ? Column(
                                     children: [
@@ -195,6 +183,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           ),
                                         ],
                                       ),
+                                      40.height,
                                       Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceEvenly,
@@ -242,9 +231,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         }),
                   ),
                   20.height,
-                  profileOption("Personal Information", "personal information",
-                      () {
+                  profileOption("Personal Information",
+                      "manage your personal information", () {
                     const PersonalProfileScreen().launch(context);
+                  }),
+                  profileOption(
+                      "Medical Data", "manage your medical information", () {
+                    const MedicalDataScreen().launch(context);
                   }),
                   profileOption("Wallet Setup", "Please Complete Wallet Setup",
                       () {
@@ -270,7 +263,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     version,
                     style: secondaryTextStyle(),
                   ).center(),
-                  10.height,
+                  // 10.height,
                   TextButton(
                     onPressed: () {
                       authenticationController.handleLogout(context);
@@ -280,6 +273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: boldTextStyle(color: redColor, size: 16),
                     ),
                   ).center(),
+                  20.height,
                 ],
               ),
             ),
@@ -289,38 +283,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  ClipRRect profileOption(
+  Container profileOption(
       String title, String description, VoidCallback ontap) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
-      child: Card(
+    return Container(
+      padding: const EdgeInsets.all(10.0),
+      margin: const EdgeInsets.symmetric(vertical: 2),
+      decoration: BoxDecoration(
         color: context.cardColor,
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: boldTextStyle(size: 14),
-                  ),
-                  5.height,
-                  Text(
-                    description,
-                    style: secondaryTextStyle(size: 12),
-                  ),
-                ],
+              Text(
+                title,
+                style: boldTextStyle(size: 14),
               ),
-              const Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-              )
+              5.height,
+              Text(
+                description,
+                style: secondaryTextStyle(size: 12),
+              ),
             ],
           ),
-        ),
+          const Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+          )
+        ],
       ).onTap(ontap),
     );
   }

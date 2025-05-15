@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/models/MedicationModel.dart';
 import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -28,10 +29,11 @@ class _ActiveMedicationScreenState extends State<ActiveMedicationScreen> {
 
     // Calculate the total days of the medication
     int totalDays = endDate.difference(startDate).inDays + 1;
+    double progressValue = currentDay / totalDays;
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(8.0),
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
@@ -39,7 +41,7 @@ class _ActiveMedicationScreenState extends State<ActiveMedicationScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const BackButton(),
+                    backButton(context),
                     Text(
                       "Medication Tracker",
                       style: boldTextStyle(color: kPrimary),
@@ -54,34 +56,30 @@ class _ActiveMedicationScreenState extends State<ActiveMedicationScreen> {
                 ),
                 10.height,
                 eachSummary(
-                    label: "Medication type",
-                    description: widget.medication.type!),
-                eachSummary(
                     label: "Medication  Name",
                     description: widget.medication.name!),
+                eachSummary(
+                    label: "Prescription",
+                    description: widget.medication.prescription.validate()),
                 eachSummary(
                     label: "Start and end date",
                     description:
                         "${DateFormat('yyyy-MM-dd').format(widget.medication.startTime!.toDate())} - ${DateFormat('yyyy-MM-dd').format(widget.medication.endTime!.toDate())}"),
-                eachSummary(
-                    label: "Dosage",
-                    description:
-                        "${widget.medication.morning} - ${widget.medication.midDay} - ${widget.medication.evening}"),
-                eachSummary(
-                    label: "Interval",
-                    description: "${widget.medication.interval} Hours daily"),
+                // eachSummary(
+                //     label: "Dosage",
+                //     description:
+                //         "${widget.medication.morning} - ${widget.medication.midDay} - ${widget.medication.evening}"),
+                // eachSummary(
+                //     label: "Interval",
+                //     description: "${widget.medication.interval} Hours daily"),
                 50.height,
-                Text(
-                  "${totalDays / currentDay}",
-                  style: boldTextStyle(),
-                ),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(5),
                   child: LinearProgressIndicator(
                     minHeight: 10,
                     backgroundColor: grey,
                     color: kPrimary,
-                    value: totalDays / currentDay,
+                    value: progressValue,
                   ),
                 ),
                 5.height,
@@ -98,7 +96,9 @@ class _ActiveMedicationScreenState extends State<ActiveMedicationScreen> {
                 ),
                 30.height,
                 AppButton(
-                  onTap: () {},
+                  onTap: () {
+                    toast("Medication Taken");
+                  },
                   text: "Taken",
                   color: kPrimary,
                   textColor: white,

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:instant_doctor/constant/color.dart';
-import 'package:instant_doctor/constant/constants.dart';
-import 'package:instant_doctor/main.dart';
-import 'package:instant_doctor/models/NotificationModel.dart';
-import 'package:instant_doctor/services/GetUserId.dart';
+import 'package:get/get.dart';
+import 'package:instant_doctor/component/backButton.dart';
 import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:instant_doctor/models/NotificationModel.dart';
+import 'package:instant_doctor/services/GetUserId.dart';
+
+import '../../constant/color.dart';
+import '../../constant/constants.dart';
+import '../../services/NotificationService.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -14,64 +17,68 @@ class NotificationScreen extends StatefulWidget {
   State<NotificationScreen> createState() => _NotificationScreenState();
 }
 
-// ... (import statements)
-
 class _NotificationScreenState extends State<NotificationScreen> {
-  String? previousDate; // Variable to store the previous notification date
+  String? previousDate; // To store the date of the previous notification
+  final notificationService = Get.find<NotificationService>();
+
+  @override
+  void initState() {
+    notificationService.updateNotificationStatus();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const BackButton(),
+                  backButton(context),
                   Text(
                     "Notification",
                     style: boldTextStyle(size: 25),
                   ),
                   Stack(
                     alignment: Alignment.topRight,
+                    clipBehavior: Clip.none,
                     children: [
                       const Icon(
                         Icons.notifications_active,
                         color: kPrimary,
                         size: 30,
-                      ).onTap(() {
-                        const NotificationScreen().launch(context);
-                      }),
+                      ),
                       Positioned(
-                          top: -4,
-                          right: 0,
-                          child: StreamBuilder<List<NotificationModel>>(
-                              stream: notificationService
-                                  .getUserUnSeenNotifications(
-                                      userId: userController.userId.value),
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData) {
-                                  var data = snapshot.data;
-                                  return Container(
-                                    padding: const EdgeInsets.all(5),
-                                    decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: fireBrick),
-                                    child: Text(
-                                      "${data!.length}",
-                                      style:
-                                          boldTextStyle(color: white, size: 10),
-                                    ).center(),
-                                  ).visible(data.isNotEmpty);
-                                }
-                                return const Text("");
-                              }))
+                        top: -4,
+                        right: 0,
+                        child: StreamBuilder<List<NotificationModel>>(
+                          stream:
+                              notificationService.getUserUnSeenNotifications(
+                                  userId: userController.userId.value),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              var data = snapshot.data;
+                              return Container(
+                                padding: const EdgeInsets.all(5),
+                                decoration: const BoxDecoration(
+                                    shape: BoxShape.circle, color: fireBrick),
+                                child: Text(
+                                  "${data!.length}",
+                                  style: boldTextStyle(color: white, size: 10),
+                                ).center(),
+                              ).visible(data.isNotEmpty);
+                            }
+                            return const Text("");
+                          },
+                        ),
+                      ),
                     ],
-                  )
+                  ),
                 ],
               ),
               30.height,
@@ -80,8 +87,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   onRefresh: () async {
                     return Future.delayed(const Duration(seconds: 2));
                   },
-                  child: StreamBuilder<List<NotificationModel>>(
-                    stream: notificationService.getUserNotifications(
+                  child: FutureBuilder<List<NotificationModel>>(
+                    future: notificationService.getUserNotifications(
                       userId: userController.userId.value,
                     ),
                     builder: (context, snapshot) {
@@ -103,83 +110,72 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                 DateTime.now().year == dateTime.year) {
                               formattedDate = "Today";
                             } else {
-                              // Format DateTime to a string (you can customize the format)
-                              formattedDate =
-                                  DateFormat('yyyy-MM-dd').format(dateTime);
+                              // Format DateTime to 'EEE d MMM, yyyy' (e.g., 'Wed 20th, 2024')
+                              formattedDate = DateFormat('EEE d MMM, yyyy')
+                                  .format(dateTime);
                             }
 
-                            // Check if the current notification has the same date as the previous one
-                            if (formattedDate == previousDate) {
-                              formattedDate =
-                                  ""; // Empty string to not show the date
-                            }
+                            // Show date if it's different from the previous notification date
+                            bool showDateHeader = formattedDate != previousDate;
 
-                            // Update the previousDate variable for the next iteration
+                            // Update the previousDate variable
                             previousDate = formattedDate;
 
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (formattedDate
-                                    .isNotEmpty) // Show the date only if it's not empty
-                                  Text(
-                                    formattedDate,
-                                    style: boldTextStyle(color: kPrimary),
+                                if (showDateHeader)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10.0),
+                                    child: Text(
+                                      formattedDate,
+                                      style: boldTextStyle(color: kPrimary),
+                                    ),
                                   ),
-                                10.height,
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(10),
                                   child: Card(
                                     color: notification.status ==
                                             MessageStatus.read
-                                        ? null
+                                        ? context.cardColor
                                         : context.scaffoldBackgroundColor
                                             .withOpacity(0.3),
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          SizedBox(
-                                            width: 50,
-                                            height: 50,
-                                            child: Image.asset(
-                                              "assets/images/doc1.png",
-                                              fit: BoxFit.cover,
-                                            ),
+                                          Icon(
+                                            Icons.notifications_active,
+                                            size: 25,
                                           ),
                                           10.width,
                                           Expanded(
                                             child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   notification.title.validate(),
                                                   style: primaryTextStyle(
-                                                      size: 14),
+                                                      size: 12),
                                                 ),
                                               ],
                                             ),
-                                          ),
-                                          const Icon(
-                                            Icons.arrow_forward_ios,
                                           ),
                                         ],
                                       ),
                                     ),
                                   ),
-                                ).onTap(() async {
-                                  await notificationService
-                                      .updateNotificationStatus(
-                                          notificationId: notification.id);
-                                  toast("Notification Read");
-                                }),
+                                ),
                               ],
                             );
                           },
                         );
                       }
-                      return const CircularProgressIndicator(
-                        color: kPrimary,
-                      ).center();
+                      return Loader().center();
                     },
                   ),
                 ),

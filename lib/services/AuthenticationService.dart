@@ -1,13 +1,21 @@
+import 'dart:math';
+
 import 'package:get/get.dart';
+import 'package:instant_doctor/constant/constants.dart';
+import 'package:instant_doctor/controllers/AuthenticationController.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../controllers/UserController.dart';
 import 'BaseService.dart';
+import 'ReferralService.dart';
 import 'generateUserTag.dart';
+import 'package:http/http.dart' as http;
 
 class AuthenticationService extends BaseService {
+  final referralService = Get.find<ReferralService>();
+
   var userCol = db.collection("Users");
   FirebaseAuth auth = FirebaseAuth.instance;
   UserController userController = Get.put(UserController());
@@ -28,6 +36,7 @@ class AuthenticationService extends BaseService {
         lastname: lastname,
         email: email,
         phoneNumber: phoneNumber,
+        photoUrl: '',
         gender: gender,
         uid: userRef.user!.uid);
 
@@ -51,6 +60,7 @@ class AuthenticationService extends BaseService {
     required String lastname,
     required String email,
     required String phoneNumber,
+    required String photoUrl,
     required String gender,
     required String uid,
   }) async {
@@ -66,9 +76,37 @@ class AuthenticationService extends BaseService {
       "id": uid,
       "tag": tag,
       "role": "User",
+      "photoUrl": photoUrl,
+      "currency": "NGN",
     };
     await userCol.doc(uid).set(data);
+    handleWelcome(email: email);
     return true;
+  }
+
+  handleWelcome({required String email}) async {
+    var response =
+        await http.post(Uri.parse("$FIREBASE_URL/mail/welcome"), body: {
+      "email": email,
+    });
+    print(response);
+  }
+
+  Future<void> handleSendOTP({required String email}) async {
+    var otp = generateOTP();
+    final authenticationController = Get.put(AuthenticationController());
+    authenticationController.otp.value = otp;
+    var response = await http.post(Uri.parse("$FIREBASE_URL/mail/otp"), body: {
+      "email": email,
+      "otp": otp,
+    });
+    print(response);
+  }
+
+  Future<bool> handleVerifyOTP({required String otp}) async {
+    final authenticationController = Get.put(AuthenticationController());
+    var res = authenticationController.otp.value == otp;
+    return res;
   }
 
   handleListenAuth() async {
@@ -89,7 +127,8 @@ class AuthenticationService extends BaseService {
 
   Future<void> resetPassword(String email) async {
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      await FirebaseAuth.instance
+          .sendPasswordResetEmail(email: email.toLowerCase());
       toast("A reset password link as been sent to your mail");
       // Password reset email sent successfully
     } catch (error) {
@@ -97,5 +136,11 @@ class AuthenticationService extends BaseService {
       toast('Error sending password reset email');
       print('Error sending password reset email: $error');
     }
+  }
+
+  String generateOTP() {
+    var random = Random();
+    int otp = 10000 + random.nextInt(90000); // Ensures it's a 5-digit number
+    return otp.toString();
   }
 }

@@ -1,22 +1,22 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../constant/constants.dart';
 import '../function/send_notification.dart';
-import '../main.dart';
+import '../services/AppointmentService.dart';
 import 'UserController.dart';
 
 class ChatController extends GetxController {
-  UserController userController = Get.put(UserController());
-  var messageController = TextEditingController();
   List files = [].obs;
   List images = [].obs;
   final ImagePicker picker = ImagePicker();
   var isLoading = false.obs;
+
+  RxList message = [].obs;
+  File? audioFile;
 
   var msgType = MessageType.text.obs;
 
@@ -67,8 +67,13 @@ class ChatController extends GetxController {
     required String docId,
     required String appointmentId,
     required String token,
+    required String message,
+    required String myName,
   }) async {
     try {
+      var userController = Get.find<UserController>();
+      final appointmentService = Get.find<AppointmentService>();
+      
       isLoading.value = msgType.value == '' ||
               msgType.value == MessageType.text ||
               (files.isEmpty && images.isEmpty)
@@ -85,15 +90,18 @@ class ChatController extends GetxController {
               : msgType.value == MessageType.image
                   ? images
                   : [],
-          message: messageController.text,
+          message: message,
           type: files.isEmpty && images.isEmpty
               ? MessageType.text
               : msgType.value);
       isLoading.value = false;
-
-      sendNotification([token], "New Message", messageController.text,
-          msgId, NotificatonType.chat);
-      messageController.clear();
+      sendNotification(
+        [token],
+        myName,
+        msgType.value == MessageType.text ? message : "Sent a file",
+        msgId,
+        "Chat",
+      );
     } finally {
       isLoading.value = false;
     }

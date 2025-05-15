@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:instant_doctor/component/ProfileImage.dart';
-import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/ReferralModel.dart';
 import 'package:instant_doctor/models/UserModel.dart';
+import 'package:instant_doctor/services/UserService.dart';
 import 'package:instant_doctor/services/format_number.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 StreamBuilder eachReferral(
     {required BuildContext context, required ReferralModel data}) {
+  final userService = Get.find<UserService>();
   return StreamBuilder<UserModel>(
       stream: userService.getProfile(userId: data.userId.validate()),
       builder: (context, snapshot) {
@@ -26,7 +28,7 @@ StreamBuilder eachReferral(
                     Expanded(
                       child: Row(
                         children: [
-                          profileImage(userRef, 40, 40),
+                          profileImage(userRef, 40, 40, context: context),
                           10.width,
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

@@ -44,8 +44,8 @@ class _DateBookingState extends State<DateBooking> {
             ),
             child: AppTextField(
               textFieldType: TextFieldType.MULTILINE,
-              minLines: 6,
-              maxLines: 8,
+              minLines: 7,
+              maxLines: 9,
               initialValue: bookingController.complain.value,
               textStyle: primaryTextStyle(),
               onChanged: (p0) {

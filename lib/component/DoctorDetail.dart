@@ -4,15 +4,15 @@ import 'package:nb_utils/nb_utils.dart';
 Container docDetail(
     BuildContext context, String desc, String title, String image) {
   return Container(
-    width: MediaQuery.of(context).size.width / 4,
+    width: MediaQuery.of(context).size.width / 3.4,
     height: 110,
     decoration: BoxDecoration(
       color: context.cardColor,
       borderRadius: BorderRadius.circular(20),
       boxShadow: [
         BoxShadow(
-          color: dimGray.withOpacity(0.2),
-          spreadRadius: 2,
+          color: dimGray.withOpacity(0.1),
+          spreadRadius: 0.5,
           blurRadius: 3,
           offset: const Offset(0, 5),
         ),

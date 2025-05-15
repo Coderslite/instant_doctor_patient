@@ -1,4 +1,7 @@
+// ignore_for_file: file_names
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/models/ReferralModel.dart';
 import 'package:instant_doctor/services/BaseService.dart';
@@ -6,8 +9,16 @@ import 'package:instant_doctor/services/TransactionService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../main.dart';
+import 'NotificationService.dart';
+import 'UserService.dart';
+import 'WalletService.dart';
 
 class ReferralService extends BaseService {
+  final walletService = Get.find<WalletService>();
+  final notificationService = Get.find<NotificationService>();
+  final userService = Get.find<UserService>();
+  final transactionService = Get.find<TransactionService>();
+
   var refCol = db.collection("Referrals");
   Future<List<ReferralModel>> getReferrals({required String tag}) async {
     var result = await refCol
@@ -44,11 +55,9 @@ class ReferralService extends BaseService {
         type: TransactionType.credit);
     notificationService.newNotification(
       userId: userProf.id.validate(),
-      type: NotificatonType.transaction,
+      type: NotificationType.transaction,
       title:
           "You have earned NGN 500 for referring ${referree.firstName} ${referree.lastName}",
-      isPushNotification: true,
-      tokens: [userProf.token],
     );
     return;
   }

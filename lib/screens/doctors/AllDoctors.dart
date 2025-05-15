@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:instant_doctor/constant/color.dart';
+import 'package:get/get.dart';
+import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../component/eachDoctor.dart';
 import '../../models/UserModel.dart';
+import '../../services/DoctorService.dart';
 import 'SingleDoctor.dart';
 
 class AllDoctorsScreen extends StatefulWidget {
@@ -15,55 +17,30 @@ class AllDoctorsScreen extends StatefulWidget {
 }
 
 class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
+  final doctorService = Get.find<DoctorService>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(10.0),
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const BackButton(),
+                  backButton(context),
                   Text(
                     "Doctors",
                     style: boldTextStyle(size: 20),
                   ),
-                  const Icon(Icons.sort).onTap(() {
-                    showModalBottomSheet(
-                        backgroundColor: Colors.transparent,
-                        context: context,
-                        builder: (context) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 20, horizontal: 10),
-                            decoration: const BoxDecoration(
-                              color: white,
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(40),
-                                topRight: Radius.circular(40),
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  "Filter Doctors",
-                                  style: boldTextStyle(
-                                    size: 24,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        });
-                  })
+                  Container(),
                 ],
               ),
               10.height,
-              TextFormField(
-                style: primaryTextStyle(),
+              AppTextField(
+                textFieldType: TextFieldType.NAME,
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: context.cardColor,
@@ -73,9 +50,9 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                   ),
                   suffixIcon: Icon(
                     Icons.search,
-                    color: context.iconColor,
+                    color: settingsController.isDarkMode.value?white:black,
                   ),
-                  hintText: "Search doctor",
+                  hintText: "Search doctor by name or speciality",
                   hintStyle: secondaryTextStyle(),
                   border: OutlineInputBorder(
                     // borderSide: BorderSide.none,
@@ -87,6 +64,13 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                 child: StreamBuilder<List<UserModel>>(
                     stream: doctorService.getAllDocs(),
                     builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        print(snapshot.error);
+                        return Text(
+                          snapshot.error.toString(),
+                          style: boldTextStyle(),
+                        );
+                      }
                       if (snapshot.hasData) {
                         var data = snapshot.data;
                         return ListView.builder(
@@ -96,17 +80,19 @@ class _AllDoctorsScreenState extends State<AllDoctorsScreen> {
                               return Padding(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 2),
-                                child: eachDoctor(doctor: doctor,context: context).onTap(
+                                child:
+                                    eachDoctor(doctor: doctor, context: context)
+                                        .onTap(
                                   () {
-                                 SingleDoctorScreen(doctor: doctor,).launch(context);
+                                    SingleDoctorScreen(
+                                      doctor: doctor,
+                                    ).launch(context);
                                   },
                                 ),
                               );
                             });
                       }
-                      return const CircularProgressIndicator(
-                        color: kPrimary,
-                      ).center();
+                      return Loader();
                     }),
               )
             ],

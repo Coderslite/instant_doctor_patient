@@ -13,26 +13,27 @@ class AppTheme {
     tabBarTheme: TabBarTheme(
         labelStyle: primaryTextStyle(color: kPrimary), labelColor: kPrimary),
     primaryColor: kPrimary,
-    scaffoldBackgroundColor: Colors.white,
-    fontFamily: GoogleFonts.inter().fontFamily,
+    scaffoldBackgroundColor: mobileBackgroundColor,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     bottomNavigationBarTheme:
         const BottomNavigationBarThemeData(backgroundColor: Colors.white),
     iconTheme: const IconThemeData(color: scaffoldSecondaryDark),
-    textTheme: const TextTheme(titleLarge: TextStyle()),
+    textTheme: TextTheme(titleLarge: boldTextStyle()),
     dialogBackgroundColor: Colors.white,
     unselectedWidgetColor: Colors.black,
     dividerColor: viewLineColor,
-    cardColor: Colors.white,
+    cardColor: mobileBackgroundColor2,
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.white,
-      systemOverlayStyle:
-          SystemUiOverlayStyle(statusBarIconBrightness: Brightness.light),
+      systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarIconBrightness: Brightness.light,
+          statusBarColor: mobileBackgroundColor),
     ),
     dialogTheme: DialogTheme(shape: dialogShape()),
   ).copyWith(
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: <TargetPlatform, PageTransitionsBuilder>{
-        TargetPlatform.android: OpenUpwardsPageTransitionsBuilder(),
+        TargetPlatform.android: CupertinoPageTransitionsBuilder(),
         TargetPlatform.linux: OpenUpwardsPageTransitionsBuilder(),
         TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
       },
@@ -45,7 +46,7 @@ class AppTheme {
         labelStyle: primaryTextStyle(color: kPrimary), labelColor: kPrimary),
     primaryColor: kPrimary,
     scaffoldBackgroundColor: scaffoldColorDark,
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: scaffoldSecondaryDark),
     iconTheme: const IconThemeData(color: Colors.white),
@@ -64,7 +65,7 @@ class AppTheme {
   ).copyWith(
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: <TargetPlatform, PageTransitionsBuilder>{
-        TargetPlatform.android: OpenUpwardsPageTransitionsBuilder(),
+        TargetPlatform.android: CupertinoPageTransitionsBuilder(),
         TargetPlatform.linux: OpenUpwardsPageTransitionsBuilder(),
         TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
       },

@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/UserModel.dart';
@@ -69,6 +71,8 @@ class UserService extends BaseService {
       return null;
     }
   }
+
+  
 
   Future<void> updateUserBalance(
       {required String id, required int amount}) async {

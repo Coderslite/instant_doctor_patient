@@ -97,21 +97,22 @@ class _PasswordScreenState extends State<PasswordScreen> {
                       decoration: InputDecoration(
                         label: Text(
                           "Password",
-                          style: primaryTextStyle(),
+                          style: primaryTextStyle(
+                            size: 14,
+                          ),
                         ),
                         contentPadding: const EdgeInsetsDirectional.symmetric(
                             vertical: 5, horizontal: 10),
                         focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
-                            borderSide:
-                                BorderSide(color: context.dividerColor)),
+                            borderSide: const BorderSide(color: kPrimary)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(color: context.dividerColor),
+                          borderSide: const BorderSide(color: kPrimary),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(color: context.dividerColor),
+                          borderSide: const BorderSide(color: kPrimary),
                         ),
                       ),
                     ),
@@ -127,21 +128,22 @@ class _PasswordScreenState extends State<PasswordScreen> {
                       decoration: InputDecoration(
                         label: Text(
                           "Retype Password",
-                          style: primaryTextStyle(),
+                          style: primaryTextStyle(
+                            size: 14,
+                          ),
                         ),
                         contentPadding: const EdgeInsetsDirectional.symmetric(
                             vertical: 5, horizontal: 10),
                         focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
-                            borderSide:
-                                BorderSide(color: context.dividerColor)),
+                            borderSide: const BorderSide(color: kPrimary)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(color: context.dividerColor),
+                          borderSide: const BorderSide(color: kPrimary),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(color: context.dividerColor),
+                          borderSide: const BorderSide(color: kPrimary),
                         ),
                       ),
                     ),
@@ -166,28 +168,29 @@ class _PasswordScreenState extends State<PasswordScreen> {
                       ],
                     ).visible(!widget.isResetPassword),
                     30.height,
-                    const CircularProgressIndicator(
-                      color: white,
-                    )
+                    Loader()
                         .center()
                         .visible(authenticationController.isLoading.value),
                     AppButton(
                       width: double.infinity,
                       textColor: white,
+                      disabledColor: gray,
+                      disabledTextColor: white,
+                      enabled: isChecked,
                       onTap: () {
                         if (_formKey.currentState!.validate()) {
                           if (pass1.text == pass2.text) {
                             widget.isResetPassword
                                 ? const SuccessPassReset().launch(context)
-                                : authenticationController.handleRegister(
-                                    firstname: widget.firstname!,
-                                    lastname: widget.lastname!,
-                                    email: widget.email!,
+                                : authenticationController.handleSendOTP(
+                                    email: widget.email.validate(),
+                                    firstname: widget.firstname.validate(),
+                                    lastname: widget.lastname.validate(),
                                     password: pass1.text,
-                                    phoneNumber: widget.phone!,
-                                    gender: widget.gender!,
-                                    referredBy: widget.referredBy.validate(),
-                                    context: context);
+                                    phoneNumber: widget.phone.validate(),
+                                    gender: widget.gender.validate(),
+                                    isResetPassword: widget.isResetPassword,
+                                    referredBy: widget.referredBy.validate());
                           } else {
                             toast("Password does not match");
                           }

@@ -57,7 +57,7 @@ class CalculatorDialpad extends StatelessWidget {
       onPressed: () => onDigitPressed(digit),
       style: ElevatedButton.styleFrom(
         shape: const CircleBorder(),
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(30.0),
         backgroundColor: context.cardColor,
       ),
       child: Text(

@@ -1,267 +1,187 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:instant_doctor/constant/color.dart';
-import 'package:instant_doctor/main.dart';
+import 'package:get/get.dart';
+import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/models/HealthTipModel.dart';
+import 'package:instant_doctor/screens/healthtips/SelectedHealthTip.dart';
+import 'package:instant_doctor/services/HealthTipService.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:sliding_up_panel/sliding_up_panel.dart';
 
-import '../../component/Accordion.dart';
-import 'package:timeago/timeago.dart' as timeago;
-import 'SingleTips.dart';
 
 class HealthTipsHome extends StatefulWidget {
-  final String tipsType;
-  final String image;
-  const HealthTipsHome(
-      {super.key, required this.tipsType, required this.image});
+  const HealthTipsHome({super.key});
 
   @override
   State<HealthTipsHome> createState() => _HealthTipsHomeState();
 }
 
 class _HealthTipsHomeState extends State<HealthTipsHome> {
+  TextEditingController searchController = TextEditingController();
+  List<HealthTipsCategoryModel> allCategories = [];
+  List<HealthTipsCategoryModel> filteredCategories = [];
+  bool isLoading = true;
+  final healthTipService = Get.find<HealthTipService>();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCategories(); // Fetch the categories when the widget initializes
+    searchController
+        .addListener(_onSearchChanged); // Listen for search input changes
+  }
+
+  // Fetch categories and set both allCategories and filteredCategories
+  void fetchCategories() async {
+    List<HealthTipsCategoryModel> categories =
+        await healthTipService.getHealthTipsCategory();
+    setState(() {
+      allCategories = categories;
+      filteredCategories = categories;
+      isLoading = false;
+    });
+  }
+
+  // Update filteredCategories based on the search query
+  void _onSearchChanged() {
+    setState(() {
+      filteredCategories = allCategories
+          .where((category) => category.name!
+              .toLowerCase()
+              .contains(searchController.text.toLowerCase()))
+          .toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose(); // Dispose controller to avoid memory leaks
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: WillPopScope(
-        onWillPop: () async {
-          if (settingsController.panelOpened == false) {
-            return true;
-          } else {
-            setState(() {
-              settingsController.panelOpened = false;
-              settingsController.panelController.close();
-            });
-            return false;
-          }
-        },
-        child: SlidingUpPanel(
-          controller: settingsController.panelController,
-          parallaxEnabled: true,
-          parallaxOffset: 0.5,
-          maxHeight: MediaQuery.of(context).size.height * 0.8,
-          onPanelOpened: () {
-            setState(() {
-              settingsController.panelOpened = true;
-            });
-          },
-          onPanelClosed: () {
-            setState(() {
-              settingsController.panelOpened = false;
-            });
-          },
-          minHeight: MediaQuery.of(context).size.height / 1.6,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
-          ),
-          color: context.cardColor,
-          collapsed: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                const SizedBox(
-                  height: 20,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "Pull Up",
-                      style: TextStyle(
-                        fontFamily: 'RedHatDisplay',
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: Color(0XFF8A99B1),
-                      ),
-                    ).onTap(() {
-                      settingsController.panelController.open();
-                    }),
-                    const Icon(
-                      Icons.arrow_upward,
-                      size: 14,
-                      color: Color(0XFF8A99B1),
-                    )
-                  ],
-                )
-              ],
-            ),
-          ),
-          panel: Padding(
-            padding: const EdgeInsets.only(top: 20, left: 5, right: 5),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                40.height,
-                Text(
-                  widget.tipsType,
-                  style: boldTextStyle(
-                    color: kPrimary,
-                    size: 22,
-                  ),
-                ).paddingLeft(10),
-                10.height,
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: () async {
-                      Future.delayed(const Duration(seconds: 2));
-                      return;
-                    },
-                    child: StreamBuilder<List<HealthTipModel>>(
-                        stream: healthTipService.getHealthTips(
-                            type: widget.tipsType == 'Health Tips'
-                                ? 'General'
-                                : widget.tipsType == 'Women Health'
-                                    ? 'Women'
-                                    : 'Men'),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            var data = snapshot.data!;
-                            if (data.isEmpty) {
-                              return Text(
-                                "No Tips Available",
-                                style: boldTextStyle(),
-                              ).center();
-                            }
-                            return ListView.builder(
-                                itemCount: data.length,
-                                physics: settingsController.panelOpened
-                                    ? const BouncingScrollPhysics()
-                                    : const NeverScrollableScrollPhysics(),
-                                itemBuilder: (context, index) {
-                                  var tip = data[index];
-                                  return healthTipCard(data: tip);
-                                });
-                          }
-                          return const CircularProgressIndicator().center();
-                        }),
-                  ),
-                )
-              ],
-            ),
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage("assets/images/${widget.image}"),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: Column(
-              children: [
-                30.height,
-                const Row(
-                  children: [
-                    BackButton(),
-                  ],
-                ),
-                Text(
-                  widget.tipsType == 'FAQ'
-                      ? 'Frequently Asked Questions'
-                      : widget.tipsType,
-                  textAlign: TextAlign.center,
-                  style: boldTextStyle(size: 32, color: white),
-                ).center(),
-              ],
-            ).center(),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Accordion healthTipAccordion() {
-    return Accordion(
-      items: [
-        AccordionItem(
-            header: Text(
-              "What is Instant Doctor?",
-              style: primaryTextStyle(size: 18),
-            ),
-            content: Column(
-              children: [
-                Text(
-                  "Instant doctor is a mobile application built using flutter, node js ",
-                  style: secondaryTextStyle(),
-                ).paddingSymmetric(horizontal: 15, vertical: 10)
-              ],
-            ))
-      ],
-    );
-  }
-
-  healthTipCard({required HealthTipModel data}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Card(
-        color: context.cardColor,
+      body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Row(
+          child: Column(
             children: [
-              SizedBox(
-                height: 50,
-                width: 50,
-                child: CachedNetworkImage(
-                  imageUrl: data.image.validate(),
-                  fit: BoxFit.cover,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  backButton(context),
+                  Text(
+                    "Health Tips Category",
+                    style: boldTextStyle(size: 16),
+                  ),
+                  const SizedBox(width: 40), // Adds space for alignment
+                ],
+              ),
+              10.height,
+              Card(
+                color: context.cardColor,
+                child: AppTextField(
+                  controller: searchController,
+                  textFieldType: TextFieldType.NAME,
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.all(10),
+                    prefixIcon: Icon(Icons.search),
+                    hintText: "Search Category",
+                    hintStyle: secondaryTextStyle(),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
                 ),
               ),
-              10.width,
+              10.height,
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      data.title.validate(),
-                      style: boldTextStyle(size: 15),
-                    ),
-                    10.height,
-                    Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.timelapse,
-                              size: 10,
-                            ),
-                            5.width,
-                            Text(
-                              timeago.format(data.createdAt!.toDate()),
-                              style: secondaryTextStyle(size: 12),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.visibility,
-                              size: 10,
-                            ),
-                            5.width,
-                            Text(
-                              "${data.views.validate()} Views",
-                              style: secondaryTextStyle(size: 12),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                child: isLoading
+                    ? Loader()
+                    : filteredCategories.isEmpty
+                        ? Center(
+                            child: Text("No categories found",
+                                style: boldTextStyle()))
+                        : CustomScrollView(
+                            slivers: [
+                              SliverPadding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10),
+                                sliver: SliverGrid(
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 3,
+                                    mainAxisSpacing: 5,
+                                    crossAxisSpacing: 5,
+                                  ),
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) {
+                                      final category =
+                                          filteredCategories[index];
+                                      return Container(
+                                        padding: const EdgeInsets.all(5),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          color: context.cardColor,
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Expanded(
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                child: SizedBox(
+                                                  width: double.infinity,
+                                                  child: CachedNetworkImage(
+                                                    imageUrl: category.image
+                                                        .validate(),
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            Text(
+                                              category.name.validate(),
+                                              style: boldTextStyle(size: 10),
+                                            ),
+                                            StreamBuilder<int>(
+                                                stream: healthTipService
+                                                    .getArticleCount(
+                                                        categoryId: category.id
+                                                            .validate()),
+                                                builder: (context, snapshot) {
+                                                  if (snapshot.hasData) {
+                                                    var count = snapshot.data!;
+                                                    return Text(
+                                                      count < 1
+                                                          ? "no article yet"
+                                                          : "+$count Articles",
+                                                      style: secondaryTextStyle(
+                                                          size: 10),
+                                                    );
+                                                  }
+                                                  return SizedBox.shrink();
+                                                }),
+                                          ],
+                                        ),
+                                      ).onTap(() {
+                                        SelectedHealthTip(
+                                          healthTipsCategory: category,
+                                        ).launch(context);
+                                      });
+                                    },
+                                    childCount: filteredCategories.length,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
               ),
             ],
           ),
         ),
       ),
-    ).onTap(() {
-      SingleTipScreen(
-        tip: data,
-      ).launch(context);
-    });
+    );
   }
 }

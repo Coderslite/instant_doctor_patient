@@ -1,3 +1,6 @@
+// ignore_for_file: file_names
+
+import 'package:get/get.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/services/BaseService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
@@ -5,9 +8,14 @@ import 'package:instant_doctor/services/format_number.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../constant/constants.dart';
+import '../function/send_notification.dart';
+import 'NotificationService.dart';
 import 'TransactionService.dart';
 
 class WalletService extends BaseService {
+  final transactionService = Get.find<TransactionService>();
+  final notificationService = Get.find<NotificationService>();
+
   var userCol = db.collection("Users");
 
   Future<void> topUp({required String userId, required int amount}) async {
@@ -21,12 +29,17 @@ class WalletService extends BaseService {
         type: TransactionType.credit,
         amount: amount.toInt());
     var token = await userService.getUserToken(userId: userId);
+    sendNotification(
+        [token],
+        "Topup Success",
+        "You have successfully top up NGN ${formatAmount(amount)} to your instant doctor wallet",
+        "",
+        NotificationType.transaction);
     await notificationService.newNotification(
-        userId: userId,
-        type: NotificatonType.transaction,
-        title: "Your top up of NGN $amount was successful",
-        tokens: [token],
-        isPushNotification: true);
+      userId: userId,
+      type: NotificationType.transaction,
+      title: "Your top up of NGN $amount was successful",
+    );
   }
 
   Future<int> getAvaibleBalance({required String userId}) async {
@@ -74,11 +87,16 @@ class WalletService extends BaseService {
           userService.updateUserBalance(id: user.id!, amount: newAmount);
           debitUser(userId: myId, amount: amount);
           await notificationService.newNotification(
-              userId: user.id!,
-              type: NotificatonType.transaction,
-              title: "Credit Alert of ${formatAmount(amount)} from $me",
-              tokens: [receiverToken],
-              isPushNotification: true);
+            userId: user.id!,
+            type: NotificationType.transaction,
+            title: "Credit Alert of ${formatAmount(amount)} from $me",
+          );
+          sendNotification(
+              [receiverToken],
+              "Credit Alert",
+              "Incomming Alert of ${formatAmount(amount)} from $me",
+              "",
+              NotificationType.transaction);
           await transactionService.newTransaction(
               title:
                   "You sent ${formatAmount(amount)} to ${user.firstName} ${user.lastName}",

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/screens/medication/MedicationTracker.dart';
 import 'package:nb_utils/nb_utils.dart';
 
@@ -18,13 +19,13 @@ class _CompleteMedicationScreenState extends State<CompleteMedicationScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const BackButton(),
+                  backButton(context),
                   Text(
                     "Medication Tracker",
                     style: boldTextStyle(color: kPrimary),

@@ -12,3 +12,15 @@ Future<String> uploadFile(File file, String appointmentId) async {
   String downloadUrl = await storageReference.getDownloadURL();
   return downloadUrl;
 }
+
+
+Future<String> uploadReportFile(File file, String reportId) async {
+  FirebaseStorage storage = FirebaseStorage.instance;
+  Reference storageReference = storage
+      .ref('/reports/')
+      .child(reportId + DateTime.now().millisecond.toString());
+  UploadTask uploadTask = storageReference.putFile(file);
+  await uploadTask.whenComplete(() => {});
+  String downloadUrl = await storageReference.getDownloadURL();
+  return downloadUrl;
+}

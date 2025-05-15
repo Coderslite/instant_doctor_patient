@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/component/backButton.dart';
+import 'package:instant_doctor/screens/profile/help/LiveChat.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -15,13 +17,13 @@ class _HelpScreenState extends State<HelpScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const BackButton(),
+                  backButton(context),
                   Text(
                     "Get Help",
                     style: boldTextStyle(),
@@ -50,6 +52,7 @@ class _HelpScreenState extends State<HelpScreen> {
               }),
               profileOption("Live Chat", "Chat with our agent live", () {
                 // HelpScreen().launch(context);
+                LiveChatScreen().launch(context);
               }),
             ],
           ),

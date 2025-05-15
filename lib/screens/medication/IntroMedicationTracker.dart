@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/screens/medication/MedicationTracker.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -16,15 +17,11 @@ class _IntroMedicationTrackerState extends State<IntroMedicationTracker> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  BackButton(),
-                ],
-              ),
+              backButton(context),
               20.height,
               Expanded(
                   child: Column(

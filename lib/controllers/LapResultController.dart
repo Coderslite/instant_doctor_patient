@@ -1,18 +1,38 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/component/snackBar.dart';
+import 'package:instant_doctor/controllers/UploadFileController.dart';
+import 'package:instant_doctor/services/GetUserId.dart';
+import 'package:instant_doctor/services/WalletService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
-class LapResultController extends GetxController {
-  List files = [].obs;
+import '../screens/home/Root.dart';
+import '../services/LabResultService.dart';
+
+class LabResultController extends GetxController {
+  UploadFileController uploadFileController = Get.put(UploadFileController());
+  RxBool isUpload = false.obs;
+  var files = [].obs;
   RxBool emailCopy = false.obs;
-  handlePickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles();
+  final walletService = Get.find<WalletService>();
+  final labResultService = Get.find<LabResultService>();
+
+  handlePickFile(String type) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions:
+          type == 'Image' ? ['png', 'jpeg', 'jpg'] : ['pdf', 'doc'],
+    );
 
     if (result != null) {
       File file = File(result.files.single.path!);
-      files.add(file);
+      files.add({
+        "file": file,
+        "fileType": type,
+      });
     } else {
       toast("no file was selected");
     }
@@ -20,5 +40,45 @@ class LapResultController extends GetxController {
 
   handleRemoveFile(int index) {
     files.removeAt(index);
+  }
+
+  // handleRemoveFileByFileName(File file) {
+  //   files.remove(file);
+  // }
+
+  handleUploadFiles(BuildContext context, int amount) async {
+    try {
+      var debited = await walletService.debitUser(
+          userId: userController.userId.value, amount: amount);
+      if (files.isEmpty) {
+        errorSnackBar(title: "No file has been selected");
+        return;
+      }
+      if (!debited) {
+        errorSnackBar(title: "Insufficient Balance");
+        return;
+      }
+      isUpload.value = true;
+      List uploadedFiles = [];
+      for (int i = files.length - 1; i >= 0; i--) {
+        // Iterate in reverse order
+        var fileUrl =
+            await uploadFileController.uploadFileLabResult(files[i]['file']);
+        uploadedFiles.add({
+          "fileUrl": fileUrl,
+          "fileType": files[i]['fileType'],
+        });
+        handleRemoveFile(i);
+      }
+      labResultService.uploadToResult(files: uploadedFiles);
+      // handleRemoveFileByFileName(files[i]);
+      toast("one lab result uploaded");
+      toast("Upload completed");
+      const Root().launch(context);
+    } catch (err) {
+      toast(err.toString());
+    } finally {
+      isUpload.value = false;
+    }
   }
 }

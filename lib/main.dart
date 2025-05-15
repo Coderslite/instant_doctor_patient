@@ -1,5 +1,5 @@
+// main.dart
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,103 +9,51 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import 'package:instant_doctor/controllers/AlarmController.dart';
-import 'package:instant_doctor/screens/chat/VideoCall.dart';
-import 'package:instant_doctor/services/DoctorService.dart';
-import 'package:instant_doctor/services/HealthTipService.dart';
-import 'package:instant_doctor/services/NotificationService.dart';
-import 'package:instant_doctor/services/ReferralService.dart';
-import 'package:instant_doctor/services/TransactionService.dart';
-import 'package:instant_doctor/services/WalletService.dart';
+import 'package:instant_doctor/controllers/FirebaseMessaging.dart';
+import 'package:instant_doctor/firebase_options.dart';
+import 'package:instant_doctor/screens/splash_screen/splash_screen.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
+import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 
 import 'AppTheme.dart';
 import 'constant/color.dart';
 import 'constant/constants.dart';
-import 'controllers/FirebaseMessaging.dart';
-import 'controllers/IncomingCallController.dart';
+import 'services_initializer.dart';
 import 'controllers/SettingController.dart';
-import 'firebase_options.dart';
-import 'screens/splash_screen/splash_screen.dart';
-import 'services/AppointmentService.dart';
-import 'services/MedicationService.dart';
-import 'services/UserService.dart';
-import 'package:timezone/data/latest.dart' as tz;
 
-SettingsController settingsController = Get.put(SettingsController());
-WalletService walletService = WalletService();
-UserService userService = UserService();
-NotificationService notificationService = NotificationService();
-TransactionService transactionService = TransactionService();
-var db = FirebaseFirestore.instance;
-AppointmentService appointmentService = AppointmentService();
-MedicationService medicationService = MedicationService();
-DoctorService doctorService = DoctorService();
-User? user = FirebaseAuth.instance.currentUser;
-// Initialize Flutter Local Notifications Plugin
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
+
+User? user = FirebaseAuth.instance.currentUser;
+var db = FirebaseFirestore.instance;
 var firebaseStorage = FirebaseStorage.instance;
-AlarmController alarmController = Get.put(AlarmController());
-// BackgroundService backgroundService = BackgroundService();
-GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-IncomingCall incomingCall = IncomingCall();
 
-ReferralService referralService = ReferralService();
-HealthTipService healthTipService = HealthTipService();
-
-@pragma('vm:entry-point')
-void callbackDispatcher() {
-  // Workmanager().executeTask((task, inputData) async {
-  //   alarmController.displayNotification();
-  //   return Future.value(true);
-  // });
-}
-
-@pragma('vm:entry-point')
-void alarmNotification() {
-  alarmController.displayNotification();
-}
+SettingsController settingsController = Get.put(SettingsController());
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   var payload = message.data;
+
   if (payload['type'] == 'Call') {
     var appointmentId = payload['id'];
     var prefs = await SharedPreferences.getInstance();
     prefs.setString('AppointmentId', appointmentId);
     FirebaseMessagings().showIncomingCallNotification(message);
-    // incomingCall.showCalling(appointmentId);
   } else {
-    FirebaseMessagings().displayLocalNotification(message);
+    if (message.notification != null) {
+      FirebaseMessagings().displayLocalNotification(message);
+    }
   }
 }
-
-@pragma('vm:entry-point')
-Future<void> notificationTapBackground(
-    NotificationResponse notificationResponse) async {
-  switch (notificationResponse.actionId) {
-    case 'accept':
-      VideoCall(
-        appointmentId: notificationResponse.payload.toString(),
-      );
-      break;
-    case 'reject':
-      FirebaseMessagings().cancelNotification();
-      break;
-  }
-}
-
 
 Future<void> initializeTheme() async {
   int themeModeIndex = getIntAsync(THEME_MODE_INDEX);
-  if (themeModeIndex == ThemeModeLight) {
-    settingsController.isDarkMode.value = false;
-  } else if (themeModeIndex == ThemeModeDark) {
-    settingsController.isDarkMode.value = true;
-  }
+  settingsController.isDarkMode.value = themeModeIndex == ThemeModeDark;
   settingsController.setTheme(
     settingsController.isDarkMode.value ? ThemeMode.dark : ThemeMode.light,
   );
@@ -113,51 +61,37 @@ Future<void> initializeTheme() async {
 
 Future<void> initializeApp() async {
   WidgetsFlutterBinding.ensureInitialized();
-  DartPluginRegistrant.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseMessagings().handleInit();
+
+  ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(navigatorKey);
+  await ZegoUIKit().initLog();
+  ZegoUIKitPrebuiltCallInvitationService().useSystemCallingUI([
+    ZegoUIKitSignalingPlugin(),
+  ]);
+
   await initialize();
   await initializeTheme();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  //  await FirebaseAnalytics().logEvent(name: 'app_start');
-  await initMethod();
-  FirebaseMessagings().handleInit();
-  // Workmanager().initialize(
-  //     callbackDispatcher, // The top level function, aka callbackDispatcher
-  //     isInDebugMode:
-  //         false // If enabled it will post a notification whenever the task is running. Handy for debugging tasks
-  //     );
   settingsController.handleGetVideoCallKeys();
 }
 
 Future<void> main() async {
   tz.initializeTimeZones();
   await initializeApp();
-  runApp(const MyApp());
-}
 
-Future<void> initMethod() async {
-  await initialize(aLocaleLanguageList: [
-    LanguageDataModel(
-        id: 1,
-        name: 'English',
-        languageCode: 'en',
-        flag: 'assets/flag/ic_us.png'),
-    // ... (other languages)
-  ]);
+  defaultToastBackgroundColor = Colors.black;
+  defaultToastTextColor = Colors.white;
+  defaultToastGravityGlobal = ToastGravity.CENTER;
+  defaultRadius = 30;
+  defaultAppButtonRadius = 30;
   defaultLoaderAccentColorGlobal = kPrimary;
-  selectedLanguageDataModel =
-      getSelectedLanguageModel(defaultLanguage: defaultLanguage);
-  if (selectedLanguageDataModel != null) {
-    settingsController
-        .setLanguage(selectedLanguageDataModel!.languageCode.validate());
-  } else {
-    selectedLanguageDataModel = localeLanguageList.first;
-    settingsController
-        .setLanguage(selectedLanguageDataModel!.languageCode.validate());
-  }
+
+  runApp(MyApp(navigatorKey: navigatorKey));
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  final GlobalKey<NavigatorState>? navigatorKey;
+  const MyApp({super.key, this.navigatorKey});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -166,7 +100,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   Future<void> init() async {
     settingsController.setTheme(
-        settingsController.isDarkMode.value ? ThemeMode.dark : ThemeMode.light);
+      settingsController.isDarkMode.value ? ThemeMode.dark : ThemeMode.light,
+    );
   }
 
   @override
@@ -178,21 +113,18 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     setOrientationPortrait();
-    return Obx(
-      () => GetMaterialApp(
-        title: 'Instant Doctor',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: settingsController.isDarkMode.value
-            ? ThemeMode.dark
-            : ThemeMode.light,
-        locale: Locale(settingsController.selectedLanguage),
-        supportedLocales: LanguageDataModel.languageLocales(),
-        localeResolutionCallback: (locale, supportedLocales) => locale,
-        home: const SplashScreen(),
-        builder: scrollBehaviour(),
-      ),
-    );
+    return Obx(() => GetMaterialApp(
+          title: 'Instant Doctor',
+          initialBinding: InitialBindings(),
+          debugShowCheckedModeBanner: false,
+          navigatorKey: widget.navigatorKey,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: settingsController.isDarkMode.value
+              ? ThemeMode.dark
+              : ThemeMode.light,
+          home: const SplashScreen(),
+          builder: scrollBehaviour(),
+        ));
   }
 }

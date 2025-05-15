@@ -1,39 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/component/AnimatedCard.dart';
 import 'package:instant_doctor/controllers/UserController.dart';
 import 'package:instant_doctor/models/UserModel.dart';
 import 'package:instant_doctor/screens/profile/wallet_setup/WalletSetup.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../constant/color.dart';
-import '../main.dart';
+import '../services/UserService.dart';
 import '../services/format_number.dart';
 
-Container card(BuildContext context) {
+AnimatedCard card(BuildContext context) {
   UserController userController = Get.put(UserController());
-  return Container(
-    height: 200,
-    width: MediaQuery.of(context).size.width / 1.1,
-    alignment: Alignment.topLeft,
-    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(50),
-      color: kPrimary,
-      image: const DecorationImage(
-        image: AssetImage("assets/images/particle.png"),
-        fit: BoxFit.cover,
-        opacity: 0.4,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: dimGray.withOpacity(0.2),
-          spreadRadius: 2,
-          blurRadius: 3,
-          offset: const Offset(0, 5),
-        ),
-      ],
-    ),
+  final userService = Get.find<UserService>();
+
+  return AnimatedCard(
+    color1: kPrimary,
+    color2: kPrimaryDark,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -53,7 +37,7 @@ Container card(BuildContext context) {
                 stream: userController.userId.isNotEmpty
                     ? userService.getProfile(
                         userId: userController.userId.value)
-                    : null,
+                    : const Stream.empty(), // return empty stream if null
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
                     return Text(snapshot.error.toString());
@@ -83,6 +67,7 @@ Container card(BuildContext context) {
                 }),
           ],
         ),
+        40.height,
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -106,7 +91,6 @@ Container card(BuildContext context) {
                 ClipboardData(text: userController.tag.value),
               );
 
-              // Show a snackbar to indicate the text has been copied
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Copied'),

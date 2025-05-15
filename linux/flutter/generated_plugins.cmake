@@ -5,8 +5,11 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_linux
   file_selector_linux
+  gtk
   nb_utils
   url_launcher_linux
+  webcrypto
+  zego_express_engine
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

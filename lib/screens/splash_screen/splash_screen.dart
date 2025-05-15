@@ -1,13 +1,14 @@
-import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
+// import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 // import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:instant_doctor/main.dart';
-import 'package:instant_doctor/screens/authentication/email_screen.dart';
+import 'package:instant_doctor/screens/authentication/login_screen.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+import '../../controllers/ZegocloudController.dart';
 import '../../services/GetUserId.dart';
 import '../home/Root.dart';
-import '../onboarding/onboarding.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -17,61 +18,24 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  FirebaseDynamicLinks dynamicLinks = FirebaseDynamicLinks.instance;
-  String link = 'https://instantdoctor.page.link/refer';
   String? userId = '';
+  final zegoCloudController = Get.find<ZegoCloudController>();
 
   handleNext() async {
-    getUserId();
-    Future.delayed(const Duration(seconds: 3)).then((value) {
+    Future.delayed(const Duration(seconds: 1)).then((value) async {
       if (user != null) {
-        return const Root().launch(context);
+        await getUserId();
+        await zegoCloudController.handleInit();
+        return Root().launch(context, isNewTask: true);
       } else {
-        return const OnboardingScreen().launch(context);
+        return LoginScreen().launch(context, isNewTask: true);
       }
-    });
-  }
-
-  checkDynamicLink() async {
-    final PendingDynamicLinkData? initialLink =
-        await FirebaseDynamicLinks.instance.getDynamicLink(Uri.parse(link));
-    final Uri? uri = initialLink?.link;
-    final queryParams = uri?.queryParameters;
-    userId = queryParams?['userId'].toString();
-    setState(() {});
-    if (userId != 'null' && userId != null) {
-      Future.delayed(const Duration(seconds: 3)).then((value) {
-        EmailScreen(
-          userId: userId,
-        ).launch(context);
-      });
-    } else {
-      handleNext();
-    }
-  }
-
-  Future<void> initDynamicLinks() async {
-    dynamicLinks.onLink.listen((dynamicLinkData) {
-      print(dynamicLinkData);
-      final Uri uri = dynamicLinkData.link;
-      final queryParams = uri.queryParameters;
-      final referral = queryParams['userId'].toString();
-      if (referral.toString() != 'null') {
-        Future.delayed(const Duration(seconds: 1)).then((value) {
-          EmailScreen(userId: referral).launch(context);
-        });
-      }
-    }).onError((error) {
-      print('onLink error');
-      print(error.message);
     });
   }
 
   @override
   void initState() {
-    initDynamicLinks();
-    checkDynamicLink();
-
+    handleNext();
     super.initState();
   }
 

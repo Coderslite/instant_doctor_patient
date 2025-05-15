@@ -49,7 +49,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     SizedBox(
                       width: 100,
                       height: 100,
-                      child: Image.asset("assets/images/logo.png"),
+                      child: Image.asset(
+                        "assets/images/logo.png",
+                      ),
                     ),
                     30.height,
                     Row(
@@ -57,7 +59,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         Text(
                           "Sign In",
                           style: boldTextStyle(
-                            color: kPrimary,
                             size: 32,
                             weight: FontWeight.bold,
                           ),
@@ -82,9 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderSide: const BorderSide(color: kPrimary)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(
-                            color: kPrimary,
-                          ),
+                          borderSide: const BorderSide(color: kPrimary),
                         ),
                       ),
                     ),
@@ -108,23 +107,18 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderSide: const BorderSide(color: kPrimary)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(
-                            color: kPrimary,
-                          ),
+                          borderSide: const BorderSide(color: kPrimary),
                         ),
                       ),
                     ),
                     30.height,
-                    const CircularProgressIndicator(
-                      color: kPrimary,
-                    )
+                    Loader()
                         .center()
                         .visible(authenticationController.isLoading.value),
                     SizedBox(
                       child: AppButton(
                         width: double.infinity,
-                        color: kPrimary,
-                        textColor: whiteColor,
+                        textColor: kPrimary,
                         onTap: () async {
                           if (_formKey.currentState!.validate()) {
                             await authenticationController.handleSignIn(
@@ -137,6 +131,31 @@ class _LoginScreenState extends State<LoginScreen> {
                         text: "Continue",
                       ),
                     ).visible(!authenticationController.isLoading.value),
+                    10.height,
+                    Loader()
+                        .center()
+                        .visible(authenticationController.googleSignin.value),
+                    AppButton(
+                      width: double.infinity,
+                      color: white,
+                      onTap: () async {
+                        authenticationController.handleGoogleSignin(context,
+                            referredBy: '');
+                      },
+                      child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              height: 30,
+                              width: 30,
+                              child: Image.asset(
+                                "assets/images/google.png",
+                              ),
+                            ),
+                            10.width,
+                            const Text("Continue with Google"),
+                          ]).center(),
+                    ).visible(!authenticationController.googleSignin.value),
                     10.height,
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -152,12 +171,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     10.height,
                     RichText(
                         text: TextSpan(
-                            style: primaryTextStyle(color: kPrimary),
+                            style: primaryTextStyle(),
                             text: "Don't have an account ? ",
                             children: [
                           TextSpan(
                               text: "Sign Up",
-                              style: boldTextStyle(color: kPrimary),
+                              style: boldTextStyle(),
                               recognizer: TapGestureRecognizer()
                                 ..onTap =
                                     () => const EmailScreen().launch(context)),

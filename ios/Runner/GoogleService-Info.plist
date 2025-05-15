@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>127248616649-tbh8pb8t6nl2ughnth8u50vee0nqvt17.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.127248616649-tbh8pb8t6nl2ughnth8u50vee0nqvt17</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>127248616649-01qc7k64itgp2c273079eibt6vaukhck.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBKjkgCSIZgzb0B4sogyIYoX9EJGkejY8U</string>
+	<key>GCM_SENDER_ID</key>
+	<string>127248616649</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.instantdoctor.app</string>
+	<key>PROJECT_ID</key>
+	<string>instant-doctor-a4e4c</string>
+	<key>STORAGE_BUCKET</key>
+	<string>instant-doctor-a4e4c.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:127248616649:ios:0379838a45d72acc651118</string>
+</dict>
+</plist>

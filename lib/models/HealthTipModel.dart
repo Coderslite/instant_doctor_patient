@@ -4,7 +4,7 @@ class HealthTipModel {
   String? id;
   String? title;
   String? description;
-  String? category;
+  String? categoryId;
   String? type;
   String? image;
   int? views;
@@ -14,7 +14,7 @@ class HealthTipModel {
     this.id,
     this.title,
     this.description,
-    this.category,
+    this.categoryId,
     this.image,
     this.type,
     this.views,
@@ -26,11 +26,31 @@ class HealthTipModel {
       id: json['id'],
       title: json['title'],
       description: json['description'],
-      category: json['category'],
+      categoryId: json['categoryId'],
       image: json['image'],
       type: json['type'],
       views: json['views'],
       createdAt: json['createdAt'],
+    );
+  }
+}
+
+class HealthTipsCategoryModel {
+  String? id;
+  String? name;
+  String? image;
+
+  HealthTipsCategoryModel({
+    this.id,
+    this.name,
+    this.image,
+  });
+
+  factory HealthTipsCategoryModel.fromJson(Map<String, dynamic> json) {
+    return HealthTipsCategoryModel(
+      id: json['id'],
+      name: json['name'],
+      image: json['image'],
     );
   }
 }

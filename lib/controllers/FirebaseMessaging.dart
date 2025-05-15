@@ -4,13 +4,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:instant_doctor/controllers/IncomingCallController.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 import '../constant/color.dart';
 import '../constant/constants.dart';
 import '../main.dart';
-import 'package:timezone/timezone.dart' as tz;
 
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -18,9 +17,10 @@ FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
 
 class FirebaseMessagings {
   void displayLocalNotification(RemoteMessage message) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'com.instantdoctor',
+    AndroidNotification? android = message.notification?.android;
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
+        const AndroidNotificationDetails(
+      'instantdoctor',
       'Instant Doctor',
       channelShowBadge: true,
       importance: Importance.max,
@@ -29,13 +29,10 @@ class FirebaseMessagings {
       color: kPrimary,
       enableLights: true,
     );
-    DarwinNotificationDetails darwinNotificationDetails =
-        const DarwinNotificationDetails();
-    NotificationDetails platformChannelSpecifics = NotificationDetails(
-        android: androidPlatformChannelSpecifics,
-        iOS: darwinNotificationDetails);
+    NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.show(
-      0,
+      DateTime.now().millisecondsSinceEpoch,
       message.notification!.title,
       message.notification!.body,
       platformChannelSpecifics,
@@ -80,7 +77,6 @@ class FirebaseMessagings {
     NotificationDetails platformChannelSpecifics = NotificationDetails(
         android: androidPlatformChannelSpecifics,
         iOS: darwinNotificationDetails);
-
     bool canceled = false;
 
     // Continuously show the notification until it's canceled
@@ -98,7 +94,6 @@ class FirebaseMessagings {
           .pendingNotificationRequests()
           .then((value) => value.isEmpty);
 
-      // Wait for a short period before showing the notification again
       await Future.delayed(const Duration(seconds: 3));
     }
   }
@@ -122,11 +117,8 @@ class FirebaseMessagings {
       // audioAttributesUsage: AudioAttributesUsage.alarm,
       sound: RawResourceAndroidNotificationSound('tone1'),
     );
-    DarwinNotificationDetails darwinNotificationDetails =
-        const DarwinNotificationDetails();
-    NotificationDetails platformChannelSpecifics = NotificationDetails(
-        android: androidPlatformChannelSpecifics,
-        iOS: darwinNotificationDetails);
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.zonedSchedule(
       UniqueKey().hashCode, // Notification ID
       title, // Notification title
@@ -156,8 +148,8 @@ class FirebaseMessagings {
           iOS: darwinInitializationSettings);
       await flutterLocalNotificationsPlugin.initialize(
         initializationSettings,
-        onDidReceiveNotificationResponse: notificationTapBackground,
-        onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+        // onDidReceiveNotificationResponse: notificationTapBackground,
+        // onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
       );
       // Request notification permissions
 
@@ -175,7 +167,7 @@ class FirebaseMessagings {
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
         var payload = message.data;
         if (payload['type'] == 'Call') {
-          IncomingCall().showCalling(payload['id']);
+          // IncomingCall().showCalling(payload['id']);
         }
       });
 
@@ -183,7 +175,10 @@ class FirebaseMessagings {
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         var payload = message.data;
         if (payload['type'] == 'Call') {
-          IncomingCall().showCalling(payload['id']);
+          // IncomingCall().showCalling(payload['id']);
+        } else if (payload['type'] == NotificationType.appointment ||
+            payload['type'] == NotificationType.medication) {
+          // displayScheduleLocalNotification(message);
         } else {
           displayLocalNotification(message);
         }

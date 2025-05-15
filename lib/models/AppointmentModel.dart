@@ -9,7 +9,12 @@ class AppointmentModel {
   Timestamp? startTime;
   Timestamp? endTime;
   Timestamp? createdAt;
+  Timestamp? updatedAt;
+  int? duration;
+  int? price;
+  String? package;
   String? videocallToken;
+  bool? isPaid;
 
   AppointmentModel({
     this.id,
@@ -19,8 +24,13 @@ class AppointmentModel {
     this.status,
     this.startTime,
     this.endTime,
+    this.duration,
+    this.price,
+    this.package,
     this.createdAt,
+    this.updatedAt,
     this.videocallToken,
+    this.isPaid,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
@@ -32,8 +42,12 @@ class AppointmentModel {
       startTime: json['startTime'],
       endTime: json['endTime'],
       createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+      package: json['package'],
+      duration: json['duration'],
+      price: json['price'],
       videocallToken: json['videocallToken'],
-
+      isPaid: json['isPaid'],
     );
   }
 }
@@ -69,5 +83,17 @@ class AppointmentConversationModel {
       type: json['type'],
       status: json['status'],
     );
+  }
+
+  toJson() {
+    Map<String, dynamic> data = {};
+    data['id'] = id;
+    data['senderId'] = senderId;
+    data['receiverId'] = receiverId;
+    data['message'] = message;
+    data['fileUrl'] = fileUrl;
+    data['type'] = type;
+    data['status'] = status;
+    return data;
   }
 }

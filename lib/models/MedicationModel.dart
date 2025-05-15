@@ -5,8 +5,6 @@ class MedicationModel {
   String? id;
   String? userId;
   String? name;
-  String? type;
-  String? color;
   String? prescription;
   Timestamp? startTime;
   Timestamp? endTime;
@@ -20,8 +18,6 @@ class MedicationModel {
     this.id,
     this.userId,
     this.name,
-    this.type,
-    this.color,
     this.prescription,
     this.startTime,
     this.endTime,
@@ -36,38 +32,29 @@ class MedicationModel {
       id: json['id'],
       userId: json['userId'],
       name: json['name'],
-      type: json['type'],
-      color: json['color'],
       prescription: json['prescription'],
-      startTime: json['startTime'] != null
-          ? Timestamp.fromDate(DateTime.parse(json['startTime']))
-          : null,
-      endTime: json['endTime'] != null
-          ? Timestamp.fromDate(DateTime.parse(json['endTime']))
-          : null,
-      morning: _parseTimeOfDay(json['morning']),
-      midDay: _parseTimeOfDay(json['midDay']),
-      evening: _parseTimeOfDay(json['evening']),
-      interval: json['interval'],
+      startTime: json['startTime'],
+      endTime: json['endTime'],
+      // morning: json['morning'],
+      // midDay: json['midDay'],
+      // evening: json['evening'],
+      // interval: json['interval'],
       createdAt: json['createdAt'] != null
           ? Timestamp.fromDate(DateTime.parse(json['createdAt']))
           : null,
     );
   }
 
-
-
   static TimeOfDay? _parseTimeOfDay(dynamic json) {
-  if (json == null) return null;
-  if (json is String) {
-    final parts = json.split(':');
-    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
-  } else if (json is Map<String, dynamic>) {
-    return TimeOfDay(hour: json['hour'], minute: json['minute']);
+    if (json == null) return null;
+    if (json is String) {
+      final parts = json.split(':');
+      return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    } else if (json is Map<String, dynamic>) {
+      return TimeOfDay(hour: json['hour'], minute: json['minute']);
+    }
+    return null;
   }
-  return null;
-}
-
 
 // Helper method to convert Map to TimeOfDay
 
@@ -76,18 +63,14 @@ class MedicationModel {
       'id': UniqueKey().toString(),
       'userId': userId,
       'name': name,
-      'type': type,
-      'color': color,
       'prescription': prescription,
-      'startTime':
-          startTime?.toDate().toIso8601String(),
-      'endTime': endTime?.toDate().toIso8601String(),
+      'startTime': startTime,
+      'endTime': endTime,
       'morning': _timeOfDayToJson(morning), // Convert TimeOfDay to Map
       'midDay': _timeOfDayToJson(midDay), // Convert TimeOfDay to Map
       'evening': _timeOfDayToJson(evening), // Convert TimeOfDay to Map
       'interval': interval,
-      'createdAt':
-          createdAt?.toDate().toIso8601String(),
+      'createdAt': createdAt?.toDate().toIso8601String(),
     };
   }
 

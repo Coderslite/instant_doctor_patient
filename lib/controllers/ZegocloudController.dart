@@ -1,65 +1,66 @@
-// import 'package:get/get.dart';
-// import 'package:instant_doctor/services/GetUserId.dart';
-// import 'package:nb_utils/nb_utils.dart';
-// import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
+import 'package:get/get.dart';
+import 'package:instant_doctor/main.dart';
+import 'package:instant_doctor/services/GetUserId.dart';
+import 'package:nb_utils/nb_utils.dart';
+import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
+import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 
-// import '../main.dart';
+class ZegoCloudController extends GetxController {
+  handleInit() async {
+    await getUserId();
+    print("Zego Cloud initialized");
+    ZegoUIKitPrebuiltCallInvitationService().init(
+      appID: settingsController.appId ?? 1629680479 /*input your AppID*/,
+      appSign: settingsController.appSign.isEmpty
+          ? '32f49c8bef297a57bc73cb0a2d952c0f4704a060e9c888a41b998da21dc5520d'
+          : settingsController.appSign /*input your AppSign*/,
+      userID: userController.userId.value,
+      userName: userController.fullName.value,
+      plugins: [
+        ZegoUIKitSignalingPlugin(),
+      ],
+      config: ZegoCallInvitationConfig(
+        permissions: [
+          ZegoCallInvitationPermission.camera,
+          ZegoCallInvitationPermission.microphone,
+        ],
+      ),
+      ringtoneConfig: ZegoCallRingtoneConfig(
+        incomingCallPath: "assets/audio/ringtone1.mp3",
+        outgoingCallPath: "",
+      ),
+      notificationConfig: ZegoCallInvitationNotificationConfig(
+        androidNotificationConfig: ZegoCallAndroidNotificationConfig(
+            channelID: "ZegoUIKit",
+            channelName: "Call Notifications",
+            sound: "assets/audio/ringtone1.mp3",
+            icon: "assets/images/logo.png",
+            fullScreenBackground: 'assets/images/logo.png',
+            showFullScreen: true,
+            messageVibrate: true,
+            messageSound: "assets/audio/ringtone1.mp3"),
+        iOSNotificationConfig: ZegoCallIOSNotificationConfig(
+          appName: "Instant Doctor",
+          // isSandboxEnvironment: true,
+          systemCallingIconName: 'CallKitIcon',
+        ),
+      ),
+      invitationEvents: ZegoUIKitPrebuiltCallInvitationEvents(
+        onError: (err) {
+          // snackBar(Get.context!,
+          //     backgroundColor: fireBrick, title: err.toString());
+        },
+        onOutgoingCallAccepted: (callID, caller) {
+          toast("User Joined");
+        },
+        onOutgoingCallDeclined: (callID, caller, customData) {
+          toast("Call cancelled");
+        },
+      ),
+    );
+  }
 
-// class ZegocloudController extends GetxController {
-//   ZegoUIKitSignalingPlugin signalingPlugin = ZegoUIKitSignalingPlugin();
-//   init() {
-//     signalingPlugin.init(appID: settingsController.appId.validate());
-//     // Set up listeners for incoming calls
-//   }
-
-// handleSendInvite(){
-//   //  Send a call invitation.
-// List<String> invitees = []; // The list of the callee. 
-// invitees.add('1234'); // ID of the callee.
-// ZIMCallInviteConfig config = ZIMCallInviteConfig();
-// config.timeout = 200; //  The timeout duration for the call invitation. Time range: 1-600 seconds. 
-
-// // (Optional) Fill in when it is necessary to send a call invitation to an offline user.
-// ZIMPushConfig pushConfig = ZIMPushConfig();
-// pushConfig.title = "your title";
-// pushConfig.content = "your content";
-// pushConfig.payload = "your payload";
-// config.pushConfig = pushConfig;
-
-// ZIM
-//     .getInstance()!
-//     .callInvite(invitees, config)
-//     .then((value) {})
-//     .catchError((onError) {});
-
-// // Callback for the callee to receive the call invitation.
-// ZIM.onCallInvitationReceived = (info, callID) {
-
-// };
-// }
-
-
-//   handleSendInvite() {
-//   /** Send call invitations to offline users */
-// var invitees = ['xxxx'];  // List of invitees' IDs
-// var pushConfig = {
-//     title: 'push title'
-//     content: 'push content',
-//     payload: 'push payload'
-// };
-
-// var config = { 
-//     timeout: 200, // Timeout for the invitation in seconds, range: 1-600
-//     extendedData: 'your call invite extendedData',
-//     pushConfig,
-// };
-// zim.callInvite(invitees, config)
-//     .then(function({ callID, timeout, errorInvitees }){
-//         // Operation succeeded
-//         // The callID here is generated internally by the SDK to uniquely identify a call invitation. It will be used when the initiator cancels the call or the invitee accepts/rejects the call.
-//     })
-//     .catch(function(err){
-//         // Operation failed
-//     })
-//   }
-// }
+  void onUserLogout() {
+    ZegoUIKitPrebuiltCallInvitationService().uninit();
+  }
+}

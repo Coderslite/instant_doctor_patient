@@ -1,3 +1,5 @@
+// ignore_for_file: empty_catches, file_names
+
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -10,76 +12,23 @@ class MedicationService extends BaseService {
   var medicationCol =
       FirebaseFirestore.instance.collection("MedicationTracker");
 
-  Future<List<MedicationModel>> getUserMedications(
-      {required String userId}) async {
-    List<MedicationModel> medications = [];
-
-    try {
-      // Get SharedPreferences instance
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-
-      // Get the list of all medications saved in SharedPreferences
-      List<String>? allMedications = prefs.getStringList('medications');
-
-      if (allMedications != null) {
-        // Iterate through each saved medication
-        for (var medicationString in allMedications) {
-          // Parse the medication string to a MedicationModel object
-          MedicationModel medication =
-              MedicationModel.fromJson(jsonDecode(medicationString));
-
-          // Check if the medication belongs to the specified userId
-          if (medication.userId == userId) {
-            medications.add(medication);
-          }
-        }
-      }
-
-      return medications;
-    } catch (e) {
-      // Handle any errors
-      print("Error fetching medications: $e");
-      return [];
-    }
+  Stream<List<MedicationModel>> getUserMedications({required String userId}) {
+    var medicationRef =
+        medicationCol.where('userId', isEqualTo: userId).snapshots();
+    return medicationRef.map((event) =>
+        event.docs.map((e) => MedicationModel.fromJson(e.data())).toList());
   }
 
   newMedication({required MedicationModel medication}) async {
-    // var res = await medicationCol.add(medication.toMap());
-    // await medicationCol.doc(res.id).update({
-    //   "id": res.id,
-    // });
-    await saveMedicationLocal(medication);
-    return;
+    var res = await medicationCol.add(medication.toJson());
+    await medicationCol.doc(res.id).update({
+      "id": res.id,
+    });
+    return res.id;
   }
 
-  // Future<List<MedicationModel>> getMedications({required String userId}) async {
-  //   // var result = await medicationCol.where('userId', isEqualTo: userId).get();
-  //   // return result.docs.map((e) => MedicationModel.fromJson(e.data())).toList();
-  //   var prefs = await SharedPreferences.getInstance();
-  //   var result = prefs.getStringList('medications');
-  //   return result!.map((e) => MedicationModel.fromJson(jsonDecode(e))).toList();
-  // }
-
   Future<void> deleteMedication({required String id}) async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      List<String>? allMedications = prefs.getStringList('medications');
-
-      if (allMedications != null) {
-        // Filter out the medication with the specified ID
-        List<String> updatedMedications =
-            allMedications.where((medicationString) {
-          Map<String, dynamic> medicationData = jsonDecode(medicationString);
-          return medicationData['id'] != id;
-        }).toList();
-
-        // Save the updated medication list back to SharedPreferences
-        await prefs.setStringList('medications', updatedMedications);
-      }
-    } catch (e) {
-      print('Error deleting medication: $e');
-      // Handle any errors
-    }
+    await medicationCol.doc(id).delete();
   }
 
   updateMedication({required MedicationModel medication}) async {
@@ -97,13 +46,11 @@ class MedicationService extends BaseService {
       }
       allMedications
           .add(jsonEncode(medicationModel.toJson())); // Fix this line as well
-     prefs.setStringList(
+      prefs.setStringList(
         'medications',
         allMedications,
       );
-    } catch (err) {
-      print(err);
-    }
+    } catch (err) {}
     // return;
   }
 }

@@ -15,15 +15,22 @@ class DoctorService extends BaseService {
   }
 
   Stream<List<UserModel>> getAllDocs() {
-    var result = userCol.where('role', isEqualTo: 'Doctor').snapshots().map(
-        (event) =>
+    var result = userCol
+        .where('role', isEqualTo: 'Doctor')
+        // .where('isAvailable', isEqualTo: true)
+        .snapshots()
+        .map((event) =>
             event.docs.map((e) => UserModel.fromJson(e.data())).toList());
     return result;
   }
 
   Stream<List<UserModel>> getTopDocs() {
-    var result = userCol.where('role', isEqualTo: 'Doctor').snapshots().map(
-        (event) =>
+    var result = userCol
+        .where('role', isEqualTo: 'Doctor')
+        .where('isAvailable', isEqualTo: true)
+        .limit(4)
+        .snapshots()
+        .map((event) =>
             event.docs.map((e) => UserModel.fromJson(e.data())).toList());
     return result;
   }

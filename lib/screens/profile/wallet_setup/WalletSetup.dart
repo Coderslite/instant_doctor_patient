@@ -27,7 +27,7 @@ class _WalletSetupScreenState extends State<WalletSetupScreen> {
         bool isDarkMode = settingsController.isDarkMode.value;
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(8.0),
             child: StreamBuilder<UserModel>(
                 stream:
                     userService.getProfile(userId: userController.userId.value),
@@ -56,7 +56,8 @@ class _WalletSetupScreenState extends State<WalletSetupScreen> {
                             ],
                           ),
                           1.height,
-                          profileImage(data, 100, 100).center(),
+                          profileImage(data, 100, 100, context: context)
+                              .center(),
                           30.height,
                           Text(
                             "Complete Wallet Setup",

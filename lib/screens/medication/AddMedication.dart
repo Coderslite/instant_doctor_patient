@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:intl/intl.dart';
@@ -34,26 +35,10 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
   final _formKey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
-    List pillTypes = [
-      pillType(type: "Tablet", selectedIdx: 0),
-      pillType(type: "Capsule", selectedIdx: 1),
-      pillType(type: "Drops", selectedIdx: 2),
-      pillType(type: "Injection", selectedIdx: 3),
-    ];
-
-    List pillColors = [
-      pillColor(redColor, 0),
-      pillColor(kPrimary, 1),
-      pillColor(purple, 2),
-      pillColor(greenColor, 3),
-      pillColor(yellow, 4),
-      pillColor(whiteSmoke, 5),
-    ];
-
     return Scaffold(
       body: SafeArea(
           child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(8.0),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Form(
@@ -63,7 +48,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const BackButton(),
+                    backButton(context),
                     Text(
                       "Add Medication",
                       style: boldTextStyle(color: kPrimary),
@@ -75,27 +60,17 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(30),
                   child: Card(
+                    color: context.cardColor,
                     child: Padding(
                       padding: const EdgeInsets.all(15.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Medication Type",
+                            "Medication For",
                             style: boldTextStyle(size: 12),
                           ),
                           10.height,
-                          SizedBox(
-                            height: 30,
-                            child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: pillTypes.length,
-                                itemBuilder: (context, index) {
-                                  var pill = pillTypes[index];
-                                  return pill;
-                                }),
-                          ),
-                          20.height,
                           AppTextField(
                             textFieldType: TextFieldType.OTHER,
                             validator: (value) {
@@ -130,22 +105,6 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                               ),
                             ),
                           ),
-                          10.height,
-                          Text(
-                            "Medication Color",
-                            style: boldTextStyle(size: 12),
-                          ),
-                          10.height,
-                          SizedBox(
-                            height: 30,
-                            child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: pillColors.length,
-                                itemBuilder: (context, index) {
-                                  var pillColor = pillColors[index];
-                                  return pillColor;
-                                }),
-                          ),
                           20.height,
                           Text(
                             "Medication Prescription",
@@ -165,8 +124,8 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                               setState(() {});
                             },
                             textStyle: primaryTextStyle(),
-                            minLines: 3,
-                            maxLines: 5,
+                            minLines: 5,
+                            maxLines: 7,
                             decoration: InputDecoration(
                               hintText:
                                   "Input directions for usage e.g 2 hous before dinner",
@@ -189,7 +148,6 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                               ),
                             ),
                           ),
-                          20.height,
                         ],
                       ),
                     ),
@@ -199,6 +157,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(30),
                   child: Card(
+                    color: context.cardColor,
                     child: Padding(
                       padding: const EdgeInsets.all(15.0),
                       child: Column(
@@ -540,14 +499,6 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                 AppButton(
                   width: double.infinity,
                   onTap: () {
-                    if (pilType.isEmpty) {
-                      toast("please choose pill type");
-                      return;
-                    }
-                    if (colorName.isEmpty) {
-                      toast("please choose pill color");
-                      return;
-                    }
                     if (startTime == null) {
                       toast("Please enter medication start time");
                       return;
@@ -556,25 +507,11 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                       toast("Please enter medication end time");
                       return;
                     }
-                    if (morning == null) {
-                      toast("please select what time in the morning");
-                      return;
-                    }
-                    if (midDay == null) {
-                      toast("please select what time at mid day");
-                      return;
-                    }
-                    if (evening == null) {
-                      toast('please select what time at night');
-                      return;
-                    }
                     if (_formKey.currentState!.validate()) {
                       MedicationModel medication = MedicationModel(
                         id: Timestamp.now().toString(),
                         userId: userController.userId.value,
                         name: name,
-                        type: pilType,
-                        color: colorName,
                         prescription: prescription,
                         startTime: startTime,
                         endTime: endTime,
@@ -582,6 +519,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                         midDay: midDay,
                         evening: evening,
                         interval: interval,
+                        createdAt: Timestamp.now(),
                       );
                       MedicationSummaryScreen(
                         medication: medication,

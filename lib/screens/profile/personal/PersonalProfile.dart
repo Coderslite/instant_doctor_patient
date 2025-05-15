@@ -1,4 +1,4 @@
-// ignore_for_file: library_private_types_in_public_api
+// ignore_for_file: library_private_types_in_public_api, file_names, use_build_context_synchronously
 
 import 'dart:io';
 
@@ -8,12 +8,14 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/models/UserModel.dart';
+import 'package:instant_doctor/screens/drug/ChangePickup.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
-import 'package:instant_doctor/services/UploadFile.dart';
 import 'package:instant_doctor/services/formatDate.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../../component/ProfileImage.dart';
+import '../../../component/backButton.dart';
+import '../../../controllers/UploadFileController.dart';
 import '../../../main.dart';
 
 class PersonalProfileScreen extends StatefulWidget {
@@ -25,6 +27,7 @@ class PersonalProfileScreen extends StatefulWidget {
 
 class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
   var controller = TextEditingController();
+  UploadFileController uploadFileController = Get.put(UploadFileController());
   bool isUploading = false;
   XFile? file;
   handleChangeImage() async {
@@ -36,7 +39,7 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
 
         file = result;
         var uploadUrl =
-            await uploadFile(File(file!.path), userController.userId.value);
+            await uploadFileController.uploadProfileImage(File(file!.path));
         await userService.updateProfile(
             data: {"photoUrl": uploadUrl}, userId: userController.userId.value);
         toast("Profile Image Updated");
@@ -50,6 +53,12 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
   }
 
   @override
+  void dispose() {
+    uploadFileController.progress.value = 0.0;
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Obx(() {
@@ -57,7 +66,7 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
         bool isDarkMode = settingsController.isDarkMode.value;
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(8.0),
             child: StreamBuilder<UserModel>(
                 stream:
                     userService.getProfile(userId: userController.userId.value),
@@ -65,12 +74,7 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                   if (snapshot.hasData) {
                     var data = snapshot.data!;
                     bool profileCompleted =
-                        data.bloodGroup.validate().isNotEmpty &&
-                            data.height.validate().isNotEmpty &&
-                            data.weight.validate().isNotEmpty &&
-                            data.dob != null &&
-                            data.genotype.validate().isNotEmpty &&
-                            data.phoneNumber.validate().isNotEmpty;
+                        data.dob != null && data.address.validate().isNotEmpty;
                     return SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
                       child: Column(
@@ -79,9 +83,7 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const BackButton(
-                                color: kPrimary,
-                              ),
+                              backButton(context),
                               Text(
                                 "Personal Information",
                                 style: boldTextStyle(
@@ -93,43 +95,61 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                             ],
                           ),
                           1.height,
-                          Stack(
-                            alignment: Alignment.topRight,
-                            children: [
-                              isUploading
-                                  ? const CircularProgressIndicator(
-                                      color: kPrimary,
-                                    ).center()
-                                  : StreamBuilder<UserModel>(
-                                      stream: userService.getProfile(
-                                          userId: userController.userId.value),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.hasData) {
-                                          var data = snapshot.data;
-                                          return profileImage(data, 100, 100);
-                                        }
-                                        return const CircularProgressIndicator(
-                                          color: kPrimary,
-                                        ).center();
-                                      }),
-                              Positioned(
-                                child: const Icon(
-                                  Icons.edit,
-                                  color: kPrimary,
-                                  size: 14,
-                                ).onTap(() {
-                                  handleChangeImage();
-                                }),
-                              ),
-                            ],
-                          ).center(),
+                          Obx(
+                            () {
+                              var progress =
+                                  uploadFileController.progress.value;
+                              return Stack(
+                                alignment: Alignment.topRight,
+                                children: [
+                                  isUploading
+                                      ? Column(
+                                          children: [
+                                            CircularProgressIndicator(
+                                              color: kPrimary,
+                                              value: progress,
+                                            ).center(),
+                                            Text(
+                                              "Uploading Image",
+                                              style: primaryTextStyle(size: 13),
+                                            ),
+                                          ],
+                                        )
+                                      : StreamBuilder<UserModel>(
+                                          stream: userService.getProfile(
+                                              userId:
+                                                  userController.userId.value),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasData) {
+                                              var data = snapshot.data;
+                                              return profileImage(
+                                                  UserModel(), 100, 100,
+                                                  context: context);
+                                            }
+                                            return const CircularProgressIndicator(
+                                              color: kPrimary,
+                                            ).center();
+                                          }),
+                                  // Positioned(
+                                  //   child: const Icon(
+                                  //     Icons.edit,
+                                  //     color: kPrimary,
+                                  //     size: 14,
+                                  //   ).onTap(() {
+                                  //     handleChangeImage();
+                                  //   }),
+                                  // ),
+                                ],
+                              ).center();
+                            },
+                          ),
                           10.height,
                           Text(
                             "Your profile isnt complete yet",
                             style: primaryTextStyle(
                               color: coral,
                             ),
-                          ).center().visible(debugProfileBuildsEnabled),
+                          ).center().visible(!profileCompleted),
                           30.height,
                           Text(
                             "Update Information",
@@ -155,21 +175,6 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                               key: "dob"),
                           profileOption("Address", data.address.validate(),
                               key: "address"),
-                          profileOption(
-                              "Marital Status", data.maritalStatus.validate(),
-                              key: "maritalStatus"),
-                          profileOption("Height", data.height.validate(),
-                              key: "height"),
-                          profileOption("Weight", data.weight.validate(),
-                              key: "weight"),
-                          profileOption(
-                              "Blood Group", data.bloodGroup.validate(),
-                              key: "bloodGroup"),
-                          profileOption("Genotype", data.genotype.validate(),
-                              key: "genotype"),
-                          profileOption("Surgery History/Medical Condition",
-                              data.surgicalHistory.validate(),
-                              key: "surgicalHistory"),
                         ],
                       ),
                     );
@@ -185,36 +190,37 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
   }
 
   profileOption(String title, String description, {required String key}) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
-      child: Card(
+    return Container(
+      padding: const EdgeInsets.all(10.0),
+      margin: const EdgeInsets.symmetric(vertical: 2),
+      decoration: BoxDecoration(
         color: context.cardColor,
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: boldTextStyle(size: 14),
-                  ),
-                  5.height,
-                  Text(
-                    description,
-                    style: secondaryTextStyle(size: 12),
-                  ),
-                ],
-              ),
-              const Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-              )
-            ],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: boldTextStyle(size: 14),
+                ),
+                5.height,
+                Text(
+                  description,
+                  style: secondaryTextStyle(size: 12),
+                ),
+              ],
+            ),
           ),
-        ),
+          const Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+          )
+        ],
       ),
     ).onTap(() async {
       controller.clear();
@@ -230,22 +236,27 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
           userService.updateProfile(data: {
             "dob": timeStamp,
           }, userId: userController.userId.value);
+          return;
         } else {
           toast("Date was not selected");
+          return;
         }
+      }
+
+      if (key == 'currency') {
+        toast("Change you country in order to change you currency");
+      }
+      if (key == 'address') {
+        ChangePickup().launch(context);
       } else {
-        if (key == 'currency') {
-          toast("Change you country in order to change you currency");
-        } else {
-          showDialog(
-            context: context,
-            builder: (context) => ProfileUpdateDialog(
-              controller: controller,
-              keey: key,
-              title: title,
-            ),
-          );
-        }
+        showDialog(
+          context: context,
+          builder: (context) => ProfileUpdateDialog(
+            controller: controller,
+            keey: key,
+            title: title,
+          ),
+        );
       }
     });
   }
@@ -258,12 +269,12 @@ class ProfileUpdateDialog extends StatefulWidget {
   final String? country;
 
   const ProfileUpdateDialog({
-    Key? key,
+    super.key,
     required this.controller,
     required this.keey,
     required this.title,
     this.country,
-  }) : super(key: key);
+  });
 
   @override
   _ProfileUpdateDialogState createState() => _ProfileUpdateDialogState();
@@ -391,10 +402,12 @@ class _ProfileUpdateDialogState extends State<ProfileUpdateDialog> {
             AppTextField(
               readOnly: widget.keey == 'email',
               controller: widget.controller,
-              textFieldType: TextFieldType.OTHER,
+              textFieldType: widget.keey == 'weight' || widget.keey == 'height'
+                  ? TextFieldType.NUMBER
+                  : TextFieldType.OTHER,
               decoration: InputDecoration(
                   hintText: widget.keey == 'height'
-                      ? "Hight value in fts"
+                      ? "Height value in fts"
                       : widget.keey == 'weight'
                           ? "Weight value in kg"
                           : "",
@@ -414,7 +427,6 @@ class _ProfileUpdateDialogState extends State<ProfileUpdateDialog> {
                   widget.keey == 'height' ||
                   widget.keey == 'weight' ||
                   widget.keey == 'email' ||
-                  widget.keey == 'address' ||
                   widget.keey == 'firstname' ||
                   widget.keey == 'lastname',
             ),

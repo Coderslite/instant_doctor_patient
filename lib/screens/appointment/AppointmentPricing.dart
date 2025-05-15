@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
 import 'package:instant_doctor/screens/doctors/AllDoctors.dart';
@@ -56,7 +57,7 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const BackButton(),
+                backButton(context),
                   Text(
                     "Pricing",
                     style: boldTextStyle(size: 20, color: kPrimary),
@@ -101,6 +102,8 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
                 text: "Proceed",
                 enabled: isChecked && selectedPackage.isNotEmpty,
                 textColor: whiteColor,
+                disabledColor: dimGray,
+                disabledTextColor: white,
               )
             ],
           ),
@@ -149,6 +152,7 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
                 children: [
                   Text(
                     formatAmount(price),
+                    textAlign: TextAlign.center,
                     style: boldTextStyle(
                       color: white,
                       size: 30,
@@ -157,6 +161,7 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
                   10.height,
                   Text(
                     desc,
+                    textAlign: TextAlign.center,
                     style: secondaryTextStyle(size: 12, color: white),
                   )
                 ],

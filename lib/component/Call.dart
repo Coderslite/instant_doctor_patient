@@ -138,7 +138,7 @@
 //                               canvas: const VideoCanvas(uid: 0),
 //                             ),
 //                           )
-//                         : const CircularProgressIndicator(),
+//                         : const Loader(),
 //                   ),
 //                 ),
 //               ),
