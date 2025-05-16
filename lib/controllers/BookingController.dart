@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/component/pay_button.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/controllers/PaymentController.dart';
 import 'package:instant_doctor/services/AppointmentService.dart';
@@ -73,15 +74,16 @@ class BookingController extends GetxController {
       var email = userInfo.email.validate();
       var appointmentId = await newBooking();
       print(appointmentId);
-      await paymentController.makePayment(
-          email: email,
-          context: Get.context!,
-          amount: price.value,
-          paymentFor: 'Appointment',
-          productId: appointmentId);
+      return payButton(
+        context,
+        appointmentId: appointmentId,
+        price: price.value,
+      );
     } catch (err) {
       isLoading.value = false;
       toast(err.toString());
+    } finally {
+      isLoading.value = false;
     }
   }
 

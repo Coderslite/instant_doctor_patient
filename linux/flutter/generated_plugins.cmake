@@ -8,7 +8,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   gtk
   nb_utils
   url_launcher_linux
-  webcrypto
   zego_express_engine
 )
 

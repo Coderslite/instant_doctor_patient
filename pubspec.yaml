@@ -103,7 +103,7 @@ dependencies:
   flutter_tawkto: ^0.0.4
   
   timezone: any
-  solana_wallet_adapter: ^0.1.5
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

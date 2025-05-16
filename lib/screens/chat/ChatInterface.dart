@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/ProfileImage.dart';
+import 'package:instant_doctor/component/pay_button.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/constant/constants.dart';
@@ -896,26 +897,32 @@ class _ChatInterfaceState extends State<ChatInterface> {
                                             width: double.infinity,
                                             onTap: () async {
                                               try {
-                                                bookingController
-                                                    .isLoading.value = true;
+                                                // bookingController
+                                                //     .isLoading.value = true;
 
                                                 setState(() {});
-                                                var userInfo = await userService
-                                                    .getProfileById(
-                                                        userId: userController
-                                                            .userId.value);
-                                                await paymentController
-                                                    .makePayment(
-                                                        email: userInfo.email
-                                                            .validate(),
-                                                        context: context,
-                                                        amount: widget
-                                                            .appointment.price
-                                                            .validate(),
-                                                        paymentFor:
-                                                            'Appointment',
-                                                        productId: widget
-                                                            .appointment.id);
+                                                // var userInfo = await userService
+                                                //     .getProfileById(
+                                                //         userId: userController
+                                                //             .userId.value);
+                                                return payButton(context,
+                                                    appointmentId:
+                                                        widget.appointmentId,
+                                                    price: widget
+                                                        .appointment.price
+                                                        .validate());
+                                                // await paymentController
+                                                //     .makePayment(
+                                                //         email: userInfo.email
+                                                //             .validate(),
+                                                //         context: context,
+                                                //         amount: widget
+                                                //             .appointment.price
+                                                //             .validate(),
+                                                //         paymentFor:
+                                                //             'Appointment',
+                                                //         productId: widget
+                                                //             .appointment.id);
                                               } finally {
                                                 bookingController
                                                     .isLoading.value = false;

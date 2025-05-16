@@ -1,8 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
+import 'package:instant_doctor/controllers/SolonaController.dart';
 import 'package:instant_doctor/screens/doctors/AllDoctors.dart';
 import 'package:instant_doctor/screens/healthtips/HealthTipsHome.dart';
 import 'package:instant_doctor/screens/lap_result/LabResult.dart';
@@ -20,6 +20,7 @@ import '../../services/NotificationService.dart';
 import '../../services/greetings.dart';
 import '../doctors/SingleDoctor.dart';
 import '../notification/Notification.dart';
+import '../wallet/SolanaWallet.dart';
 
 class Home2 extends StatefulWidget {
   const Home2({super.key});
@@ -175,7 +176,8 @@ class _Home2State extends State<Home2> {
                         ],
                       ),
                     ).onTap(() {
-                      AllDoctorsScreen().launch(context);
+                      // AllDoctorsScreen().launch(context);
+                      // SolanaScreen().launch(context);
                     }),
                   ),
                   StaggeredGridTile.count(
