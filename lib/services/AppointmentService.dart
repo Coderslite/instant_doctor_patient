@@ -172,7 +172,7 @@ class AppointmentService {
       );
 
       return true;
-    } catch (err, stack) {
+    } catch (err) {
       print("Error in updateAppointmentAfterPayment: $err");
       return false;
     }

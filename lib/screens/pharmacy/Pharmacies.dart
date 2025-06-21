@@ -101,7 +101,7 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
                           setState(() {});
                         },
                       ))
-                  .toList(),
+                  ,
             ],
             SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
           ],
@@ -200,7 +200,7 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
                       ),
                       if (showSavedLocations && savedLocations.isNotEmpty) ...[
                         SizedBox(height: 8),
-                        Container(
+                        SizedBox(
                           height: 90,
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,

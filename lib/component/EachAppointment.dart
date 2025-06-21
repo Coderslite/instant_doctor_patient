@@ -147,7 +147,7 @@ Widget eachAppointment({
                       children: [
                         StreamBuilder<List<AppointmentConversationModel>>(
                             stream: appointmentService.getUnreadChat(
-                                appointment.id.validate(), docId!),
+                                appointment.id.validate(), docId),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
                                 var data = snapshot.data!.length;

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:instant_doctor/component/AnimatedCard.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/screens/appointment/NewAppointment.dart';
-import 'package:instant_doctor/screens/doctors/AllDoctors.dart';
 import 'package:instant_doctor/screens/pharmacy/Pharmacies.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';

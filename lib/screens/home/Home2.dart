@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/screens/appointment/NewAppointment.dart';
-import 'package:instant_doctor/screens/doctors/AllDoctors.dart';
 import 'package:instant_doctor/screens/healthtips/HealthTipsHome.dart';
 import 'package:instant_doctor/screens/lap_result/LabResult.dart';
 import 'package:instant_doctor/screens/medication/MedicationTracker.dart';

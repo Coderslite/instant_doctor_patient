@@ -1,10 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_date_timeline/easy_date_timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/component/snackBar.dart';
-import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/AppointmentPricingModel.dart';
 import 'package:instant_doctor/services/format_number.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
@@ -500,7 +498,7 @@ class _NewAppointmentState extends State<NewAppointment> {
   Widget _buildDetailPrompt(String text) {
     return GestureDetector(
       onTap: () {
-        final newText = _complainController.text + '\n$text';
+        final newText = '${_complainController.text}\n$text';
         _complainController.text = newText;
         bookingController.complain.value = newText; // Update controller value
         _complainController.selection = TextSelection.fromPosition(
