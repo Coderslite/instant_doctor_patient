@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:instant_doctor/component/AnimatedCard.dart';
 import 'package:instant_doctor/constant/color.dart';
+import 'package:instant_doctor/screens/appointment/NewAppointment.dart';
 import 'package:instant_doctor/screens/doctors/AllDoctors.dart';
 import 'package:instant_doctor/screens/pharmacy/Pharmacies.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -44,7 +45,7 @@ class _HomeCardState extends State<HomeCard> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 200,
+      height: 210,
       child: Column(
         children: [
           Expanded(
@@ -59,6 +60,7 @@ class _HomeCardState extends State<HomeCard> {
                     color2: const Color.fromRGBO(0, 174, 239, 1),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -140,6 +142,7 @@ class _HomeCardState extends State<HomeCard> {
                   color2: kPrimaryDark,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,7 +192,8 @@ class _HomeCardState extends State<HomeCard> {
                                     ],
                                   ),
                                 ).onTap(() {
-                                  AllDoctorsScreen().launch(context);
+                                  // AllDoctorsScreen().launch(context);
+                                  NewAppointment().launch(context);
                                 }),
                               ],
                             ),
@@ -197,7 +201,7 @@ class _HomeCardState extends State<HomeCard> {
                           20.width,
                           Container(
                             width: 80,
-                            height: 130,
+                            height: 150,
                             decoration: BoxDecoration(
                                 // shape: BoxShape.circle,
                                 // color: white,

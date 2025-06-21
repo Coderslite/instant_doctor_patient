@@ -68,9 +68,9 @@ class _AnimatedCardState extends State<AnimatedCard> {
         ),
         borderRadius: BorderRadius.circular(20),
         image: const DecorationImage(
-          image: AssetImage("assets/images/particle.png"),
+          image: AssetImage("assets/images/sol_bg.png"),
           fit: BoxFit.cover,
-          opacity: 0.2,
+          opacity: 0.03,
         ),
       ),
       child: widget.child,

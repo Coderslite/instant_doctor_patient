@@ -24,14 +24,34 @@ class MedicineHome extends StatefulWidget {
 
 class _MedicineHomeState extends State<MedicineHome> {
   int selectedindex = 0;
+  int selectedCategoryIndex = 0;
   var isLoading = true;
   final orderController = Get.find<OrderController>();
 
   final drugService = Get.find<DrugService>();
   final pharmacyService = Get.find<PharmacyService>();
+
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  List<String> _categories = ['All']; // Default 'All' category
+
+  @override
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text.toLowerCase();
+    });
   }
 
   @override
@@ -89,6 +109,7 @@ class _MedicineHomeState extends State<MedicineHome> {
                 color: context.cardColor,
                 child: AppTextField(
                   textFieldType: TextFieldType.OTHER,
+                  controller: _searchController,
                   decoration: InputDecoration(
                     hintStyle: secondaryTextStyle(),
                     hintText: "Search Medicine",
@@ -102,74 +123,133 @@ class _MedicineHomeState extends State<MedicineHome> {
                   ),
                 ),
               ),
-              10.height,
-              SizedBox(
-                height: 25,
-                child: StreamBuilder(
-                    stream: drugService.getDrugCat(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        var data = snapshot.data!;
-                        return ListView.builder(
-                            itemCount: data.length,
-                            scrollDirection: Axis.horizontal,
-                            itemBuilder: (context, index) {
-                              var cat = data[index];
-                              return Container(
-                                padding: const EdgeInsets.all(5),
-                                margin: const EdgeInsets.only(right: 10),
-                                decoration: BoxDecoration(
-                                  color:
-                                      selectedindex == index ? kPrimary : grey,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  cat.name.validate(),
-                                  style: boldTextStyle(
-                                    color: white,
-                                    size: 10,
-                                  ),
-                                ),
-                              ).onTap(() {
-                                selectedindex = index;
-                                setState(() {});
-                              });
-                            });
-                      }
-                      return Loader();
-                    }),
-              ),
-              10.height,
-              Expanded(
-                child: StreamBuilder<List<DrugModel>>(
-                    stream: pharmacyService.getPharmacyDrug(
-                        pharmacyId: widget.pharmacyId),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return Text(snapshot.error.toString());
-                      }
-                      if (snapshot.hasData) {
-                        var data = snapshot.data!;
-                        return MasonryGridView.builder(
-                          itemCount: data.length,
-                          physics: BouncingScrollPhysics(),
-                          gridDelegate:
-                              SliverSimpleGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2),
-                          itemBuilder: (context, index) {
-                            return eachMedicine(context,
-                                drug: data[index],
-                                pharmacyName: widget.pharmacyName);
-                          },
-                        );
-                      }
-                      return Loader();
-                    }),
-              ),
+              _buildCategoryChips(),
+              Expanded(child: _buildMedicineGrid()),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCategoryChips() {
+    return StreamBuilder<List<DrugCategoryModel>>(
+      stream: drugService.getDrugCat(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          _categories =
+              ['All'] + snapshot.data!.map((e) => e.name.validate()).toList();
+          print(_categories);
+          return Container(
+            height: 50,
+            margin: EdgeInsets.symmetric(vertical: 5),
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _categories.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(
+                      _categories[index],
+                      style: boldTextStyle(
+                        size: 12,
+                        color: selectedCategoryIndex == index
+                            ? white
+                            : Colors.black,
+                      ),
+                    ),
+                    selected: selectedCategoryIndex == index,
+                    selectedColor: kPrimary,
+                    backgroundColor: Colors.grey[200],
+                    onSelected: (selected) {
+                      setState(() {
+                        selectedCategoryIndex = index;
+                      });
+                    },
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  ),
+                );
+              },
+            ),
+          );
+        }
+        return SizedBox(height: 50, child: Center(child: Loader()));
+      },
+    );
+  }
+
+  Widget _buildMedicineGrid() {
+    return StreamBuilder<List<DrugModel>>(
+      stream: pharmacyService.getPharmacyDrug(pharmacyId: widget.pharmacyId),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text("Error loading medicines"));
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: Loader());
+        }
+
+        if (snapshot.hasData) {
+          var data = snapshot.data!;
+
+          // Apply filters
+          var filteredData = data.where((drug) {
+            // Apply category filter
+            final categoryMatch = selectedCategoryIndex == 0 ||
+                drug.category == _categories[selectedCategoryIndex];
+
+            // Apply search filter
+            final searchMatch = _searchQuery.isEmpty ||
+                drug.name.validate().toLowerCase().contains(_searchQuery) ||
+                (drug.description?.toLowerCase().contains(_searchQuery) ??
+                    false);
+
+            return categoryMatch && searchMatch;
+          }).toList();
+
+          if (filteredData.isEmpty) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.medication_outlined, size: 60, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  "No medicines found",
+                  style: boldTextStyle(size: 16),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Try a different search or category",
+                  style: secondaryTextStyle(),
+                ),
+              ],
+            );
+          }
+
+          return MasonryGridView.builder(
+            padding: EdgeInsets.only(top: 0),
+            itemCount: filteredData.length,
+            physics: BouncingScrollPhysics(),
+            gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+            ),
+            itemBuilder: (context, index) {
+              return eachMedicine(
+                context,
+                drug: filteredData[index],
+                pharmacyName: widget.pharmacyName,
+              );
+            },
+          );
+        }
+
+        return Center(child: Loader());
+      },
     );
   }
 }

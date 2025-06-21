@@ -28,7 +28,7 @@ class PharmacyModel {
       address: json['address'],
       image: json['image'],
       discount: json['discount'],
-      deliveryCharge: json['deliveryCharge'],
+      deliveryCharge: json['deliveryFee'],
       location: json['location'],
     );
   }

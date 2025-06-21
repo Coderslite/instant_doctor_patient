@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/PaymentController.dart';
 import 'package:instant_doctor/screens/wallet/SolanaWallet.dart';
 import 'package:nb_utils/nb_utils.dart';

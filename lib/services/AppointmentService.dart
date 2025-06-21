@@ -99,7 +99,7 @@ class AppointmentService {
     var data = {
       "doctorId": docId,
       "userId": userId,
-      "status": "Pending",
+      "status": "pending",
       "complain": complain,
       "startTime": startTime,
       "endTime": endTime,
@@ -116,48 +116,53 @@ class AppointmentService {
     return result.id;
   }
 
-  Future<bool> updateAppointmentAfterPayment(
-      {required String appointmentId}) async {
+  Future<bool> updateAppointmentAfterPayment({
+    required String appointmentId,
+  }) async {
+    if (appointmentId.trim().isEmpty) {
+      print("Invalid appointmentId passed to updateAppointmentAfterPayment.");
+      return false;
+    }
+
     try {
+      // Step 1: Update isPaid flag
       await appointmentCollection.doc(appointmentId).update({
         "isPaid": true,
       });
-      var appointment =
-          await getAppointment(appointmentId: appointmentId);
-      var doctoken = await userService.getUserToken(
-          userId: appointment.doctorId.validate());
-      var usertoken =
-          await userService.getUserToken(userId: userController.userId.value);
-      await notificationService.newNotification(
+
+      // Step 2: Fetch appointment
+      var appointment = await getAppointment(appointmentId: appointmentId);
+
+      var usertoken = await userService.getUserToken(
+        userId: userController.userId.value,
+      );
+
+      // Step 4: Send in-app notifications
+      notificationService.newNotification(
         userId: appointment.doctorId.validate(),
         type: NotificationType.appointment,
         title:
             "You received an appointment ${formatDate(appointment.startTime!.toDate())} - ${formatDate(appointment.endTime!.toDate())}",
       );
 
-      await notificationService.newNotification(
+      notificationService.newNotification(
         userId: userController.userId.value,
         type: NotificationType.appointment,
         title:
-            "You have successful schedule an appointment ${formatDate(appointment.startTime!.toDate())} - ${formatDate(appointment.endTime!.toDate())}",
+            "You have successfully scheduled an appointment ${formatDate(appointment.startTime!.toDate())} - ${formatDate(appointment.endTime!.toDate())}",
       );
 
       sendNotification(
-          [doctoken],
-          "New Appointment",
-          "You received an appointment ${formatDate(appointment.startTime!.toDate())} - ${formatDate(appointment.endTime!.toDate())}",
-          appointmentId,
-          NotificationType.transaction);
+        [usertoken],
+        "New Appointment",
+        "You have successfully scheduled an appointment ${formatDate(appointment.startTime!.toDate())} - ${formatDate(appointment.endTime!.toDate())}",
+        appointmentId,
+        NotificationType.transaction,
+      );
 
-      sendNotification(
-          [usertoken],
-          "New Appointment",
-          "You have successful schedule an appointment ${formatDate(appointment.startTime!.toDate())} - ${formatDate(appointment.endTime!.toDate())}",
-          appointmentId,
-          NotificationType.transaction);
-
+      // Step 6: Schedule reminders
       scheduleAppointmentNotification(
-        tokens: [usertoken, doctoken],
+        tokens: [usertoken],
         title: "",
         body: "",
         id: appointmentId,
@@ -165,8 +170,10 @@ class AppointmentService {
         scheduledTime: appointment.startTime!,
         endTime: appointment.endTime!,
       );
+
       return true;
-    } catch (err) {
+    } catch (err, stack) {
+      print("Error in updateAppointmentAfterPayment: $err");
       return false;
     }
   }
@@ -174,6 +181,7 @@ class AppointmentService {
   Stream<List<AppointmentModel>> getAllAppointment(String userId) {
     return appointmentCollection
         .where("userId", isEqualTo: userId)
+        .where('status', isNotEqualTo: 'deleted')
         .orderBy('updatedAt', descending: true)
         .snapshots()
         .map((event) => event.docs
@@ -320,16 +328,15 @@ class AppointmentService {
   Future<void> deleteAppointment({required String appointmentId}) async {
     var chats = await appointmentCollection
         .doc(appointmentId)
-        .collection("conversation")
-        .get();
-    for (var chat in chats.docs) {
-      await appointmentCollection
-          .doc(appointmentId)
-          .collection("conversation")
-          .doc(chat.id)
-          .delete();
-    }
-    await appointmentCollection.doc(appointmentId).delete();
+        .update({"status": 'deleted'});
+    // for (var chat in chats.docs) {
+    //   await appointmentCollection
+    //       .doc(appointmentId)
+    //       .collection("conversation")
+    //       .doc(chat.id)
+    //       .delete();
+    // }
+    // await appointmentCollection.doc(appointmentId).delete();
     return;
   }
 

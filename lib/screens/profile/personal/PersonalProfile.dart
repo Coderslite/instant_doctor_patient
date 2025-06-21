@@ -73,8 +73,8 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     var data = snapshot.data!;
-                    bool profileCompleted =
-                        data.dob != null && data.address.validate().isNotEmpty;
+                    bool profileCompleted = data.dob != null &&
+                        data.phoneNumber.validate().isNotEmpty;
                     return SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
                       child: Column(

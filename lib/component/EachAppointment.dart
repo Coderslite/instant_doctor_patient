@@ -13,123 +13,167 @@ import '../models/AppointmentModel.dart';
 import 'IsOnline.dart';
 import 'TimeRemaining.dart';
 
-StreamBuilder eachAppointment({
-  required docId,
+Widget eachAppointment({
+  required String docId,
   required AppointmentModel appointment,
   required bool isExpired,
   required bool isOngoing,
+  required BuildContext context,
 }) {
   final date = appointment.createdAt!.toDate();
   final doctorService = Get.find<DoctorService>();
   final appointmentService = Get.find<AppointmentService>();
-  return StreamBuilder<UserModel>(
-      stream: doctorService.getDoc(docId: docId),
-      builder: (context, snapshot) {
-        var data = snapshot.data;
-        if (snapshot.hasData) {
-          return Container(
-            margin: const EdgeInsets.symmetric(vertical: 2),
+  return docId.isEmpty || appointment.isPaid.validate() == false
+      ? Card(
+          color: context.cardColor,
+          child: Padding(
             padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              color: context.cardColor,
-              borderRadius: BorderRadius.circular(10),
-            ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Stack(
-                  alignment: Alignment.topRight,
-                  children: [
-                    profileImage(data, 60, 60, context: context),
-                    Positioned(
-                      child: isOnline(data!.status == ONLINE ? true : false),
-                    )
-                  ],
+                SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: Image.asset("assets/images/logo.png"),
                 ),
-                5.width,
+                10.width,
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "${data.firstName!} ${data.lastName!}",
+                        "Instant Doctor",
                         style: boldTextStyle(
                           size: 14,
                         ),
                       ),
                       Text(
-                        data.speciality!,
+                        isExpired
+                            ? "Expired"
+                            : appointment.isPaid.validate()
+                                ? "Not Assigned"
+                                : "Pending Payment",
                         style: secondaryTextStyle(
-                          size: 10,
+                          size: 14,
                         ),
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.timelapse,
-                                size: 12,
-                                color: dimGray,
-                              ),
-                              5.width,
-                              Text(
-                                timeago.format(date),
-                                style: secondaryTextStyle(size: 10),
-                              ),
-                            ],
-                          ),
-                          appointment.isPaid.validate() == false && !isExpired
-                              ? Text(
-                                  "Pending Payment",
-                                  style:
-                                      boldTextStyle(color: fireBrick, size: 10),
-                                )
-                              : TimeRemaining(
-                                  appointment: appointment,
-                                )
-                        ],
-                      ),
-                      AddReviewButton(
-                        appointment: appointment,
-                        isOngoing: isOngoing,
-                        isExpired: isExpired,
-                      )
                     ],
                   ),
                 ),
-                Column(
-                  children: [
-                    StreamBuilder<List<AppointmentConversationModel>>(
-                        stream: appointmentService.getUnreadChat(
-                            appointment.id.validate(), docId!),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            var data = snapshot.data!.length;
-                            if (data < 1) {
-                              return const Text("");
-                            }
-                            return Container(
-                              padding: const EdgeInsets.all(5),
-                              decoration: const BoxDecoration(
-                                  shape: BoxShape.circle, color: kPrimary),
-                              child: Text(
-                                "$data",
-                                style: boldTextStyle(color: white),
-                              ),
-                            );
-                          }
-                          return const Text("");
-                        }),
-                  ],
-                ),
+                Icon(Icons.arrow_forward_ios)
               ],
             ),
-          );
-        }
-        return const Text("");
-      });
+          ),
+        )
+      : StreamBuilder<UserModel>(
+          stream: doctorService.getDoc(docId: docId),
+          builder: (context, snapshot) {
+            var data = snapshot.data;
+            if (snapshot.hasData) {
+              return Container(
+                margin: const EdgeInsets.symmetric(vertical: 2),
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  color: context.cardColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Stack(
+                      alignment: Alignment.topRight,
+                      children: [
+                        profileImage(data, 60, 60, context: context),
+                        Positioned(
+                          child:
+                              isOnline(data!.status == ONLINE ? true : false),
+                        )
+                      ],
+                    ),
+                    5.width,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${data.firstName!} ${data.lastName!}",
+                            style: boldTextStyle(
+                              size: 14,
+                            ),
+                          ),
+                          Text(
+                            data.speciality!,
+                            style: secondaryTextStyle(
+                              size: 10,
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.timelapse,
+                                    size: 12,
+                                    color: dimGray,
+                                  ),
+                                  5.width,
+                                  Text(
+                                    timeago.format(date),
+                                    style: secondaryTextStyle(size: 10),
+                                  ),
+                                ],
+                              ),
+                              appointment.isPaid.validate() == false &&
+                                      !isExpired
+                                  ? Text(
+                                      "Pending Payment",
+                                      style: boldTextStyle(
+                                          color: fireBrick, size: 10),
+                                    )
+                                  : TimeRemaining(
+                                      appointment: appointment,
+                                    )
+                            ],
+                          ),
+                          AddReviewButton(
+                            appointment: appointment,
+                            isOngoing: isOngoing,
+                            isExpired: isExpired,
+                          )
+                        ],
+                      ),
+                    ),
+                    Column(
+                      children: [
+                        StreamBuilder<List<AppointmentConversationModel>>(
+                            stream: appointmentService.getUnreadChat(
+                                appointment.id.validate(), docId!),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                var data = snapshot.data!.length;
+                                if (data < 1) {
+                                  return const Text("");
+                                }
+                                return Container(
+                                  padding: const EdgeInsets.all(5),
+                                  decoration: const BoxDecoration(
+                                      shape: BoxShape.circle, color: kPrimary),
+                                  child: Text(
+                                    "$data",
+                                    style: boldTextStyle(color: white),
+                                  ),
+                                );
+                              }
+                              return const Text("");
+                            }),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }
+            return const Text("");
+          });
 }
 
 class AddReviewButton extends StatefulWidget {

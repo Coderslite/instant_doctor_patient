@@ -233,36 +233,36 @@ class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
                     ),
                   ),
                 ),
-                StreamBuilder<UserModel>(
-                    stream: userService.getProfile(
-                        userId: userController.userId.value),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        var data = snapshot.data!;
-                        bool profileCompleted =
-                            data.bloodGroup.validate().isNotEmpty &&
-                                data.height.validate().isNotEmpty &&
-                                data.weight.validate().isNotEmpty &&
-                                data.genotype.validate().isNotEmpty;
-                        return AppButton(
-                          text: !profileCompleted
-                              ? "Please complete profile"
-                              : "Book Appointment",
-                          onTap: () {
-                            !profileCompleted
-                                ? const MedicalDataScreen().launch(context)
-                                : NewAppointment(
-                                    docID: widget.doctor.id.validate(),
-                                  ).launch(context);
-                          },
-                          color: kPrimary,
-                          textColor: white,
-                          width: double.infinity,
-                        );
-                      }
-                      return Loader().center();
-                    }).paddingSymmetric(horizontal: 10, vertical: 10),
-              ],
+              //   StreamBuilder<UserModel>(
+              //       stream: userService.getProfile(
+              //           userId: userController.userId.value),
+              //       builder: (context, snapshot) {
+              //         if (snapshot.hasData) {
+              //           var data = snapshot.data!;
+              //           bool profileCompleted =
+              //               data.bloodGroup.validate().isNotEmpty &&
+              //                   data.height.validate().isNotEmpty &&
+              //                   data.weight.validate().isNotEmpty &&
+              //                   data.genotype.validate().isNotEmpty;
+              //           return AppButton(
+              //             text: !profileCompleted
+              //                 ? "Please complete profile"
+              //                 : "Book Appointment",
+              //             onTap: () {
+              //               !profileCompleted
+              //                   ? const MedicalDataScreen().launch(context)
+              //                   : NewAppointment(
+              //                       docID: widget.doctor.id.validate(),
+              //                     ).launch(context);
+              //             },
+              //             color: kPrimary,
+              //             textColor: white,
+              //             width: double.infinity,
+              //           );
+              //         }
+              //         return Loader().center();
+              //       }).paddingSymmetric(horizontal: 10, vertical: 10),ß
+              ]
             ),
             body: Container(
               padding: const EdgeInsets.all(8),

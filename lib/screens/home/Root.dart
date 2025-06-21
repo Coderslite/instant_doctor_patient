@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
@@ -106,7 +107,8 @@ class RootState extends State<Root> with WidgetsBindingObserver {
   final iconList = <IconData>[
     Ionicons.home,
     // Ionicons.cart,
-    Ionicons.chatbubble_ellipses,
+    // Ionicons.chatbubble_ellipses,
+    CupertinoIcons.calendar_today,
     Icons.shopping_cart,
 
     Ionicons.person,
@@ -293,5 +295,4 @@ class RootState extends State<Root> with WidgetsBindingObserver {
       settingsController.selectedIndex.value = index;
     });
   }
-  
 }

@@ -3,6 +3,7 @@
 import 'package:get/get.dart';
 import 'package:instant_doctor/controllers/AuthenticationController.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
+import 'package:instant_doctor/controllers/ConnectivityController.dart';
 import 'package:instant_doctor/controllers/MedicationController.dart';
 import 'package:instant_doctor/controllers/NotificationController.dart';
 import 'package:instant_doctor/controllers/OrderController.dart';
@@ -52,6 +53,7 @@ class InitialBindings extends Bindings {
     Get.lazyPut(() => MedicationController());
     Get.lazyPut(() => NotificationController());
     Get.lazyPut(() => ChatController());
+    Get.lazyPut(() => ConnectivityController());
 
     // Services
     Get.lazyPut(() => WalletService());

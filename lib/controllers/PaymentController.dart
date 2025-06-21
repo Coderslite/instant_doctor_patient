@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/snackBar.dart';
+import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
 import 'package:instant_doctor/controllers/UserController.dart';
 import 'package:instant_doctor/screens/home/Root.dart';
@@ -48,8 +49,7 @@ class PaymentController extends GetxController {
 
     await PaystackFlutter().pay(
       context: context,
-      secretKey:
-          'sk_test_5a009cc631c4d56e7c8b7dccdfdf471ebc4a8cba', // Your Paystack secret key gotten from your Paystack dashboard.
+      secretKey: PaystackKey.secretKey,
       amount: amount.toDouble() *
           100, // The amount to be charged in the smallest currency unit. If amount is 600, multiply by 100(600*100)
       email: email, // The customer's email address.
@@ -60,7 +60,10 @@ class PaymentController extends GetxController {
       paymentOptions: [
         PaymentOption.card,
         PaymentOption.bankTransfer,
-        PaymentOption.mobileMoney
+        PaymentOption.mobileMoney,
+        PaymentOption.ussd,
+        PaymentOption.bank,
+        PaymentOption.qr,
       ],
       currency: Currency.NGN,
       metaData: {

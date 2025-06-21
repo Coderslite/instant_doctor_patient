@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class DrugModel {
   String? id;
   String? pharmacyId;
+  String? category;
   String? name;
   String? description;
   int? amount;
@@ -16,6 +17,7 @@ class DrugModel {
   DrugModel({
     this.id,
     this.pharmacyId,
+    this.category,
     this.name,
     this.description,
     this.amount,
@@ -31,6 +33,7 @@ class DrugModel {
     return DrugModel(
       id: json['id'],
       pharmacyId: json['pharmacyId'],
+      category: json['category'],
       name: json['name'],
       description: json['description'],
       amount: json['amount'],

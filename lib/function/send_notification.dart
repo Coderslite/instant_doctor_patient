@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../constant/constants.dart';
 
-void sendNotification(
+Future<void> sendNotification(
     List tokens, String title, String body, String id, String type) async {
   var response = await http.post(Uri.parse("$FIREBASE_URL/notification"),
       headers: <String, String>{

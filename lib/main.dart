@@ -20,6 +20,7 @@ import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 import 'AppTheme.dart';
 import 'constant/color.dart';
 import 'constant/constants.dart';
+import 'controllers/ConnectivityController.dart';
 import 'services_initializer.dart';
 import 'controllers/SettingController.dart';
 
@@ -32,7 +33,9 @@ var db = FirebaseFirestore.instance;
 var firebaseStorage = FirebaseStorage.instance;
 
 SettingsController settingsController = Get.put(SettingsController());
-
+ConnectivityController connectivityController =
+    Get.put(ConnectivityController());
+    
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   WidgetsFlutterBinding.ensureInitialized();

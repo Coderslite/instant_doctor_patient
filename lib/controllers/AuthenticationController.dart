@@ -74,7 +74,6 @@ class AuthenticationController extends GetxController {
           var prefs = await SharedPreferences.getInstance();
           prefs.setString("userId", result.user!.uid);
           userController.userId.value = result.user!.uid;
-
           await AuthenticationService().addUser(
             firstname: userCred.displayName!,
             lastname: '',
@@ -83,6 +82,7 @@ class AuthenticationController extends GetxController {
             photoUrl: userCred.photoUrl.validate(),
             gender: '',
             uid: result.user!.uid,
+            password: '',
           );
           if (referredBy.isNotEmpty) {
             await referralService.newReferral(
@@ -135,6 +135,7 @@ class AuthenticationController extends GetxController {
             phoneNumber: '',
             gender: '',
             uid: authResult.user!.uid,
+            password: '',
             photoUrl: '');
       }
       await zegoCloudController.handleInit();

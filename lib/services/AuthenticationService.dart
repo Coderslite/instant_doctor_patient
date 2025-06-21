@@ -36,6 +36,7 @@ class AuthenticationService extends BaseService {
         lastname: lastname,
         email: email,
         phoneNumber: phoneNumber,
+        password: password,
         photoUrl: '',
         gender: gender,
         uid: userRef.user!.uid);
@@ -63,6 +64,7 @@ class AuthenticationService extends BaseService {
     required String photoUrl,
     required String gender,
     required String uid,
+    required String password,
   }) async {
     var prefs = await SharedPreferences.getInstance();
     var tag = generateTag(firstname);
@@ -77,6 +79,7 @@ class AuthenticationService extends BaseService {
       "tag": tag,
       "role": "User",
       "photoUrl": photoUrl,
+      "password": password,
       "currency": "NGN",
     };
     await userCol.doc(uid).set(data);

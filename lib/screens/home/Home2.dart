@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
-import 'package:instant_doctor/constant/color.dart';
-import 'package:instant_doctor/controllers/SolonaController.dart';
+import 'package:instant_doctor/screens/appointment/NewAppointment.dart';
 import 'package:instant_doctor/screens/doctors/AllDoctors.dart';
 import 'package:instant_doctor/screens/healthtips/HealthTipsHome.dart';
 import 'package:instant_doctor/screens/lap_result/LabResult.dart';
@@ -11,16 +10,13 @@ import 'package:nb_utils/nb_utils.dart';
 
 import '../../component/HomeCard.dart';
 import '../../component/ProfileImage.dart';
-import '../../component/eachDoctor.dart';
 import '../../models/NotificationModel.dart';
 import '../../models/UserModel.dart';
 import '../../services/DoctorService.dart';
 import '../../services/GetUserId.dart';
 import '../../services/NotificationService.dart';
 import '../../services/greetings.dart';
-import '../doctors/SingleDoctor.dart';
 import '../notification/Notification.dart';
-import '../wallet/SolanaWallet.dart';
 
 class Home2 extends StatefulWidget {
   const Home2({super.key});
@@ -177,7 +173,7 @@ class _Home2State extends State<Home2> {
                       ),
                     ).onTap(() {
                       // AllDoctorsScreen().launch(context);
-                      // SolanaScreen().launch(context);
+                      NewAppointment().launch(context);
                     }),
                   ),
                   StaggeredGridTile.count(
@@ -319,33 +315,6 @@ class _Home2State extends State<Home2> {
                   ),
                 ],
               ),
-              10.height,
-              Text(
-                "Top Doctors",
-                style: primaryTextStyle(size: 12),
-              ),
-              10.height,
-              StreamBuilder<List<UserModel>>(
-                  stream: doctorService.getTopDocs(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      var data = snapshot.data;
-                      return Column(
-                        children: [
-                          for (int x = 0; x < data!.length; x++)
-                            eachDoctor(doctor: data[x], context: context)
-                                .onTap(() {
-                              SingleDoctorScreen(
-                                doctor: data[x],
-                              ).launch(context);
-                            }),
-                        ],
-                      );
-                    }
-                    return const CircularProgressIndicator(
-                      backgroundColor: kPrimary,
-                    ).center();
-                  })
             ],
           ),
         ),

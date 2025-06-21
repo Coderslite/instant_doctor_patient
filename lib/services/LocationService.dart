@@ -34,13 +34,17 @@ class LocationService {
   }
 
   String parseAddressComponents(List<dynamic> components) {
-    String street = '';
     String streetNumber = '';
+    String street = '';
     String neighborhood = '';
     String locality = '';
+    String adminAreaLevel2 = '';
+    String adminAreaLevel1 = '';
+    String country = '';
+    String postalCode = '';
 
     for (var component in components) {
-      final types = component['types'];
+      final types = component['types'] as List<dynamic>;
       if (types.contains('street_number')) {
         streetNumber = component['long_name'];
       } else if (types.contains('route')) {
@@ -50,18 +54,32 @@ class LocationService {
         neighborhood = component['long_name'];
       } else if (types.contains('locality')) {
         locality = component['long_name'];
+      } else if (types.contains('administrative_area_level_2')) {
+        adminAreaLevel2 = component['long_name'];
+      } else if (types.contains('administrative_area_level_1')) {
+        adminAreaLevel1 = component['long_name'];
+      } else if (types.contains('country')) {
+        country = component['long_name'];
+      } else if (types.contains('postal_code')) {
+        postalCode = component['long_name'];
       }
     }
 
-    // Build a clean address string
     final addressParts = [
       if (streetNumber.isNotEmpty) streetNumber,
       street,
       if (neighborhood.isNotEmpty && neighborhood != locality) neighborhood,
-      locality
-    ].where((part) => part.isNotEmpty).toList();
+      locality,
+      if (adminAreaLevel2.isNotEmpty) adminAreaLevel2,
+      // if (adminAreaLevel1.isNotEmpty) adminAreaLevel1,
+      if (country.isNotEmpty) country,
+      if (postalCode.isNotEmpty) postalCode,
+    ];
 
-    return addressParts.join(', ');
+    final cleanAddress =
+        addressParts.where((part) => part.isNotEmpty).join(', ');
+    print(cleanAddress);
+    return cleanAddress;
   }
 
   Future<List<LocationSuggestion>> getSuggestions(String query) async {

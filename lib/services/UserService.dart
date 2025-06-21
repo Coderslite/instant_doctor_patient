@@ -4,6 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/UserModel.dart';
 import 'package:instant_doctor/services/BaseService.dart';
+import 'package:instant_doctor/services/GetUserId.dart';
+
+import '../models/SavedLocationModel.dart';
 
 class UserService extends BaseService {
   var userCol = db.collection("Users");
@@ -62,7 +65,7 @@ class UserService extends BaseService {
     }
   }
 
-    Future<UserModel?> getUserByTag({required String tag}) async {
+  Future<UserModel?> getUserByTag({required String tag}) async {
     var userRef = await userCol.where('tag', isEqualTo: tag).get();
     if (userRef.docs.isNotEmpty) {
       var userData = userRef.docs.first.data();
@@ -72,12 +75,46 @@ class UserService extends BaseService {
     }
   }
 
-  
-
   Future<void> updateUserBalance(
       {required String id, required int amount}) async {
     userCol.doc(id).update({
       "amount": amount,
     });
+  }
+
+  // Add to your LocationController class
+  Future<List<SavedLocation>> getSavedLocations() async {
+    final userDoc = await userCol.doc(userController.userId.value).get();
+
+    if (userDoc.exists && userDoc.data()?['savedLocations'] != null) {
+      return (userDoc.data()!['savedLocations'] as List)
+          .map((loc) => SavedLocation.fromMap(loc))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<void> saveLocation(SavedLocation location) async {
+    final locations = await getSavedLocations();
+    locations.add(location);
+
+    await userCol.doc(userController.userId.value).update({
+      'savedLocations': locations.map((loc) => loc.toMap()).toList(),
+    });
+  }
+
+  Future<void> deleteSavedLocation(String id) async {
+    final locations = await getSavedLocations();
+    locations.removeWhere((loc) => loc.id == id);
+
+    await userCol.doc(userController.userId.value).update({
+      'savedLocations': locations.map((loc) => loc.toMap()).toList(),
+    });
+  }
+
+  Future<void> setLocation(double lat, double lng, String address) async {
+    locationController.latitude.value = lat;
+    locationController.longitude.value = lng;
+    locationController.address.value = address;
   }
 }

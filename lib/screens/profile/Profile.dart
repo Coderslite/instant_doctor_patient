@@ -96,6 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       }),
                   10.height,
                   AnimatedCard(
+                    
                     color1: kPrimary,
                     color2: kPrimaryDark,
                     child: StreamBuilder<UserModel>(

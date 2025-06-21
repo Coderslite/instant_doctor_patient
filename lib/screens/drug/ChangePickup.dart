@@ -13,6 +13,7 @@ import '../../controllers/LocationController.dart';
 import '../../controllers/OrderController.dart';
 import '../../controllers/UserController.dart';
 import '../../main.dart';
+import '../../models/SavedLocationModel.dart';
 import '../../services/UserService.dart';
 
 class ChangePickup extends StatefulWidget {
@@ -24,14 +25,17 @@ class ChangePickup extends StatefulWidget {
 
 class _ChangePickupState extends State<ChangePickup> {
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   final LocationService _locationService = LocationService();
   final Completer<GoogleMapController> _mapController = Completer();
+  bool _skipNextCameraIdle = false;
 
   String _address = '';
   bool _isLoading = false;
   bool _isMapReady = false;
   List<LocationSuggestion> _suggestions = [];
   bool _showSuggestions = false;
+  bool _showSaveLocationDialog = false;
 
   @override
   void initState() {
@@ -126,13 +130,17 @@ class _ChangePickupState extends State<ChangePickup> {
       setState(() {
         _isLoading = true;
         _showSuggestions = false;
+        _skipNextCameraIdle = true; // <-- Skip next camera idle update
       });
 
       final result =
           await _locationService.getLocationFromPlaceId(suggestion.placeId);
       await _moveToLocation(result.position);
-      _address = result.address;
+
+      // Set the address to the raw description from Google suggestion
+      _address = suggestion.description;
       _searchController.text = _address;
+
       FocusScope.of(context).unfocus();
     } catch (e) {
       toast('Failed to get location details');
@@ -160,6 +168,33 @@ class _ChangePickupState extends State<ChangePickup> {
 
     Get.find<OrderController>().getTotalDeliveryFee();
     Navigator.pop(context);
+  }
+
+  Future<void> _saveAsNewLocation() async {
+    if (_nameController.text.isEmpty) {
+      toast('Please enter a name for this location');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      await Get.find<UserService>().saveLocation(
+        SavedLocation(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          name: _nameController.text,
+          address: _address,
+          latitude: Get.find<LocationController>().latitude.value,
+          longitude: Get.find<LocationController>().longitude.value,
+        ),
+      );
+      toast('Location saved successfully');
+      _nameController.clear();
+      setState(() => _showSaveLocationDialog = false);
+    } catch (e) {
+      toast('Failed to save location');
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<String> _loadMapStyle(BuildContext context, bool isDarkMode) async {
@@ -200,13 +235,21 @@ class _ChangePickupState extends State<ChangePickup> {
                 Get.find<LocationController>().longitude.value =
                     position.target.longitude;
               },
-              onCameraIdle: () => _updateAddress(
-                LatLng(
-                  Get.find<LocationController>().latitude.value,
-                  Get.find<LocationController>().longitude.value,
-                ),
-              ),
+              onCameraIdle: () {
+                if (_skipNextCameraIdle) {
+                  _skipNextCameraIdle = false;
+                  return;
+                }
+
+                _updateAddress(
+                  LatLng(
+                    Get.find<LocationController>().latitude.value,
+                    Get.find<LocationController>().longitude.value,
+                  ),
+                );
+              },
               myLocationEnabled: true,
+              myLocationButtonEnabled: false,
             )
           else
             Loader().center(),
@@ -251,6 +294,17 @@ class _ChangePickupState extends State<ChangePickup> {
                             setState(() => _showSuggestions = false);
                           },
                         ),
+                      IconButton(
+                        icon: Icon(Icons.my_location),
+                        onPressed: () async {
+                          await Get.find<LocationController>()
+                              .handleGetMyLocation();
+                          await _moveToLocation(LatLng(
+                            Get.find<LocationController>().latitude.value,
+                            Get.find<LocationController>().longitude.value,
+                          ));
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -313,9 +367,8 @@ class _ChangePickupState extends State<ChangePickup> {
                         ),
                       ),
                     SizedBox(height: 8),
-                    // Your custom marker image
                     Image.asset(
-                      'assets/images/marker.webp', // Your custom marker path
+                      'assets/images/marker.webp',
                       width: 48,
                       height: 48,
                     ),
@@ -324,30 +377,98 @@ class _ChangePickupState extends State<ChangePickup> {
               ),
             ),
 
-          // Bottom Confirm Button
+          // Bottom Buttons
           Positioned(
             bottom: 24,
             left: 16,
             right: 16,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimary, // Your primary color
-                padding: EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            child: Column(
+              children: [
+                AppButton(
+                  color: kPrimary,
+                  textColor: white,
+                  onTap: _address.isNotEmpty
+                      ? () {
+                          setState(() => _showSaveLocationDialog = true);
+                        }
+                      : null,
+                  text: 'SAVE THIS LOCATION',
                 ),
-              ),
-              onPressed: _address.isNotEmpty ? _saveLocation : null,
-              child: Text(
-                'CONFIRM DELIVERY LOCATION',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                SizedBox(height: 8),
+                AppButton(
+                  onTap: _address.isNotEmpty ? _saveLocation : null,
+                  text: 'USE THIS LOCATION',
+                  color: context.cardColor,
+                  textColor:
+                      settingsController.isDarkMode.value ? white : black,
+                ),
+              ],
+            ),
+          ),
+
+          // Save Location Dialog
+          if (_showSaveLocationDialog)
+            Container(
+              color: Colors.black54,
+              child: Center(
+                child: Card(
+                  margin: EdgeInsets.all(16),
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "Save Location",
+                          style: boldTextStyle(size: 18),
+                        ),
+                        SizedBox(height: 16),
+                        TextField(
+                          controller: _nameController,
+                          decoration: InputDecoration(
+                            labelText: 'Location Name',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  setState(
+                                      () => _showSaveLocationDialog = false);
+                                },
+                                child: Text("Cancel"),
+                              ),
+                            ),
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: _saveAsNewLocation,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: kPrimary,
+                                ),
+                                child: _isLoading
+                                    ? SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          color: white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Text("Save"),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
 
           // Loading Indicator
           if (_isLoading) Center(child: Loader()),

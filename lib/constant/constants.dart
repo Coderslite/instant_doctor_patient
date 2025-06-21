@@ -12,8 +12,13 @@ const ONLINE = 'online';
 const OFFLINE = 'offline';
 
 class PaystackKey {
-  static String publicKey = "pk_test_d2811bea5f8ee3c81b0d10ec65f856a28aa47966";
-  static String secretKey = "sk_test_5a009cc631c4d56e7c8b7dccdfdf471ebc4a8cba";
+  // test credentials
+  // static String publicKey = "pk_test_d2811bea5f8ee3c81b0d10ec65f856a28aa47966";
+  // static String secretKey = "sk_test_5a009cc631c4d56e7c8b7dccdfdf471ebc4a8cba";
+
+  // live credentials
+  static String publicKey = "pk_live_fa9a859fed46fd231e65483c85f9611c98f0d173o";
+  static String secretKey = "sk_live_c07e9ad43ea5365e467383dab49c9dcefc1975cf";
 }
 
 class MessageType {

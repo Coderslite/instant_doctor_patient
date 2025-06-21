@@ -170,7 +170,6 @@ PODS:
     - Flutter
   - fluttertoast (0.0.2):
     - Flutter
-    - Toast
   - geocoding_ios (1.0.5):
     - Flutter
   - geolocator_apple (1.2.0):
@@ -274,7 +273,6 @@ PODS:
     - Flutter
     - FlutterMacOS
   - SwiftyGif (5.4.5)
-  - Toast (4.1.1)
   - url_launcher_ios (0.0.1):
     - Flutter
   - vibration (1.7.5):
@@ -397,7 +395,6 @@ SPEC REPOS:
     - RecaptchaInterop
     - SDWebImage
     - SwiftyGif
-    - Toast
     - ZIM
     - ZIPFoundation
     - ZPNs
@@ -552,7 +549,7 @@ SPEC CHECKSUMS:
   flutter_local_notifications: 4cde75091f6327eb8517fa068a0a5950212d2086
   flutter_logs: 5d0dca26963e0f30b11a995a764744ef77d5d428
   flutter_pdfview: 25f53dd6097661e6395b17de506e6060585946bd
-  fluttertoast: e9a18c7be5413da53898f660530c56f35edfba9c
+  fluttertoast: 21eecd6935e7064cc1fcb733a4c5a428f3f24f0f
   geocoding_ios: d7460f56e80e118d57678efe5c2cdc888739ff18
   geolocator_apple: 6cbaf322953988e009e5ecb481f07efece75c450
   Google-Maps-iOS-Utils: cfe6a0239c7ca634b7e001ad059a6707143dc8dc
@@ -585,7 +582,6 @@ SPEC CHECKSUMS:
   sign_in_with_apple: f3bf75217ea4c2c8b91823f225d70230119b8440
   sqflite_darwin: a553b1fd6fe66f53bbb0fe5b4f5bab93f08d7a13
   SwiftyGif: 706c60cf65fa2bc5ee0313beece843c8eb8194d4
-  Toast: 1f5ea13423a1e6674c4abdac5be53587ae481c4e
   url_launcher_ios: 5334b05cef931de560670eeae103fd3e431ac3fe
   vibration: 7d883d141656a1c1a6d8d238616b2042a51a1241
   video_player_avfoundation: 7c6c11d8470e1675df7397027218274b6d2360b3
