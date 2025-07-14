@@ -3,7 +3,6 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  app_links
   audioplayers_windows
   cloud_firestore
   connectivity_plus
@@ -12,7 +11,9 @@ list(APPEND FLUTTER_PLUGIN_LIST
   firebase_core
   firebase_storage
   flutter_inappwebview_windows
-  geolocator_windows
+  flutter_timezone
+  flutter_volume_controller
+  local_auth_windows
   nb_utils
   permission_handler_windows
   share_plus

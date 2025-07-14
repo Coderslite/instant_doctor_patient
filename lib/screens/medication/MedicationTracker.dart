@@ -4,12 +4,12 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/models/MedicationModel.dart';
+import 'package:instant_doctor/screens/home/Root.dart';
 import 'package:instant_doctor/screens/medication/ActiveMedication.dart';
 import 'package:instant_doctor/screens/medication/AddMedication.dart';
 import 'package:instant_doctor/services/MedicationService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
-import '../../component/backButton.dart';
 import '../../services/GetUserId.dart';
 import '../../services/LabResultService.dart';
 
@@ -35,7 +35,18 @@ class _MedicationTrackerState extends State<MedicationTracker> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  backButton(context),
+                  Card(
+                    color: context.cardColor,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.arrow_back_ios_new,
+                        color: kPrimary,
+                      ),
+                    ).onTap(() {
+                      Get.offAll(Root());
+                    }),
+                  ),
                   Text(
                     "Medication Tracker",
                     style: boldTextStyle(
@@ -82,7 +93,7 @@ class _MedicationTrackerState extends State<MedicationTracker> {
                                 dismissible:
                                     DismissiblePane(onDismissed: () async {
                                   await medicationService.deleteMedication(
-                                      id: medication.id.validate());
+                                      medication: medication);
                                 }),
 
                                 // All actions are defined in the children parameter.

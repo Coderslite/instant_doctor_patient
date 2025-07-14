@@ -24,6 +24,7 @@ import 'package:instant_doctor/services/UserService.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:zego_uikit/zego_uikit.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 // import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 
@@ -253,13 +254,13 @@ class _ChatInterfaceState extends State<ChatInterface> {
       body: KeyboardDismisser(
         child: Container(
           decoration: const BoxDecoration(
-              color: kPrimary,
-              image: DecorationImage(
-                image: AssetImage("assets/images/particle.png"),
-                fit: BoxFit.cover,
-                opacity: 0.4,
-              ),
+            color: kPrimary,
+            image: DecorationImage(
+              image: AssetImage("assets/images/particle.png"),
+              fit: BoxFit.cover,
+              opacity: 0.4,
             ),
+          ),
           child: SafeArea(
             child: Column(
               children: [

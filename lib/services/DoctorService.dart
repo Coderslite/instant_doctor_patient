@@ -25,6 +25,16 @@ class DoctorService extends BaseService {
     return result;
   }
 
+  Future<List<String>> getDoctorsToken() async {
+    List<String> token = [];
+    var res = await userCol.get();
+    var docs = res.docs;
+    for (var doc in docs) {
+      token.add(doc.data()['token'] ?? '');
+    }
+    return token;
+  }
+
   Stream<List<UserModel>> getTopDocs() {
     var result = userCol
         .where('role', isEqualTo: 'Doctor')

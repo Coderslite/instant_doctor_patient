@@ -7,6 +7,7 @@ import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/services/LocationService.dart';
 import 'package:instant_doctor/services/UserService.dart';
 import 'package:nb_utils/nb_utils.dart';
+import '../constant/constants.dart';
 import '../models/DrugModel.dart';
 import '../models/OrderModel.dart';
 import '../models/PharmacyModel.dart';
@@ -227,12 +228,13 @@ class OrderController extends GetxController {
 
       // Payment only for the overall total
       int grandTotal = orders.fold(0, (sum, order) => sum + order.totalAmount!);
+
       final paymentController = Get.find<PaymentController>();
       paymentController.makePayment(
         email: email!,
         context: Get.context!,
         amount: grandTotal,
-        paymentFor: "Order",
+        paymentFor: PaymentFor.order,
       );
     } catch (e) {
       errorSnackBar(title: "Failed to make orders: $e");
@@ -240,20 +242,29 @@ class OrderController extends GetxController {
     }
   }
 
-  orderNow() async {
-    final orderService = Get.find<OrderService>();
+  orderNow({required int pharmacyEarning}) async {
+    try {
+      final orderService = Get.find<OrderService>();
 
-    for (var order in orders) {
-      await orderService.newOrder(order: order);
-      for (var item in order.items.validate()) {
-        orderService.updateQuantity(itemId: item['id'], qty: item['quantity']);
+      for (var order in orders) {
+        order.pharmacyEarning = pharmacyEarning;
+        await orderService.newOrder(order: order);
+        for (var item in order.items.validate()) {
+          orderService.updateQuantity(
+              itemId: item['id'], qty: item['quantity']);
+        }
       }
+
+      await handleClearCart();
+      successSnackBar(title: "Orders placed successfully.");
+      settingsController.selectedIndex.value = 2;
+      Root().launch(Get.context!);
+      isLoading.value = false;
+    } catch (err) {
+      print(err);
+    } finally {
+      isLoading.value = false;
     }
-    await handleClearCart();
-    successSnackBar(title: "Orders placed successfully.");
-    settingsController.selectedIndex.value = 2;
-    Root().launch(Get.context!);
-    isLoading.value = false;
   }
 
   updateItemQuantity({required String itemId}) async {}

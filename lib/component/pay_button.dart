@@ -4,6 +4,7 @@ import 'package:instant_doctor/controllers/PaymentController.dart';
 import 'package:instant_doctor/screens/wallet/SolanaWallet.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+import '../constant/constants.dart';
 import '../services/GetUserId.dart';
 
 payButton(context, {required int price, required String appointmentId}) {
@@ -28,14 +29,14 @@ payButton(context, {required int price, required String appointmentId}) {
                       email: userInfo.email.validate(),
                       context: context,
                       amount: price.validate(),
-                      paymentFor: 'Appointment',
+                      paymentFor: PaymentFor.appointment,
                       productId: appointmentId);
                 },
                 width: double.infinity,
                 child: SizedBox(
                   height: 40,
                   child: Image.asset(
-                    "assets/images/paystack.png",
+                    "assets/images/ng",
                     fit: BoxFit.cover,
                   ),
                 ),

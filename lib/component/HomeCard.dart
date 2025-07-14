@@ -126,7 +126,7 @@ class _HomeCardState extends State<HomeCard> {
                                 color: white,
                               ),
                               child: Image.asset(
-                                "assets/images/med.png",
+                                "assets/images/drug1.png",
                                 fit: BoxFit.cover,
                               ),
                             ),

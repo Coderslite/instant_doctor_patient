@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/controllers/AuthenticationController.dart';
 import 'package:instant_doctor/screens/authentication/email_screen.dart';
 import 'package:instant_doctor/screens/authentication/forgot_password.dart';
@@ -121,11 +121,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         textColor: kPrimary,
                         onTap: () async {
                           if (_formKey.currentState!.validate()) {
-                            await authenticationController.handleSignIn(
+                            await authenticationController.handleSendOTP(
                                 email: emailController.text,
+                                firstname: '',
+                                lastname: '',
                                 password: passwordController.text,
-                                context: context);
-                            TextInput.finishAutofillContext();
+                                phoneNumber: '',
+                                gender: '',
+                                otpFor: OtpFor.login,
+                                referredBy: '');
                           }
                         },
                         text: "Continue",

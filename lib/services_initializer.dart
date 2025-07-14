@@ -3,13 +3,13 @@
 import 'package:get/get.dart';
 import 'package:instant_doctor/controllers/AuthenticationController.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
-import 'package:instant_doctor/controllers/ConnectivityController.dart';
 import 'package:instant_doctor/controllers/MedicationController.dart';
 import 'package:instant_doctor/controllers/NotificationController.dart';
 import 'package:instant_doctor/controllers/OrderController.dart';
 import 'package:instant_doctor/controllers/PaymentController.dart';
 import 'package:instant_doctor/controllers/ReferController.dart';
 import 'package:instant_doctor/controllers/ReportController.dart';
+import 'package:instant_doctor/controllers/WaitlistController.dart';
 import 'package:instant_doctor/controllers/ZegocloudController.dart';
 import 'package:instant_doctor/controllers/LocationController.dart';
 import 'package:instant_doctor/services/DoctorService.dart';
@@ -24,6 +24,7 @@ import 'package:instant_doctor/services/ReferralService.dart';
 import 'package:instant_doctor/services/ReportService.dart';
 import 'package:instant_doctor/services/ReviewService.dart';
 import 'package:instant_doctor/services/TransactionService.dart';
+import 'package:instant_doctor/services/WaitlistService.dart';
 import 'package:instant_doctor/services/WalletService.dart';
 import 'package:instant_doctor/services/AppointmentService.dart';
 import 'package:instant_doctor/services/AuthenticationService.dart';
@@ -53,7 +54,7 @@ class InitialBindings extends Bindings {
     Get.lazyPut(() => MedicationController());
     Get.lazyPut(() => NotificationController());
     Get.lazyPut(() => ChatController());
-    Get.lazyPut(() => ConnectivityController());
+    Get.lazyPut(() => WaitlistController());
 
     // Services
     Get.lazyPut(() => WalletService());
@@ -74,5 +75,6 @@ class InitialBindings extends Bindings {
     Get.lazyPut(() => LocationService());
     Get.lazyPut(() => OrderService());
     Get.lazyPut(() => AuthenticationService());
+    Get.lazyPut(() => WaitlistService());
   }
 }

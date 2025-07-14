@@ -4,10 +4,10 @@ import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/main.dart';
+import 'package:instant_doctor/screens/authentication/create_pin.dart';
 import 'package:instant_doctor/screens/authentication/login_screen.dart';
 import 'package:instant_doctor/screens/authentication/otp_screen.dart';
 import 'package:instant_doctor/screens/authentication/success_signup.dart';
-import 'package:instant_doctor/screens/home/Root.dart';
 import 'package:instant_doctor/services/AuthenticationService.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -29,7 +29,6 @@ class AuthenticationController extends GetxController {
   );
   RxBool isLoading = false.obs;
   RxBool googleSignin = false.obs;
-  RxString otp = ''.obs;
 
   final authenticationService = Get.find<AuthenticationService>();
   final userService = Get.find<UserService>();
@@ -90,7 +89,7 @@ class AuthenticationController extends GetxController {
           }
         }
         await zegoCloudController.handleInit();
-        const Root().launch(context);
+        CreatePinScreen().launch(context, isNewTask: true);
       }
     } catch (error) {
       print(error);
@@ -140,7 +139,8 @@ class AuthenticationController extends GetxController {
       }
       await zegoCloudController.handleInit();
       // Navigate to the home screen or root after successful login
-      const Root().launch(context);
+      // const Root().launch(context);
+      CreatePinScreen().launch(context, isNewTask: true);
       toast("Login Successful with Apple");
     } catch (error) {
       print("Error during Apple Sign-In: $error");
@@ -166,9 +166,9 @@ class AuthenticationController extends GetxController {
       var prefs = await SharedPreferences.getInstance();
       prefs.setString("userId", value.user!.uid);
       userController.userId.value = value.user!.uid;
-
+      getUserId();
       await zegoCloudController.handleInit();
-      const Root().launch(context);
+      CreatePinScreen().launch(context, isNewTask: true);
       toast("Login Successful");
     } on FirebaseAuthException catch (e) {
       isLoading.value = false;
@@ -218,6 +218,7 @@ class AuthenticationController extends GetxController {
     if (result) {
       isLoading.value = false;
       await zegoCloudController.handleInit();
+      getUserId();
       const SuccessSignUp().launch(context);
     } else {
       isLoading.value = false;
@@ -227,42 +228,83 @@ class AuthenticationController extends GetxController {
 
   handleLogout(BuildContext context) async {
     FirebaseAuth.instance.signOut().then((value) async {
+      const LoginScreen().launch(context, isNewTask: true);
       final zegoCloudController = Get.find<ZegoCloudController>();
       await _googleSignIn.signOut();
       userService.updateStatus(
           userId: userController.userId.value, status: OFFLINE);
       var prefs = await SharedPreferences.getInstance();
+      userController.userId.value = '';
+      userController.pin.value = '';
       prefs.remove('userId');
-      const LoginScreen().launch(context);
+      prefs.remove('pin');
       zegoCloudController.onUserLogout();
     });
   }
 
-  handleSendOTP(
-      {required String email,
-      required String firstname,
-      required String lastname,
-      required String password,
-      required String phoneNumber,
-      required String gender,
-      required bool isResetPassword,
-      required String referredBy}) async {
+  Future<void> handleSendOTP({
+    required String email,
+    required String firstname,
+    required String lastname,
+    required String password,
+    required String phoneNumber,
+    required String gender,
+    required String otpFor,
+    required String referredBy,
+  }) async {
     try {
       isLoading.value = true;
+      if (otpFor == OtpFor.login) {
+        try {
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: email.toLowerCase(),
+            password: password,
+          );
+        } catch (ere) {
+          errorSnackBar(title: "Invalid Email or Password");
+          return;
+        }
+      }
+
+      // Store OTP stage and related data in SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isOTPStage', true);
+      await prefs.setString('otpEmail', email);
+      await prefs.setString('otpFirstname', firstname);
+      await prefs.setString('otpLastname', lastname);
+      await prefs.setString('otpPassword', password);
+      await prefs.setString('otpPhoneNumber', phoneNumber);
+      await prefs.setString('otpGender', gender);
+      await prefs.setString('otpFor', otpFor);
+      await prefs.setString('otpReferredBy', referredBy);
+
       await authenticationService.handleSendOTP(email: email);
       successSnackBar(title: "OTP sent successfully");
       OTPScreen(
-              isResetPassword: isResetPassword,
-              firstname: firstname,
-              lastname: lastname,
-              email: email,
-              password: password,
-              phoneNumber: phoneNumber,
-              gender: gender,
-              referredBy: referredBy)
-          .launch(Get.context!);
+        otpFor: otpFor,
+        firstname: firstname,
+        lastname: lastname,
+        email: email,
+        password: password,
+        phoneNumber: phoneNumber,
+        gender: gender,
+        referredBy: referredBy,
+      ).launch(Get.context!);
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> clearOTPStage() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('isOTPStage');
+    await prefs.remove('otpEmail');
+    await prefs.remove('otpFirstname');
+    await prefs.remove('otpLastname');
+    await prefs.remove('otpPassword');
+    await prefs.remove('otpPhoneNumber');
+    await prefs.remove('otpGender');
+    await prefs.remove('otpFor');
+    await prefs.remove('otpReferredBy');
   }
 }

@@ -14,7 +14,6 @@ import '../../controllers/ReferController.dart';
 import '../../main.dart';
 import '../../models/UserModel.dart';
 import '../../services/GetAppVersion.dart';
-import '../refer/Refer.dart';
 import '../settings/SettingScreen.dart';
 import 'help/Help.dart';
 import 'personal/PersonalProfile.dart';
@@ -96,7 +95,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       }),
                   10.height,
                   AnimatedCard(
-                    
                     color1: kPrimary,
                     color2: kPrimaryDark,
                     child: StreamBuilder<UserModel>(
@@ -244,9 +242,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       () {
                     const WalletSetupScreen().launch(context);
                   }).visible(userController.currency.isEmpty),
-                  profileOption("Refer 💶", "Refer and earn bonus", () {
-                    const ReferScreen().launch(context);
-                  }),
+                  // profileOption("Refer 💶", "Refer and earn bonus", () {
+                  //   const ReferScreen().launch(context);
+                  // }),
                   profileOption("Privacy", "Security Settings", () {}),
                   profileOption("Policy", "Read about our policy", () {
                     const PolicyScreen().launch(context);
@@ -261,7 +259,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   }),
                   10.height,
                   Text(
-                    version,
+                    "version $version",
                     style: secondaryTextStyle(),
                   ).center(),
                   // 10.height,

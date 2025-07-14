@@ -12,8 +12,6 @@ import 'DrugService.dart';
 import 'NotificationService.dart';
 
 class OrderService {
-
-
   final drugService = Get.find<DrugService>();
   final notificationService = Get.find<NotificationService>();
 
@@ -79,6 +77,13 @@ class OrderService {
         .snapshots();
     return ref.map((event) =>
         event.docs.map((e) => OrderModel.fromJson(e.data())).toList());
+  }
+
+  Future<void> updatePharmacyEarning(
+      {required String orderId, required int pharmacyEarning}) async {
+    orderCol.doc(orderId).update({
+      "pharmacyEarning": pharmacyEarning,
+    });
   }
 
   Future<void> updateQuantity(

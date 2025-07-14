@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/controllers/AuthenticationController.dart';
 import 'package:instant_doctor/screens/authentication/success_reset.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
@@ -189,7 +190,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
                                     password: pass1.text,
                                     phoneNumber: widget.phone.validate(),
                                     gender: widget.gender.validate(),
-                                    isResetPassword: widget.isResetPassword,
+                                    otpFor: OtpFor.register,
                                     referredBy: widget.referredBy.validate());
                           } else {
                             toast("Password does not match");

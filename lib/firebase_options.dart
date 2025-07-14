@@ -55,7 +55,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDMGvffD_GkXSpeW4MpLnol_xuiQ_6oAmU',
-    appId: '1:127248616649:android:eb0f9fd488205b86651118',
+    appId: '1:127248616649:android:378d4a79ea84f105651118',
     messagingSenderId: '127248616649',
     projectId: 'instant-doctor-a4e4c',
     storageBucket: 'instant-doctor-a4e4c.appspot.com',

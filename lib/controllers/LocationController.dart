@@ -1,57 +1,55 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/screens/drug/ChangePickup.dart';
+import 'package:location/location.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 class LocationController extends GetxController {
   var latitude = 0.0.obs;
   var longitude = 0.0.obs;
   var address = ''.obs;
+  final Location _location = Location();
 
   Rx<CameraPosition> cameraPosition = const CameraPosition(
     target: LatLng(0, 0),
     zoom: 18,
   ).obs;
+
   // Request permission and get the current position
-  Future<Position> determinePosition() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Check if location services are enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  Future<bool> _checkAndRequestPermission() async {
+    bool serviceEnabled = await _location.serviceEnabled();
     if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
-    }
-
-    // Check permission status
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
+      serviceEnabled = await _location.requestService();
+      if (!serviceEnabled) {
+        return false;
       }
     }
 
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
+    PermissionStatus permissionStatus = await _location.hasPermission();
+    if (permissionStatus == PermissionStatus.denied) {
+      permissionStatus = await _location.requestPermission();
+      if (permissionStatus != PermissionStatus.granted) {
+        return false;
+      }
     }
-
-    // If permissions are granted, get the current location
-    return await Geolocator.getCurrentPosition();
+    return true;
   }
 
   // Get and update location
   Future<void> handleGetMyLocation() async {
     try {
-      Position position = await determinePosition();
-      latitude.value = position.latitude;
-      longitude.value = position.longitude;
+      bool hasPermission = await _checkAndRequestPermission();
+      if (!hasPermission) {
+        throw Exception('Location permissions are denied');
+      }
+
+      LocationData locationData = await _location.getLocation();
+      latitude.value = locationData.latitude ?? 0.0;
+      longitude.value = locationData.longitude ?? 0.0;
       cameraPosition.value = CameraPosition(
           target: LatLng(latitude.value, longitude.value), zoom: 14);
     } catch (e) {
@@ -76,7 +74,7 @@ class LocationController extends GetxController {
             ),
             10.height,
             Text(
-              "please kindly update your locatiom to proceed",
+              "please kindly update your location to proceed",
               textAlign: TextAlign.center,
               style: primaryTextStyle(size: 14),
             ),
@@ -93,9 +91,6 @@ class LocationController extends GetxController {
           ],
         ),
       );
-    } else {}
+    }
   }
-
-
-  
 }

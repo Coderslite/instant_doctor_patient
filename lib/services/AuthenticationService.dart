@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:get/get.dart';
+import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/constant/constants.dart';
-import 'package:instant_doctor/controllers/AuthenticationController.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -97,8 +97,8 @@ class AuthenticationService extends BaseService {
 
   Future<void> handleSendOTP({required String email}) async {
     var otp = generateOTP();
-    final authenticationController = Get.put(AuthenticationController());
-    authenticationController.otp.value = otp;
+    var prefs = await SharedPreferences.getInstance();
+    prefs.setString('otp', otp);
     var response = await http.post(Uri.parse("$FIREBASE_URL/mail/otp"), body: {
       "email": email,
       "otp": otp,
@@ -107,8 +107,9 @@ class AuthenticationService extends BaseService {
   }
 
   Future<bool> handleVerifyOTP({required String otp}) async {
-    final authenticationController = Get.put(AuthenticationController());
-    var res = authenticationController.otp.value == otp;
+    var prefs = await SharedPreferences.getInstance();
+    var storedOTP = prefs.getString('otp').toString();
+    var res = storedOTP == otp;
     return res;
   }
 
@@ -132,11 +133,11 @@ class AuthenticationService extends BaseService {
     try {
       await FirebaseAuth.instance
           .sendPasswordResetEmail(email: email.toLowerCase());
-      toast("A reset password link as been sent to your mail");
+      successSnackBar(title: "A reset password link as been sent to your mail");
       // Password reset email sent successfully
     } catch (error) {
       // Handle errors, such as invalid email or user not found
-      toast('Error sending password reset email');
+      errorSnackBar(title: 'Error sending password reset email');
       print('Error sending password reset email: $error');
     }
   }

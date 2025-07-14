@@ -136,7 +136,7 @@ class FirebaseMessagings {
   handleInit() async {
     if (isMobile && !kIsWeb) {
       await Firebase.initializeApp();
-
+      await FirebaseMessaging.instance.setAutoInitEnabled(true);
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
       const AndroidInitializationSettings initializationSettingsAndroid =
@@ -162,6 +162,7 @@ class FirebaseMessagings {
       } else {}
       var prefs = await SharedPreferences.getInstance();
       var token = await firebaseMessaging.getToken();
+      print(token);
       prefs.setString(MESSAGE_TOKEN, token.toString());
 
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {

@@ -162,9 +162,10 @@ class _CartScreenState extends State<CartScreen> {
                           disabledColor: grey,
                           disabledTextColor: white,
                           onTap: () {
-                            showConfirmDialog(context,
-                                "Do you want to proceed with the checkout",
-                                onAccept: () async {
+                            showConfirmDialogCustom(context,
+                                title:
+                                    "Do you want to proceed with the checkout",
+                                onAccept: (v) async {
                               await orderController.makeOrder();
                             });
                           },

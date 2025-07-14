@@ -7,6 +7,7 @@ class OrderModel {
   List? items;
   int? totalAmount;
   int? deliveryFee;
+  int? pharmacyEarning;
   String? address;
   String? trackingId;
   String? status;
@@ -20,6 +21,7 @@ class OrderModel {
     this.items,
     this.totalAmount,
     this.deliveryFee,
+    this.pharmacyEarning,
     this.address,
     this.trackingId,
     this.status,
@@ -38,6 +40,7 @@ class OrderModel {
       trackingId: json['trackingId'],
       status: json['status'],
       totalAmount: json['totalAmount'],
+      pharmacyEarning: json['pharmacyEarning'],
       createdAt: json['createdAt'],
       updatedAt: json['updatedAt'],
     );
@@ -51,6 +54,7 @@ class OrderModel {
     data['items'] = items;
     data['status'] = status;
     data['totalAmount'] = totalAmount;
+    data['pharmacyEarning'] = pharmacyEarning;
     data['trackingId'] = trackingId;
     data['address'] = address;
     data['deliveryFee'] = deliveryFee;

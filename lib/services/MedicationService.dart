@@ -3,6 +3,8 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get.dart';
+import 'package:instant_doctor/controllers/MedicationController.dart';
 import 'package:instant_doctor/services/BaseService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
@@ -27,8 +29,13 @@ class MedicationService extends BaseService {
     return res.id;
   }
 
-  Future<void> deleteMedication({required String id}) async {
-    await medicationCol.doc(id).delete();
+  Future<void> deleteMedication({required MedicationModel medication}) async {
+    var medicationController = Get.find<MedicationController>();
+    await medicationController.cancelMedicationNotifications(
+        medication.id.validate(),
+        medication.startTime!.toDate(),
+        medication.endTime!.toDate());
+    await medicationCol.doc(medication.id.validate()).delete();
   }
 
   updateMedication({required MedicationModel medication}) async {

@@ -13,7 +13,11 @@ class SettingsController extends GetxController {
   String selectedLanguage = defaultLanguage;
   AppLocalizations? appLocale;
   RxInt selectedIndex = 0.obs;
+  var trialAvailable = false.obs;
+  var loggedIn = false.obs;
 
+  RxBool shouldLock = false.obs;
+  RxBool isAuthScreenActive = false.obs;
 
   int? appId;
   String appSign = '';

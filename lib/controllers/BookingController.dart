@@ -7,10 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/controllers/PaymentController.dart';
+import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/services/AppointmentService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../component/SuccessAppointment.dart';
+import '../constant/constants.dart';
 import '../services/GetUserId.dart';
 import '../services/UserService.dart';
 
@@ -32,60 +34,80 @@ class BookingController extends GetxController {
   final userService = Get.find<UserService>();
   final paymentController = Get.find<PaymentController>();
   final appointmentService = Get.find<AppointmentService>();
+
   Future handleBookAppointment({
     required doctorId,
+    required bool isTrial,
     required BuildContext context,
   }) async {
     docId.value = doctorId;
     try {
       isLoading.value = true;
-      if (price.value <= 0) {
-        errorSnackBar(title: "Please select a valid package");
-        return false;
-      }
+
+      // Validate package selection
       if (package.value.isEmpty) {
         errorSnackBar(title: "Please select a valid package");
         return false;
       }
+
+      // Validate symptoms/complaint
       if (complain.value.isEmpty) {
-        errorSnackBar(title: "Please enter complain");
+        errorSnackBar(title: "Please describe your symptoms");
         return false;
       }
 
-      if (selectedDate.isBefore(DateTime.now())) {
-        toast('Selected date and time must be in the future');
+      // Validate date/time (must be at least 5 minutes ahead of current time)
+      final minAllowedTime = DateTime.now().add(Duration(minutes: 5));
+      if (selectedDate.isBefore(minAllowedTime)) {
+        errorSnackBar(
+            title:
+                "Selected date and time must be at least 5 minutes from now");
         return false;
       }
-      // Convert DateTime to Firebase Timestamp
-      var endDate = selectedDate.add(Duration(seconds: duration.value));
+
+      // Calculate end time
+      var endDate = isTrial
+          ? selectedDate.add(Duration(days: 1))
+          : selectedDate.add(Duration(seconds: duration.value));
       startTime = Timestamp.fromDate(selectedDate);
       endTime = Timestamp.fromDate(endDate);
-      // var endDate2 = selectedDate.add(const Duration(minutes: 2));
-      // var endTime2 = Timestamp.fromDate(endDate2);
-      // var isAlreadyBooked = await appointmentService.isDoctorAlreadyBooked(
-      //     docId: docId, startTime: startTime, endTime: endTime);
-      // if (!isAlreadyBooked) {
-      //   errorSnackBar(title: "This doctor is already booked within this time");
-      //   return false;
-      // }
+
+      // Check if doctor is available (commented out as in original)
+      // var isAlreadyBooked = await appointmentService.isDoctorAlreadyBooked(...)
+
       var userInfo =
           await userService.getProfileById(userId: userController.userId.value);
       var email = userInfo.email.validate();
-      var appointmentId = await newBooking();
-      print(appointmentId);
-      await paymentController.makePayment(
+      var appointmentId = await newBooking(isTrial);
+
+      // Skip payment for trial appointments
+      if (isTrial) {
+        // You might want to add specific trial handling here
+        // For example, mark appointment as trial in database
+        successSnackBar(title: "Trial appointment booked successfully!");
+        isLoading.value = false;
+        settingsController.trialAvailable.value = false;
+        await userService.updateProfile(
+            data: {"isTrialAvailable": false, "isPaid": true},
+            userId: userController.userId.value);
+        await updateAppointmentAfterPayment(appointmentId);
+      } else {
+        // Proceed with payment for regular appointments
+        await paymentController.makePayment(
           email: email,
           context: Get.context!,
           amount: price.value,
-          paymentFor: 'Appointment',
-          productId: appointmentId);
+          paymentFor: PaymentFor.appointment,
+          productId: appointmentId,
+        );
+      }
     } catch (err) {
       isLoading.value = false;
-      toast(err.toString());
+      errorSnackBar(title: "Booking failed");
     }
   }
 
-  Future<String> newBooking() async {
+  Future<String> newBooking(bool isTrial) async {
     var res = await appointmentService.createAppointment(
       docId: docId.value,
       userId: userController.userId.value,
@@ -94,6 +116,7 @@ class BookingController extends GetxController {
       package: package.value,
       startTime: startTime!,
       endTime: endTime!,
+      isTrial: isTrial,
     );
 
     if (res != null) {
@@ -106,6 +129,7 @@ class BookingController extends GetxController {
   Future<void> updateAppointmentAfterPayment(String appointmentId) async {
     var res = await appointmentService.updateAppointmentAfterPayment(
         appointmentId: appointmentId);
+
     if (res) {
       isLoading.value = false;
       selectedDate = DateTime.now();

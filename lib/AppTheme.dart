@@ -10,11 +10,11 @@ class AppTheme {
 
   static final ThemeData lightTheme = ThemeData(
     //primarySwatch: createMaterialColor(kPrimary),
-    tabBarTheme: TabBarTheme(
+    tabBarTheme: TabBarThemeData(
         labelStyle: primaryTextStyle(color: kPrimary), labelColor: kPrimary),
     primaryColor: kPrimary,
     scaffoldBackgroundColor: mobileBackgroundColor,
-    fontFamily: GoogleFonts.poppins().fontFamily,
+    fontFamily: GoogleFonts.roboto().fontFamily,
     bottomNavigationBarTheme:
         const BottomNavigationBarThemeData(backgroundColor: Colors.white),
     iconTheme: const IconThemeData(color: scaffoldSecondaryDark),
@@ -29,7 +29,7 @@ class AppTheme {
           statusBarIconBrightness: Brightness.light,
           statusBarColor: mobileBackgroundColor),
     ),
-    dialogTheme: DialogTheme(shape: dialogShape()),
+    dialogTheme: DialogThemeData(shape: dialogShape()),
   ).copyWith(
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: <TargetPlatform, PageTransitionsBuilder>{
@@ -42,11 +42,11 @@ class AppTheme {
 
   static final ThemeData darkTheme = ThemeData(
     // primarySwatch: createMaterialColor(kPrimary),
-    tabBarTheme: TabBarTheme(
+    tabBarTheme: TabBarThemeData(
         labelStyle: primaryTextStyle(color: kPrimary), labelColor: kPrimary),
     primaryColor: kPrimary,
     scaffoldBackgroundColor: scaffoldColorDark,
-    fontFamily: GoogleFonts.poppins().fontFamily,
+    fontFamily: GoogleFonts.roboto().fontFamily,
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: scaffoldSecondaryDark),
     iconTheme: const IconThemeData(color: Colors.white),
@@ -61,7 +61,7 @@ class AppTheme {
       systemOverlayStyle:
           SystemUiOverlayStyle(statusBarIconBrightness: Brightness.light),
     ),
-    dialogTheme: DialogTheme(shape: dialogShape()),
+    dialogTheme: DialogThemeData(shape: dialogShape()),
   ).copyWith(
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: <TargetPlatform, PageTransitionsBuilder>{

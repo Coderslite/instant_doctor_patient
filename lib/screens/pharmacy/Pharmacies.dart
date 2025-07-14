@@ -12,8 +12,10 @@ import 'package:nb_utils/nb_utils.dart';
 import '../../component/eachPharmacy.dart';
 import '../../controllers/LocationController.dart';
 import '../../controllers/OrderController.dart';
+import '../../controllers/WaitlistController.dart';
 import '../../models/SavedLocationModel.dart';
 import '../../services/PharmacyService.dart';
+import '../../services/WaitlistService.dart';
 import '../drug/ChangePickup.dart';
 
 class PharmaciesScreen extends StatefulWidget {
@@ -86,22 +88,20 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
             if (savedLocations.isNotEmpty) ...[
               Divider(),
               Text("Saved Locations", style: boldTextStyle()),
-              ...savedLocations
-                  .map((location) => ListTile(
-                        leading: Icon(Icons.location_on, color: kPrimary),
-                        title: Text(location.name),
-                        subtitle: Text(location.address),
-                        onTap: () async {
-                          Navigator.pop(context);
-                          await userService.setLocation(
-                            location.latitude,
-                            location.longitude,
-                            location.address,
-                          );
-                          setState(() {});
-                        },
-                      ))
-                  ,
+              ...savedLocations.map((location) => ListTile(
+                    leading: Icon(Icons.location_on, color: kPrimary),
+                    title: Text(location.name),
+                    subtitle: Text(location.address),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      await userService.setLocation(
+                        location.latitude,
+                        location.longitude,
+                        location.address,
+                      );
+                      setState(() {});
+                    },
+                  )),
             ],
             SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
           ],
@@ -251,7 +251,7 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
                       ],
                     ],
                   )),
-                  
+
               SizedBox(height: 10),
 
               // Category Filter Chips
@@ -265,11 +265,9 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
                         label: Text(category),
                         selected: selectedCategory == category,
                         selectedColor: kPrimary,
-                        labelStyle: TextStyle(
-                          color: selectedCategory == category
-                              ? white
-                              : Colors.black,
-                        ),
+                        labelStyle: boldTextStyle(
+                            color: selectedCategory == category ? white : null),
+                        backgroundColor: context.cardColor,
                         onSelected: (selected) {
                           setState(() {
                             selectedCategory = category;
@@ -413,6 +411,8 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
   }
 
   Widget _buildNoPharmaciesFound() {
+    var waitlistService = Get.find<WaitlistService>();
+    var waitlistController = Get.find<WaitlistController>();
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -446,6 +446,52 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
             style: boldTextStyle(color: white),
           ),
         ),
+        SizedBox(height: 20),
+        FutureBuilder<bool>(
+            future: waitlistService.checkNotified(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                var data = snapshot.data!;
+                if (data) {
+                  return Container();
+                } else {
+                  return Obx(
+                    () => ElevatedButton(
+                      onPressed: () async {
+                        await waitlistController.newWaitlist();
+                        setState(() {});
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.cardColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                      ),
+                      child: waitlistController.isLoading.value
+                          ? Loader()
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.notifications_active,
+                                  color: kPrimary,
+                                ),
+                                10.width,
+                                Text(
+                                  "Get Notified",
+                                  style: boldTextStyle(color: kPrimary),
+                                ),
+                              ],
+                            ),
+                    ),
+                  );
+                }
+              }
+              return Container();
+            }),
       ],
     );
   }

@@ -27,7 +27,7 @@ class UserModel {
   String? state;
   Timestamp? lastSeen;
   String? token;
-  bool? isTrialUsed;
+  bool? isTrialAvailable;
   GeoPoint? location;
   String? address;
   UserModel({
@@ -59,7 +59,7 @@ class UserModel {
     this.workingHours,
     this.bio,
     this.state,
-    this.isTrialUsed,
+    this.isTrialAvailable,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -94,7 +94,7 @@ class UserModel {
       workingHours: json['workingHour'],
       bio: json['bio'],
       state: json['stateOfOrigin'],
-      isTrialUsed: json['isTrialUsed'],
+      isTrialAvailable: json['isTrialAvailable']??true,
     );
   }
 }

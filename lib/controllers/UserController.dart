@@ -14,6 +14,7 @@ class UserController extends GetxController {
   RxString fullName = ''.obs;
   RxBool isFirstTime = false.obs;
   RxBool isTrialUsed = false.obs;
+  RxString pin = ''.obs;
 
   handleFirstTimeUsed() async {
     var prefs = await SharedPreferences.getInstance();

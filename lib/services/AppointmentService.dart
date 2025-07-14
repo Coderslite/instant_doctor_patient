@@ -1,9 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/models/AppointmentPricingModel.dart';
+import 'package:instant_doctor/services/DoctorService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:instant_doctor/services/formatDate.dart';
-
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'dart:typed_data';
+import 'package:permission_handler/permission_handler.dart';
 import '../constant/constants.dart';
 import '../controllers/ChatController.dart';
 import '../function/send_notification.dart';
@@ -15,10 +21,157 @@ import 'UploadFile.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 class AppointmentService {
+  final FlutterLocalNotificationsPlugin _notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   final notificationService = Get.find<NotificationService>();
-
   var appointmentCollection = db.collection("Appointments");
   var appointmentPricingCollection = db.collection("AppointmentPricing");
+
+  AppointmentService() {
+    _initializeNotifications();
+  }
+
+  Future<void> _initializeNotifications() async {
+    tz.initializeTimeZones();
+    final String timeZoneName = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
+
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    final DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings(
+      requestSoundPermission: true,
+      requestBadgePermission: true,
+      requestAlertPermission: true,
+    );
+
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
+
+    await _notificationsPlugin.initialize(initializationSettings);
+  }
+
+  Future<bool> requestExactAlarmPermission() async {
+    final status = await Permission.scheduleExactAlarm.status;
+    if (status.isGranted) {
+      return true;
+    } else {
+      final result = await Permission.scheduleExactAlarm.request();
+      return result.isGranted;
+    }
+  }
+
+  Future<void> scheduleAppointmentNotification({
+    required String title,
+    required String body,
+    required String id,
+    required String type,
+    required Timestamp scheduledTime,
+    required Timestamp endTime,
+  }) async {
+    try {
+      // Convert Timestamp to DateTime
+      DateTime scheduledDateTime = scheduledTime.toDate();
+      DateTime now = DateTime.now();
+
+      // Define notification intervals (30, 5, and 0 minutes before)
+      List<int> reminderMinutes = [30, 5, 0];
+
+      for (int i = 0; i < reminderMinutes.length; i++) {
+        int minutesBefore = reminderMinutes[i];
+        DateTime reminderTime =
+            scheduledDateTime.subtract(Duration(minutes: minutesBefore));
+
+        // Skip if reminder time is in the past
+        if (reminderTime.isBefore(now)) {
+          print(
+              'Skipping reminder for $minutesBefore minutes before appointment as it is in the past');
+          continue;
+        }
+
+        final tz.TZDateTime tzReminderTime = tz.TZDateTime.from(
+          reminderTime,
+          tz.local,
+        );
+
+        // Generate unique notification ID for each reminder
+        int notificationId = (id.hashCode + i + 1); // +1, +2, +3 for uniqueness
+
+        // Customize body for start time notification
+        String notificationBody = body.isEmpty
+            ? minutesBefore == 0
+                ? 'Your appointment is starting now at ${formatDate(scheduledDateTime)}'
+                : 'Your appointment is in $minutesBefore minutes at ${formatDate(scheduledDateTime)}'
+            : body.replaceAll('{minutes}',
+                minutesBefore == 0 ? '0' : minutesBefore.toString());
+
+        // Define notification details
+        AndroidNotificationDetails androidPlatformChannelSpecifics =
+            AndroidNotificationDetails(
+          'appointment_channel',
+          'Appointment Reminders',
+          channelDescription: 'Channel for appointment reminders',
+          importance: Importance.max,
+          priority: Priority.high,
+          playSound: true,
+          sound: RawResourceAndroidNotificationSound('tone1'),
+          enableVibration: true,
+          vibrationPattern: Int64List.fromList([0, 1000, 500, 1000]),
+          autoCancel: false,
+          timeoutAfter: 60000,
+        );
+
+        const DarwinNotificationDetails iosPlatformChannelSpecifics =
+            DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          sound: 'tone1.mp3',
+          interruptionLevel: InterruptionLevel.critical,
+        );
+
+        // Schedule the notification
+        await _notificationsPlugin.zonedSchedule(
+          notificationId,
+          title.isEmpty ? 'Appointment Reminder' : title,
+          notificationBody,
+          tzReminderTime,
+          NotificationDetails(
+            android: androidPlatformChannelSpecifics,
+            iOS: iosPlatformChannelSpecifics,
+          ),
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        );
+      }
+
+      toast("Appointment reminders scheduled");
+    } catch (e) {
+      print('Error scheduling appointment notification: $e');
+      toast("Error scheduling notification: $e");
+    }
+  }
+
+  Future<void> cancelAppointmentNotification({
+    required String appointmentId,
+  }) async {
+    try {
+      // Cancel all three notifications (30, 5, and 0 minutes)
+      for (int i = 1; i <= 3; i++) {
+        int notificationId = (appointmentId.hashCode + i);
+        await _notificationsPlugin.cancel(notificationId);
+      }
+      toast("Appointment notifications canceled");
+    } catch (e) {
+      print("Error canceling appointment notifications: $e");
+      toast("Error canceling notifications: $e");
+    }
+  }
 
   Future<bool> isDoctorAlreadyBooked({
     required String docId,
@@ -26,57 +179,47 @@ class AppointmentService {
     required Timestamp endTime,
   }) async {
     try {
-      // Convert Timestamp to DateTime
       DateTime startDateTime = startTime.toDate();
       DateTime endDateTime = endTime.toDate();
 
-      // Query appointments for the doctor starting before the specified end time
       var startQuerySnapshot = await FirebaseFirestore.instance
           .collection('Appointments')
           .where('doctorId', isEqualTo: docId)
           .where('startTime', isLessThan: endTime)
           .get();
 
-      // Query appointments for the doctor ending after the specified start time
       var endQuerySnapshot = await FirebaseFirestore.instance
           .collection('Appointments')
           .where('doctorId', isEqualTo: docId)
           .where('endTime', isGreaterThan: startTime)
           .get();
 
-      // Merge the results of the two queries
       var querySnapshotDocs = [
         ...startQuerySnapshot.docs,
         ...endQuerySnapshot.docs,
       ];
 
-      // If there are any appointments found, check if they overlap with the specified time range
       for (var doc in querySnapshotDocs) {
         Timestamp existingStartTime = doc['startTime'];
         Timestamp existingEndTime = doc['endTime'];
 
-        // Convert Timestamp to DateTime for existing appointments
         DateTime existingStartDateTime = existingStartTime.toDate();
         DateTime existingEndDateTime = existingEndTime.toDate();
 
-        // Check for overlapping appointments
         if ((existingStartDateTime.isAfter(startDateTime) &&
                 existingStartDateTime.isBefore(endDateTime)) ||
             (existingEndDateTime.isAfter(startDateTime) &&
                 existingEndDateTime.isBefore(endDateTime)) ||
             (existingStartDateTime.isBefore(startDateTime) &&
                 existingEndDateTime.isAfter(endDateTime))) {
-          // Overlapping appointments found, so doctor is already booked
           return true;
         }
       }
 
-      // No overlapping appointments found, doctor is available
       return false;
     } catch (e) {
-      // Handle any errors, such as Firebase exceptions
       print('Error checking doctor availability: $e');
-      return false; // Assume doctor is not booked to avoid blocking the appointment
+      return false;
     }
   }
 
@@ -95,6 +238,7 @@ class AppointmentService {
     required String package,
     required Timestamp endTime,
     required Timestamp startTime,
+    required bool isTrial,
   }) async {
     var data = {
       "doctorId": docId,
@@ -108,6 +252,7 @@ class AppointmentService {
       "createdAt": Timestamp.now(),
       "updatedAt": Timestamp.now(),
       "isPaid": false,
+      "isTrial": isTrial,
     };
     var result = await appointmentCollection.add(data);
     await appointmentCollection.doc(result.id).update({
@@ -119,52 +264,49 @@ class AppointmentService {
   Future<bool> updateAppointmentAfterPayment({
     required String appointmentId,
   }) async {
+    final doctorService = Get.find<DoctorService>();
+
     if (appointmentId.trim().isEmpty) {
       print("Invalid appointmentId passed to updateAppointmentAfterPayment.");
+      toast("Invalid appointment ID");
       return false;
     }
 
     try {
-      // Step 1: Update isPaid flag
       await appointmentCollection.doc(appointmentId).update({
         "isPaid": true,
+        "updatedAt": Timestamp.now(),
       });
 
-      // Step 2: Fetch appointment
       var appointment = await getAppointment(appointmentId: appointmentId);
 
-      var usertoken = await userService.getUserToken(
-        userId: userController.userId.value,
-      );
-
-      // Step 4: Send in-app notifications
-      notificationService.newNotification(
+      await notificationService.newNotification(
         userId: appointment.doctorId.validate(),
         type: NotificationType.appointment,
         title:
             "You received an appointment ${formatDate(appointment.startTime!.toDate())} - ${formatDate(appointment.endTime!.toDate())}",
       );
 
-      notificationService.newNotification(
+      await notificationService.newNotification(
         userId: userController.userId.value,
         type: NotificationType.appointment,
         title:
             "You have successfully scheduled an appointment ${formatDate(appointment.startTime!.toDate())} - ${formatDate(appointment.endTime!.toDate())}",
       );
 
+      var docTokens = await doctorService.getDoctorsToken();
       sendNotification(
-        [usertoken],
+        docTokens,
         "New Appointment",
-        "You have successfully scheduled an appointment ${formatDate(appointment.startTime!.toDate())} - ${formatDate(appointment.endTime!.toDate())}",
+        "A new appointment have been scheduled, kindly accept it..",
         appointmentId,
-        NotificationType.transaction,
+        NotificationType.appointment,
       );
 
-      // Step 6: Schedule reminders
-      scheduleAppointmentNotification(
-        tokens: [usertoken],
-        title: "",
-        body: "",
+      await scheduleAppointmentNotification(
+        title: "Appointment Reminder",
+        body:
+            "Your appointment is in {minutes} minutes at ${formatDate(appointment.startTime!.toDate())}",
         id: appointmentId,
         type: NotificationType.appointment,
         scheduledTime: appointment.startTime!,
@@ -174,7 +316,24 @@ class AppointmentService {
       return true;
     } catch (err) {
       print("Error in updateAppointmentAfterPayment: $err");
+      toast("Error processing payment: $err");
       return false;
+    }
+  }
+
+  Future<void> deleteAppointment({required String appointmentId}) async {
+    try {
+      await cancelAppointmentNotification(appointmentId: appointmentId);
+
+      await appointmentCollection.doc(appointmentId).update({
+        "status": 'deleted',
+        "updatedAt": Timestamp.now(),
+      });
+
+      toast("Appointment deleted successfully");
+    } catch (e) {
+      print("Error deleting appointment: $e");
+      toast("Error deleting appointment: $e");
     }
   }
 
@@ -185,11 +344,7 @@ class AppointmentService {
         .orderBy('updatedAt', descending: true)
         .snapshots()
         .map((event) => event.docs
-            .map(
-              (e) => AppointmentModel.fromJson(
-                e.data(),
-              ),
-            )
+            .map((e) => AppointmentModel.fromJson(e.data()))
             .toList());
   }
 
@@ -218,10 +373,7 @@ class AppointmentService {
     var query = appointmentCollection
         .doc(appointmentId)
         .collection("conversation")
-        .where(
-          'senderId',
-          isEqualTo: userId,
-        )
+        .where('senderId', isEqualTo: userId)
         .where('status', isNotEqualTo: MessageStatus.read)
         .snapshots()
         .map((event) => event.docs
@@ -325,19 +477,11 @@ class AppointmentService {
     });
   }
 
-  Future<void> deleteAppointment({required String appointmentId}) async {
-    var chats = await appointmentCollection
-        .doc(appointmentId)
-        .update({"status": 'deleted'});
-    // for (var chat in chats.docs) {
-    //   await appointmentCollection
-    //       .doc(appointmentId)
-    //       .collection("conversation")
-    //       .doc(chat.id)
-    //       .delete();
-    // }
-    // await appointmentCollection.doc(appointmentId).delete();
-    return;
+  Future<void> updateDoctorEarning(
+      {required String appointmentId, required int doctorEarning}) async {
+    appointmentCollection.doc(appointmentId).update({
+      "doctorEarning": doctorEarning,
+    });
   }
 
   Future<List<Appointmentpricingmodel>> getAppointmentPrice() async {

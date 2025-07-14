@@ -12,6 +12,10 @@ class MedicationModel {
   TimeOfDay? midDay;
   TimeOfDay? evening;
   int? interval;
+  List<DateTime>? takenDates;
+  List<DateTime>? missedDates;
+  Map<String, List<TimeOfDay>>? dailyTakenTimes;
+  Map<String, List<TimeOfDay>>? dailyMissedTimes;
   Timestamp? createdAt;
 
   MedicationModel({
@@ -25,8 +29,13 @@ class MedicationModel {
     this.midDay,
     this.evening,
     this.interval,
+    this.takenDates,
+    this.missedDates,
+    this.dailyTakenTimes,
+    this.dailyMissedTimes,
     this.createdAt,
   });
+
   factory MedicationModel.fromJson(Map<String, dynamic> json) {
     return MedicationModel(
       id: json['id'],
@@ -35,51 +44,91 @@ class MedicationModel {
       prescription: json['prescription'],
       startTime: json['startTime'],
       endTime: json['endTime'],
-      // morning: json['morning'],
-      // midDay: json['midDay'],
-      // evening: json['evening'],
-      // interval: json['interval'],
-      createdAt: json['createdAt'] != null
-          ? Timestamp.fromDate(DateTime.parse(json['createdAt']))
+      morning: json['morning'] != null
+          ? TimeOfDay(
+              hour: json['morning']['hour'], minute: json['morning']['minute'])
           : null,
+      midDay: json['midDay'] != null
+          ? TimeOfDay(
+              hour: json['midDay']['hour'], minute: json['midDay']['minute'])
+          : null,
+      evening: json['evening'] != null
+          ? TimeOfDay(
+              hour: json['evening']['hour'], minute: json['evening']['minute'])
+          : null,
+      interval: json['interval'],
+      takenDates: json['takenDates'] != null
+          ? (json['takenDates'] as List)
+              .map((e) => (e as Timestamp).toDate())
+              .toList()
+          : null,
+      missedDates: json['missedDates'] != null
+          ? (json['missedDates'] as List)
+              .map((e) => (e as Timestamp).toDate())
+              .toList()
+          : null,
+      dailyTakenTimes: json['dailyTakenTimes'] != null
+          ? Map<String, List<TimeOfDay>>.fromEntries(
+              (json['dailyTakenTimes'] as Map).entries.map((entry) => MapEntry(
+                    entry.key,
+                    (entry.value as List)
+                        .map((time) => TimeOfDay(
+                              hour: time['hour'],
+                              minute: time['minute'],
+                            ))
+                        .toList(),
+                  )))
+          : null,
+      dailyMissedTimes: json['dailyMissedTimes'] != null
+          ? Map<String, List<TimeOfDay>>.fromEntries(
+              (json['dailyMissedTimes'] as Map).entries.map((entry) => MapEntry(
+                    entry.key,
+                    (entry.value as List)
+                        .map((time) => TimeOfDay(
+                              hour: time['hour'],
+                              minute: time['minute'],
+                            ))
+                        .toList(),
+                  )))
+          : null,
+      createdAt: json['createdAt'],
     );
   }
 
-  static TimeOfDay? _parseTimeOfDay(dynamic json) {
-    if (json == null) return null;
-    if (json is String) {
-      final parts = json.split(':');
-      return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
-    } else if (json is Map<String, dynamic>) {
-      return TimeOfDay(hour: json['hour'], minute: json['minute']);
-    }
-    return null;
-  }
-
-// Helper method to convert Map to TimeOfDay
-
   Map<String, dynamic> toJson() {
     return {
-      'id': UniqueKey().toString(),
+      'id': id ?? UniqueKey().toString(),
       'userId': userId,
       'name': name,
       'prescription': prescription,
       'startTime': startTime,
       'endTime': endTime,
-      'morning': _timeOfDayToJson(morning), // Convert TimeOfDay to Map
-      'midDay': _timeOfDayToJson(midDay), // Convert TimeOfDay to Map
-      'evening': _timeOfDayToJson(evening), // Convert TimeOfDay to Map
+      'morning': morning != null
+          ? {'hour': morning!.hour, 'minute': morning!.minute}
+          : null,
+      'midDay': midDay != null
+          ? {'hour': midDay!.hour, 'minute': midDay!.minute}
+          : null,
+      'evening': evening != null
+          ? {'hour': evening!.hour, 'minute': evening!.minute}
+          : null,
       'interval': interval,
-      'createdAt': createdAt?.toDate().toIso8601String(),
+      'takenDates': takenDates?.map((e) => Timestamp.fromDate(e)).toList(),
+      'missedDates': missedDates?.map((e) => Timestamp.fromDate(e)).toList(),
+      'dailyTakenTimes': dailyTakenTimes?.map((key, value) => MapEntry(key,
+          value.map((e) => {'hour': e.hour, 'minute': e.minute}).toList())),
+      'dailyMissedTimes': dailyMissedTimes?.map((key, value) => MapEntry(key,
+          value.map((e) => {'hour': e.hour, 'minute': e.minute}).toList())),
+      'createdAt': createdAt ?? Timestamp.now(),
     };
   }
+}
 
-  // Helper method to convert TimeOfDay to Map
-  Map<String, dynamic>? _timeOfDayToJson(TimeOfDay? timeOfDay) {
-    if (timeOfDay == null) return null;
-    return {
-      'hour': timeOfDay.hour,
-      'minute': timeOfDay.minute,
-    };
-  }
+// Helper method to convert TimeOfDay to Map
+Map<String, dynamic>? _timeOfDayToJson(TimeOfDay? timeOfDay) {
+  if (timeOfDay == null) return null;
+  return {
+    'hour': timeOfDay.hour,
+    'minute': timeOfDay.minute,
+  };
 }

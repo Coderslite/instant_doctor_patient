@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/controllers/UploadFileController.dart';
-import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:instant_doctor/services/WalletService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
@@ -21,20 +21,33 @@ class LabResultController extends GetxController {
   final labResultService = Get.find<LabResultService>();
 
   handlePickFile(String type) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions:
-          type == 'Image' ? ['png', 'jpeg', 'jpg'] : ['pdf', 'doc'],
-    );
-
-    if (result != null) {
-      File file = File(result.files.single.path!);
-      files.add({
-        "file": file,
-        "fileType": type,
-      });
+    if (type == 'Image') {
+      var result = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (result != null) {
+        File file = File(result.path);
+        files.add({
+          "file": file,
+          "fileType": type,
+        });
+      } else {
+        toast("no file was selected");
+      }
     } else {
-      toast("no file was selected");
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions:
+            type == 'Image' ? ['png', 'jpeg', 'jpg'] : ['pdf', 'doc'],
+      );
+
+      if (result != null) {
+        File file = File(result.files.single.path!);
+        files.add({
+          "file": file,
+          "fileType": type,
+        });
+      } else {
+        toast("no file was selected");
+      }
     }
   }
 
@@ -46,16 +59,12 @@ class LabResultController extends GetxController {
   //   files.remove(file);
   // }
 
-  handleUploadFiles(BuildContext context, int amount) async {
+  handleUploadFiles(
+    BuildContext context,
+  ) async {
     try {
-      var debited = await walletService.debitUser(
-          userId: userController.userId.value, amount: amount);
       if (files.isEmpty) {
         errorSnackBar(title: "No file has been selected");
-        return;
-      }
-      if (!debited) {
-        errorSnackBar(title: "Insufficient Balance");
         return;
       }
       isUpload.value = true;

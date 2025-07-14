@@ -5,7 +5,8 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   audioplayers_linux
   file_selector_linux
-  gtk
+  flutter_timezone
+  flutter_volume_controller
   nb_utils
   url_launcher_linux
   zego_express_engine

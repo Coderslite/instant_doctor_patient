@@ -1,10 +1,10 @@
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/DrugModel.dart';
 import 'package:instant_doctor/models/PharmacyModel.dart';
 
+import '../constant/constants.dart';
 import 'DrugService.dart';
 
 class PharmacyService {
@@ -41,7 +41,7 @@ class PharmacyService {
     final nearbyPharmacies = allPharmacies.where((pharmacy) {
       if (pharmacy.location == null) return false;
 
-      final distance = Geolocator.distanceBetween(
+      final distance = calculateDistance2(
         userPosition.latitude,
         userPosition.longitude,
         pharmacy.location!.latitude,
@@ -65,7 +65,7 @@ class PharmacyService {
       return pharmacies.where((pharmacy) {
         if (pharmacy.location == null) return false;
 
-        final distance = Geolocator.distanceBetween(
+        final distance = calculateDistance2(
           userPosition.latitude,
           userPosition.longitude,
           pharmacy.location!.latitude,

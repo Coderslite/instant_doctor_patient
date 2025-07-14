@@ -20,7 +20,6 @@ import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 import 'AppTheme.dart';
 import 'constant/color.dart';
 import 'constant/constants.dart';
-import 'controllers/ConnectivityController.dart';
 import 'services_initializer.dart';
 import 'controllers/SettingController.dart';
 
@@ -28,13 +27,13 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
+
 User? user = FirebaseAuth.instance.currentUser;
 var db = FirebaseFirestore.instance;
 var firebaseStorage = FirebaseStorage.instance;
 
 SettingsController settingsController = Get.put(SettingsController());
-ConnectivityController connectivityController =
-    Get.put(ConnectivityController());
+
     
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -62,13 +61,14 @@ Future<void> initializeTheme() async {
   );
 }
 
+
 Future<void> initializeApp() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessagings().handleInit();
 
   ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(navigatorKey);
-  await ZegoUIKit().initLog();
+  // await ZegoUIKit().initLog();
   ZegoUIKitPrebuiltCallInvitationService().useSystemCallingUI([
     ZegoUIKitSignalingPlugin(),
   ]);

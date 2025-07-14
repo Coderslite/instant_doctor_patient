@@ -41,7 +41,7 @@ Widget eachAppointment({
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Instant Doctor",
+                        "Instant Doctor ${appointment.isTrial.validate() ? '-- Trial' : ''}",
                         style: boldTextStyle(
                           size: 14,
                         ),
@@ -49,7 +49,8 @@ Widget eachAppointment({
                       Text(
                         isExpired
                             ? "Expired"
-                            : appointment.isPaid.validate()
+                            : appointment.isPaid.validate() ||
+                                    appointment.isTrial.validate()
                                 ? "Not Assigned"
                                 : "Pending Payment",
                         style: secondaryTextStyle(
@@ -95,7 +96,7 @@ Widget eachAppointment({
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "${data.firstName!} ${data.lastName!}",
+                            "${data.firstName!} ${data.lastName!} ${appointment.isTrial.validate() ? '-- Trial' : ''}",
                             style: boldTextStyle(
                               size: 14,
                             ),

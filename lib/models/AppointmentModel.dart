@@ -15,6 +15,7 @@ class AppointmentModel {
   String? package;
   String? videocallToken;
   bool? isPaid;
+  bool? isTrial;
 
   AppointmentModel({
     this.id,
@@ -31,6 +32,7 @@ class AppointmentModel {
     this.updatedAt,
     this.videocallToken,
     this.isPaid,
+    this.isTrial,
   });
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
@@ -48,6 +50,7 @@ class AppointmentModel {
       price: json['price'],
       videocallToken: json['videocallToken'],
       isPaid: json['isPaid'],
+      isTrial: json['isTrial'],
     );
   }
 }

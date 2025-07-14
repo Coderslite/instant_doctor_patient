@@ -7,34 +7,34 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:127248616649:android:07af8497b1ce0e37651118",
+        "mobilesdk_app_id": "1:127248616649:android:378d4a79ea84f105651118",
         "android_client_info": {
-          "package_name": "com.instantdocor.doc"
+          "package_name": "com.instantdoctor.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "127248616649-01qc7k64itgp2c273079eibt6vaukhck.apps.googleusercontent.com",
+          "client_id": "127248616649-6ikai2e6ck6q4rdp1rg7324f36kl2f51.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.instantdocor.doc",
-            "certificate_hash": "90a8913c343cce5290968a005a900335568ddd01"
+            "package_name": "com.instantdoctor.app",
+            "certificate_hash": "d6ac4e501679731e571284d60a8d3c4be808be6e"
           }
         },
         {
-          "client_id": "127248616649-om7gbgpb7pcof4a8fd4u2rppn1e6jlh4.apps.googleusercontent.com",
+          "client_id": "127248616649-epii132nog7krbmhbiild61vfuugg7m9.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.instantdocor.doc",
-            "certificate_hash": "92a8607e8c5aa9d90c75251495383cbbd0ec0ba8"
-          }
-        },
-        {
-          "client_id": "127248616649-sc38u6ko3j9qgn2tk8hlqivdj9sgnpmb.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.instantdocor.doc",
+            "package_name": "com.instantdoctor.app",
             "certificate_hash": "8329fe948bb628ef6e38a731d6abfda7179dde5a"
+          }
+        },
+        {
+          "client_id": "127248616649-krk08ngj6i32g8pjd73m6au293cpvjd4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.instantdoctor.app",
+            "certificate_hash": "84f54dbb90dd0a88e5c09783ad2fafcb179dbe46"
           }
         },
         {
@@ -67,36 +67,12 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:127248616649:android:378d4a79ea84f105651118",
+        "mobilesdk_app_id": "1:127248616649:android:d1eb52d7ceba9b14651118",
         "android_client_info": {
-          "package_name": "com.instantdoctor.app"
+          "package_name": "com.instantdoctor.spec"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "127248616649-6ikai2e6ck6q4rdp1rg7324f36kl2f51.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.instantdoctor.app",
-            "certificate_hash": "d6ac4e501679731e571284d60a8d3c4be808be6e"
-          }
-        },
-        {
-          "client_id": "127248616649-epii132nog7krbmhbiild61vfuugg7m9.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.instantdoctor.app",
-            "certificate_hash": "8329fe948bb628ef6e38a731d6abfda7179dde5a"
-          }
-        },
-        {
-          "client_id": "127248616649-krk08ngj6i32g8pjd73m6au293cpvjd4.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.instantdoctor.app",
-            "certificate_hash": "84f54dbb90dd0a88e5c09783ad2fafcb179dbe46"
-          }
-        },
         {
           "client_id": "127248616649-1k6h7gqq43a6aqn8aihkhdv31ic6h1gd.apps.googleusercontent.com",
           "client_type": 3

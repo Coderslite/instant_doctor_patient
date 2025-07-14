@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/screens/authentication/create_pin.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../constant/color.dart';
-import '../home/Root.dart';
 
 class SuccessSignUp extends StatefulWidget {
   const SuccessSignUp({
@@ -56,7 +56,7 @@ class _SuccessSignUpState extends State<SuccessSignUp> {
                     textColor: whiteColor,
                     onTap: () {
                       if (_formKey.currentState!.validate()) {
-                        const Root().launch(context);
+                        CreatePinScreen().launch(context, isNewTask: true);
                       }
                     },
                     text: "Continue",

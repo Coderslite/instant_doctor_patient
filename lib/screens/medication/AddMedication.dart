@@ -1,13 +1,13 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:instant_doctor/component/backButton.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get.dart';
+import 'package:instant_doctor/screens/medication/MedicationTracker.dart';
+import 'package:intl/intl.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
-import 'package:intl/intl.dart';
+import 'package:instant_doctor/services/formatTime.dart';
+import 'package:instant_doctor/models/MedicationModel.dart';
 import 'package:nb_utils/nb_utils.dart';
-
-import '../../models/MedicationModel.dart';
-import '../../services/formatTime.dart';
 import 'MedicationSummary.dart';
 
 class AddMedicationScreen extends StatefulWidget {
@@ -18,566 +18,435 @@ class AddMedicationScreen extends StatefulWidget {
 }
 
 class _AddMedicationScreenState extends State<AddMedicationScreen> {
-  int? selectedIndex;
-  int? colorIdx;
-
-  var pilType = '';
-  var name = '';
-  var colorName = '';
-  var prescription = '';
+  final _formKey = GlobalKey<FormState>();
+  String name = '';
+  String prescription = '';
   Timestamp? startTime;
   Timestamp? endTime;
   TimeOfDay? morning;
   TimeOfDay? midDay;
   TimeOfDay? evening;
-  var interval = 0;
-  var isLoading = false;
-  final _formKey = GlobalKey<FormState>();
+  bool isLoading = false;
+
+  // New state for frequency selection
+  List<bool> frequencySelection = [
+    false,
+    false,
+    false
+  ]; // Morning, Midday, Evening
+  final List<String> frequencyLabels = ['Morning', 'Mid Day', 'Evening'];
+  final List<TimeOfDay?> frequencyTimes = [null, null, null];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
+      appBar: AppBar(
+        leading: Card(
+          color: context.cardColor,
           child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    backButton(context),
-                    Text(
-                      "Add Medication",
-                      style: boldTextStyle(color: kPrimary),
-                    ),
-                    const Text(""),
-                  ],
-                ),
-                20.height,
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(30),
-                  child: Card(
-                    color: context.cardColor,
-                    child: Padding(
-                      padding: const EdgeInsets.all(15.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Medication For",
-                            style: boldTextStyle(size: 12),
-                          ),
-                          10.height,
-                          AppTextField(
-                            textFieldType: TextFieldType.OTHER,
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "field is requireed";
-                              }
-                              return null;
-                            },
-                            textStyle: primaryTextStyle(),
-                            onChanged: (p0) {
-                              name = p0.toString();
-                              setState(() {});
-                            },
-                            decoration: InputDecoration(
-                              hintText: "Input medication name",
-                              hintStyle: secondaryTextStyle(),
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 10,
-                              ),
-                              border: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: kPrimary,
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: kPrimary,
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
-                          20.height,
-                          Text(
-                            "Medication Prescription",
-                            style: boldTextStyle(size: 12),
-                          ),
-                          10.height,
-                          AppTextField(
-                            textFieldType: TextFieldType.OTHER,
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "field is requireed";
-                              }
-                              return null;
-                            },
-                            onChanged: (p0) {
-                              prescription = p0.toString();
-                              setState(() {});
-                            },
-                            textStyle: primaryTextStyle(),
-                            minLines: 5,
-                            maxLines: 7,
-                            decoration: InputDecoration(
-                              hintText:
-                                  "Input directions for usage e.g 2 hous before dinner",
-                              hintStyle: secondaryTextStyle(),
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 10,
-                                horizontal: 10,
-                              ),
-                              border: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: kPrimary,
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: const BorderSide(
-                                  color: kPrimary,
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+            padding: const EdgeInsets.all(8.0),
+            child: Icon(
+              Icons.arrow_back_ios_new,
+              color: kPrimary,
+            ),
+          ).onTap(() {
+            Get.off(MedicationTracker());
+          }),
+        ),
+        title: Text("Add Medication", style: TextStyle(color: kPrimary)),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Medication Info Card
+              _buildSectionCard(
+                title: "Medication Information",
+                children: [
+                  _buildInputField(
+                    label: "Medication Name",
+                    hint: "e.g. Ibuprofen",
+                    validator: (value) =>
+                        value?.isEmpty ?? true ? "Required field" : null,
+                    onChanged: (value) => name = value,
                   ),
-                ),
-                10.height,
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(30),
-                  child: Card(
-                    color: context.cardColor,
-                    child: Padding(
-                      padding: const EdgeInsets.all(15.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Schedule",
-                            style: secondaryTextStyle(size: 12),
-                          ),
-                          10.height,
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Start Date",
-                                    style: boldTextStyle(size: 12),
-                                  ),
-                                  5.height,
-                                  Container(
-                                    width: 120,
-                                    decoration: BoxDecoration(
-                                      color: kPrimaryLight,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 10,
-                                    ),
-                                    child: Text(
-                                      startTime == null
-                                          ? "Select Date"
-                                          : DateFormat('yyyy-MM-dd')
-                                              .format(startTime!.toDate()),
-                                      style: primaryTextStyle(
-                                          size: 12, color: black),
-                                    ).center(),
-                                  ).onTap(() async {
-                                    var selectedDate = await showDatePicker(
-                                      context: context,
-                                      initialDate: DateTime.now(),
-                                      firstDate: DateTime.now(),
-                                      lastDate: DateTime.now()
-                                          .add(const Duration(days: 120)),
-                                      builder: (BuildContext context,
-                                          Widget? child) {
-                                        return Theme(
-                                          data: ThemeData.light(),
-                                          child: child!,
-                                        );
-                                      },
-                                    );
-
-                                    if (selectedDate != null) {
-                                      Timestamp selectedTimestamp =
-                                          Timestamp.fromDate(
-                                        DateTime(
-                                            selectedDate.year,
-                                            selectedDate.month,
-                                            selectedDate.day),
-                                      );
-                                      startTime = selectedTimestamp;
-                                      setState(() {});
-                                    }
-                                  }),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "End Date",
-                                    style: boldTextStyle(size: 12),
-                                  ),
-                                  5.height,
-                                  Container(
-                                    width: 120,
-                                    decoration: BoxDecoration(
-                                      color: kPrimaryLight,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 10,
-                                    ),
-                                    child: Text(
-                                      endTime == null
-                                          ? "Select Date"
-                                          : DateFormat('yyyy-MM-dd')
-                                              .format(endTime!.toDate()),
-                                      style: primaryTextStyle(
-                                          size: 12, color: black),
-                                    ).center(),
-                                  ).onTap(() async {
-                                    var selectedDate = await showDatePicker(
-                                      context: context,
-                                      initialDate: DateTime.now(),
-                                      firstDate: DateTime.now(),
-                                      lastDate: DateTime.now()
-                                          .add(const Duration(days: 120)),
-                                      builder: (BuildContext context,
-                                          Widget? child) {
-                                        return Theme(
-                                          data: ThemeData.light(),
-                                          child: child!,
-                                        );
-                                      },
-                                    );
-
-                                    if (selectedDate != null) {
-                                      // Set the selected date to the end of the day (11:59 PM)
-                                      DateTime selectedEndDate = DateTime(
-                                        selectedDate.year,
-                                        selectedDate.month,
-                                        selectedDate.day,
-                                        23, // Hour
-                                        59, // Minute
-                                        59, // Second
-                                        999, // Millisecond
-                                      );
-
-                                      Timestamp selectedTimestamp =
-                                          Timestamp.fromDate(selectedEndDate);
-
-                                      // Now you can use 'selectedTimestamp' in your Firebase Firestore operations.
-                                      endTime = selectedTimestamp;
-                                      setState(() {});
-                                    }
-                                  }),
-                                ],
-                              ),
-                            ],
-                          ),
-                          10.height,
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Morning",
-                                    style: boldTextStyle(size: 12),
-                                  ),
-                                  5.height,
-                                  Container(
-                                    width: 90,
-                                    decoration: BoxDecoration(
-                                      color: kPrimaryLight,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 10,
-                                    ),
-                                    child: Text(
-                                      morning == null
-                                          ? "Select Time"
-                                          : formatTimeOfDay(morning!),
-                                      style: primaryTextStyle(
-                                          size: 12, color: black),
-                                    ).center(),
-                                  ).onTap(() async {
-                                    var selectedTime = await showTimePicker(
-                                      context: context,
-                                      initialTime: morning ?? TimeOfDay.now(),
-                                      builder: (BuildContext context,
-                                          Widget? child) {
-                                        return Theme(
-                                          data: ThemeData.light(),
-                                          child: child!,
-                                        );
-                                      },
-                                    );
-                                    if (selectedTime != null) {
-                                      morning = selectedTime;
-                                      setState(() {});
-                                    }
-                                  })
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Mid Day",
-                                    style: boldTextStyle(size: 12),
-                                  ),
-                                  5.height,
-                                  Container(
-                                    width: 90,
-                                    decoration: BoxDecoration(
-                                      color: kPrimaryLight,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 10,
-                                    ),
-                                    child: Text(
-                                      midDay == null
-                                          ? "Select Time"
-                                          : formatTimeOfDay(midDay!),
-                                      style: primaryTextStyle(
-                                          size: 12, color: black),
-                                    ).center(),
-                                  ).onTap(() async {
-                                    var selectedTime = await showTimePicker(
-                                      context: context,
-                                      initialTime: midDay ?? TimeOfDay.now(),
-                                      builder: (BuildContext context,
-                                          Widget? child) {
-                                        return Theme(
-                                          data: ThemeData.light(),
-                                          child: child!,
-                                        );
-                                      },
-                                    );
-                                    if (selectedTime != null) {
-                                      midDay = selectedTime;
-                                      setState(() {});
-                                    }
-                                  })
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Evening",
-                                    style: boldTextStyle(size: 12),
-                                  ),
-                                  5.height,
-                                  Container(
-                                    width: 90,
-                                    decoration: BoxDecoration(
-                                      color: kPrimaryLight,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 10,
-                                    ),
-                                    child: Text(
-                                      evening == null
-                                          ? "Select Time"
-                                          : formatTimeOfDay(evening!),
-                                      style: primaryTextStyle(
-                                          size: 12, color: black),
-                                    ).center(),
-                                  ).onTap(() async {
-                                    var selectedTime = await showTimePicker(
-                                      context: context,
-                                      initialTime: evening ?? TimeOfDay.now(),
-                                      builder: (BuildContext context,
-                                          Widget? child) {
-                                        return Theme(
-                                          data: ThemeData.light(),
-                                          child: child!,
-                                        );
-                                      },
-                                    );
-                                    if (selectedTime != null) {
-                                      evening = selectedTime;
-                                      setState(() {});
-                                    }
-                                  })
-                                ],
-                              ),
-                            ],
-                          ),
-                          20.height,
-                          // Column(
-                          //   crossAxisAlignment: CrossAxisAlignment.start,
-                          //   children: [
-                          //     Text(
-                          //       "Time Interval",
-                          //       style: boldTextStyle(size: 12),
-                          //     ),
-                          //     5.height,
-                          //     Row(
-                          //       children: [
-                          //         SizedBox(
-                          //           height: 50,
-                          //           width: 60,
-                          //           child: AppTextField(
-                          //             textFieldType: TextFieldType.NUMBER,
-                          //             validator: (value) {
-                          //               if (value!.isEmpty) {
-                          //                 return "field is requireed";
-                          //               }
-                          //               return null;
-                          //             },
-                          //             maxLength: 2,
-                          //             inputFormatters: [
-                          //               FilteringTextInputFormatter.allow(RegExp(
-                          //                   r'[0-9]')), // Only allow digits 0-9
-                          //             ],
-                          //             textStyle: primaryTextStyle(color: black),
-                          //             onChanged: (p0) {
-                          //               if (p0.isNotEmpty &&
-                          //                   p0.toString() != 'null') {
-                          //                 interval = int.parse(p0.toString());
-                          //                 setState(() {});
-                          //               } else {
-                          //                 interval = 0;
-                          //               }
-                          //             },
-                          //             decoration: InputDecoration(
-                          //               filled: true,
-                          //               fillColor: kPrimaryLight,
-                          //               border: OutlineInputBorder(
-                          //                 borderSide: BorderSide.none,
-                          //                 borderRadius:
-                          //                     BorderRadius.circular(10),
-                          //               ),
-                          //             ),
-                          //           ),
-                          //         ),
-                          //         5.width,
-                          //         Text(
-                          //           "Hours",
-                          //           style: primaryTextStyle(size: 12),
-                          //         ),
-                          //       ],
-                          //     ),
-                          //   ],
-                          // ),
-
-                          20.height,
-                        ],
-                      ),
-                    ),
+                  const SizedBox(height: 16),
+                  _buildInputField(
+                    label: "Instructions",
+                    hint: "e.g. Take 2 pills with water after meals",
+                    validator: (value) =>
+                        value?.isEmpty ?? true ? "Required field" : null,
+                    onChanged: (value) => prescription = value,
+                    maxLines: 3,
                   ),
-                ),
-                20.height,
-                AppButton(
-                  width: double.infinity,
-                  onTap: () {
-                    if (startTime == null) {
-                      toast("Please enter medication start time");
-                      return;
-                    }
-                    if (endTime == null) {
-                      toast("Please enter medication end time");
-                      return;
-                    }
-                    if (_formKey.currentState!.validate()) {
-                      MedicationModel medication = MedicationModel(
-                        id: Timestamp.now().toString(),
-                        userId: userController.userId.value,
-                        name: name,
-                        prescription: prescription,
-                        startTime: startTime,
-                        endTime: endTime,
-                        morning: morning,
-                        midDay: midDay,
-                        evening: evening,
-                        interval: interval,
-                        createdAt: Timestamp.now(),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // Schedule Card
+              _buildSectionCard(
+                title: "Medication Schedule",
+                children: [
+                  // Date Range Picker
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDatePicker(
+                          label: "Start Date",
+                          value: startTime?.toDate(),
+                          onSelected: (date) {
+                            setState(() {
+                              startTime = Timestamp.fromDate(date);
+                              // Auto-set end date to 1 week later if not set
+                              endTime ??= Timestamp.fromDate(
+                                    date.add(const Duration(days: 3)));
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildDatePicker(
+                          label: "End Date",
+                          value: endTime?.toDate(),
+                          onSelected: (date) {
+                            setState(() => endTime = Timestamp.fromDate(
+                                DateTime(date.year, date.month, date.day, 23,
+                                    59, 59, 999)));
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Frequency Selection
+                  Text("Dosage Times", style: boldTextStyle(size: 24)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: List.generate(3, (index) {
+                      return ChoiceChip(
+                        label: Text(frequencyLabels[index]),
+                        selected: frequencySelection[index],
+                        onSelected: (selected) {
+                          setState(() {
+                            frequencySelection[index] = selected;
+                            if (selected && frequencyTimes[index] == null) {
+                              // Set default time if none selected
+                              frequencyTimes[index] = TimeOfDay(
+                                hour: index == 0
+                                    ? 8
+                                    : index == 1
+                                        ? 12
+                                        : 18,
+                                minute: 0,
+                              );
+                              _updateTimeFields();
+                            } else if (!selected) {
+                              frequencyTimes[index] = null;
+                              _updateTimeFields();
+                            }
+                          });
+                        },
+                        selectedColor: kPrimary,
+                        labelStyle: TextStyle(
+                          color: frequencySelection[index]
+                              ? Colors.white
+                              : Colors.black,
+                        ),
                       );
-                      MedicationSummaryScreen(
-                        medication: medication,
-                      ).launch(context);
-                    }
-                  },
-                  text: "Continue",
-                  textColor: white,
+                    }),
+                  ),
+
+                  // Time Pickers for selected frequencies
+                  if (frequencySelection.any((element) => element)) ...[
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: List.generate(3, (index) {
+                        if (!frequencySelection[index]) {
+                          return const SizedBox.shrink();
+                        }
+
+                        return _buildTimePicker(
+                          label: frequencyLabels[index],
+                          time: frequencyTimes[index],
+                          onSelected: (time) {
+                            setState(() {
+                              frequencyTimes[index] = time;
+                              _updateTimeFields();
+                            });
+                          },
+                        );
+                      }),
+                    ),
+                  ],
+                ],
+              ),
+
+              const SizedBox(height: 32),
+
+              // Continue Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    // primary: kPrimary,
+                    backgroundColor: kPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: _validateAndContinue,
+                  child: isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          "Continue",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionCard(
+      {required String title, required List<Widget> children}) {
+    return Card(
+        elevation: 2,
+        color: context.cardColor,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
                   color: kPrimary,
-                )
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...children,
+            ],
+          ),
+        ));
+  }
+
+  Widget _buildInputField({
+    required String label,
+    required String hint,
+    required String? Function(String?) validator,
+    required void Function(String) onChanged,
+    int maxLines = 1,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontWeight: FontWeight.w500)),
+        const SizedBox(height: 8),
+        TextFormField(
+          style: primaryTextStyle(),
+          decoration: InputDecoration(
+            hintText: hint,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            contentPadding: const EdgeInsets.all(16),
+            filled: true,
+            fillColor: context.cardColor,
+          ),
+          maxLines: maxLines,
+          validator: validator,
+          onChanged: onChanged,
+        )
+      ],
+    );
+  }
+
+  Widget _buildDatePicker({
+    required String label,
+    required DateTime? value,
+    required Function(DateTime) onSelected,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontWeight: FontWeight.w500)),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: () async {
+            final date = await showDatePicker(
+              context: context,
+              initialDate: DateTime.now(),
+              firstDate: DateTime.now(),
+              lastDate: DateTime.now().add(const Duration(days: 365)),
+              builder: (context, child) => Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: ColorScheme.light(
+                    primary: kPrimary,
+                    onPrimary: Colors.white,
+                    onSurface: Colors.black,
+                  ),
+                ),
+                child: child!,
+              ),
+            );
+            if (date != null) onSelected(date);
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[300]!),
+              color: context.cardColor,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  value != null
+                      ? DateFormat('MMM dd, yyyy').format(value)
+                      : "Select Date",
+                  style: primaryTextStyle(
+                    size: 14,
+                    color: value != null ? null : Colors.grey,
+                  ),
+                ),
+                Icon(Icons.calendar_today, size: 20, color: kPrimary),
               ],
             ),
           ),
         ),
-      )),
+      ],
     );
   }
 
-  pillColor(Color color, int idx) {
-    return Stack(
-      alignment: Alignment.topRight,
+  Widget _buildTimePicker({
+    required String label,
+    required TimeOfDay? time,
+    required Function(TimeOfDay) onSelected,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CircleAvatar(
-          backgroundColor: color,
+        Text(label, style: TextStyle(fontWeight: FontWeight.w500)),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: () async {
+            final selectedTime = await showTimePicker(
+              context: context,
+              initialTime: time ?? TimeOfDay.now(),
+              builder: (context, child) => Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: ColorScheme.light(
+                    primary: kPrimary,
+                    onPrimary: Colors.white,
+                    onSurface: Colors.black,
+                  ),
+                ),
+                child: child!,
+              ),
+            );
+            if (selectedTime != null) onSelected(selectedTime);
+          },
+          child: Container(
+            width: 120,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[300]!),
+              color: context.cardColor,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  time != null ? formatTimeOfDay(time) : "Select Time",
+                  style: primaryTextStyle(
+                    size: 14,
+                    color: time != null ? null : Colors.grey,
+                  ),
+                ),
+                Icon(Icons.access_time, size: 18, color: kPrimary),
+              ],
+            ),
+          ),
         ),
-        Positioned(
-            top: 0,
-            right: 0,
-            child: const Icon(
-              Icons.check,
-            ).visible(idx == colorIdx))
       ],
-    ).onTap(() {
-      colorIdx = idx;
-      colorName = color.toString();
-      setState(() {});
+    );
+  }
+
+  void _updateTimeFields() {
+    setState(() {
+      morning = frequencyTimes[0];
+      midDay = frequencyTimes[1];
+      evening = frequencyTimes[2];
     });
   }
 
-  pillType({
-    required String type,
-    required int selectedIdx,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10),
-      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-      decoration: BoxDecoration(
-        color: selectedIdx == selectedIndex ? kPrimary : grey,
-        borderRadius: BorderRadius.circular(10),
+  void _validateAndContinue() {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (startTime == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Please select a start date")));
+      return;
+    }
+
+    if (endTime == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Please select an end date")));
+      return;
+    }
+
+    if (!frequencySelection.contains(true)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Please select at least one dosage time")));
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    final medication = MedicationModel(
+      id: Timestamp.now().toString(),
+      userId: userController.userId.value,
+      name: name,
+      prescription: prescription,
+      startTime: startTime,
+      endTime: endTime,
+      morning: morning,
+      midDay: midDay,
+      evening: evening,
+      interval: 0,
+      createdAt: Timestamp.now(),
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MedicationSummaryScreen(medication: medication),
       ),
-      child: Text(
-        type,
-        style: primaryTextStyle(size: 12, color: white),
-      ),
-    ).onTap(() {
-      selectedIndex = selectedIdx;
-      pilType = type;
-      setState(() {});
-    });
+    ).then((_) => setState(() => isLoading = false));
   }
 }

@@ -149,7 +149,8 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                                                 "This appointment has expired");
                                         return;
                                       }
-                                      if (!appointment.isPaid.validate()) {
+                                      if (!appointment.isPaid.validate() &&
+                                          !appointment.isTrial.validate()) {
                                         await showConfirmDialog(context,
                                             "Do you want to make payment now ?",
                                             onAccept: () {
