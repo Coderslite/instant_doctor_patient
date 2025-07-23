@@ -23,8 +23,8 @@
             "flutterMode": "release"
         }
     ],
-    "args": [
-        "--no-shrink",
-        "--debug"
-     ]
+    // "args": [
+    //     "--no-shrink",
+    //     "--debug"
+    //  ]
 }

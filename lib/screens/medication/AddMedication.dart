@@ -8,6 +8,7 @@ import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:instant_doctor/services/formatTime.dart';
 import 'package:instant_doctor/models/MedicationModel.dart';
 import 'package:nb_utils/nb_utils.dart';
+import '../../component/check_internet.dart';
 import 'MedicationSummary.dart';
 
 class AddMedicationScreen extends StatefulWidget {
@@ -64,6 +65,8 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              internetCheck(),
+
               // Medication Info Card
               _buildSectionCard(
                 title: "Medication Information",
@@ -105,7 +108,7 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                               startTime = Timestamp.fromDate(date);
                               // Auto-set end date to 1 week later if not set
                               endTime ??= Timestamp.fromDate(
-                                    date.add(const Duration(days: 3)));
+                                  date.add(const Duration(days: 3)));
                             });
                           },
                         ),

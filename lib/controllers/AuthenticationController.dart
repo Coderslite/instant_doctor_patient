@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:instant_doctor/component/snackBar.dart';
+import 'package:instant_doctor/controllers/LocationController.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/screens/authentication/create_pin.dart';
 import 'package:instant_doctor/screens/authentication/login_screen.dart';
@@ -11,7 +12,7 @@ import 'package:instant_doctor/screens/authentication/success_signup.dart';
 import 'package:instant_doctor/services/AuthenticationService.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-
+import 'package:http/http.dart' as http;
 import '../constant/constants.dart';
 import '../services/GetUserId.dart';
 import '../services/ReferralService.dart';
@@ -89,6 +90,8 @@ class AuthenticationController extends GetxController {
           }
         }
         await zegoCloudController.handleInit();
+        await Get.find<LocationController>()
+            .handleGetMyLocation(isLogin: true, email: userCred.email);
         CreatePinScreen().launch(context, isNewTask: true);
       }
     } catch (error) {
@@ -156,6 +159,7 @@ class AuthenticationController extends GetxController {
     isLoading.value = true;
     try {
       final zegoCloudController = Get.find<ZegoCloudController>();
+      await FirebaseAuth.instance.signOut();
       final value = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email.toLowerCase(),
         password: password,
@@ -168,6 +172,8 @@ class AuthenticationController extends GetxController {
       userController.userId.value = value.user!.uid;
       getUserId();
       await zegoCloudController.handleInit();
+      await Get.find<LocationController>()
+          .handleGetMyLocation(isLogin: true, email: email);
       CreatePinScreen().launch(context, isNewTask: true);
       toast("Login Successful");
     } on FirebaseAuthException catch (e) {

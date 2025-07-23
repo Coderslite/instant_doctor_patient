@@ -1,12 +1,20 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/screens/drug/ChangePickup.dart';
+import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:location/location.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:http/http.dart' as http;
+import 'package:device_info_plus/device_info_plus.dart';
+import '../constant/constants.dart';
+import '../services/LocationService.dart';
 
 class LocationController extends GetxController {
   var latitude = 0.0.obs;
@@ -40,7 +48,8 @@ class LocationController extends GetxController {
   }
 
   // Get and update location
-  Future<void> handleGetMyLocation() async {
+  Future<void> handleGetMyLocation(
+      {required bool isLogin, required String? email}) async {
     try {
       bool hasPermission = await _checkAndRequestPermission();
       if (!hasPermission) {
@@ -52,9 +61,50 @@ class LocationController extends GetxController {
       longitude.value = locationData.longitude ?? 0.0;
       cameraPosition.value = CameraPosition(
           target: LatLng(latitude.value, longitude.value), zoom: 14);
+      await handleSaveAddress();
+      if (isLogin) {
+        await notifyLogin(
+            email: email.validate(),
+            location:
+                "$address -- (latitude: ${longitude.value}, longitude: ${latitude.value})");
+      }
     } catch (e) {
       print("Failed to get location: $e");
     }
+  }
+
+  handleSaveAddress() async {
+    await updateAddress(
+      LatLng(latitude.value, longitude.value),
+    );
+    if (address.value.isNotEmpty) {
+      userService.updateProfile(data: {
+        "address": address.value,
+        "location": GeoPoint(latitude.value, longitude.value)
+      }, userId: userController.userId.value);
+    }
+  }
+
+  Future<void> updateAddress(LatLng position) async {
+    final LocationService locationService = LocationService();
+    try {
+      // First try with Google's reverse geocoding
+      final url = 'https://maps.googleapis.com/maps/api/geocode/json?'
+          'latlng=${position.latitude},${position.longitude}'
+          '&key=${LocationService.apiKey}';
+
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['results'].isNotEmpty) {
+          final components = data['results'][0]['address_components'];
+          address.value = locationService.parseAddressComponents(components);
+          return;
+        }
+      }
+    } catch (e) {
+      toast('Could not get address details');
+    } finally {}
   }
 
   handleCheckLocation() async {
@@ -92,5 +142,31 @@ class LocationController extends GetxController {
         ),
       );
     }
+  }
+
+  Future<void> notifyLogin(
+      {required String email, required String location}) async {
+    var deviceId = await handleGetDeviceInfo();
+    await http.post(
+      Uri.parse("$FIREBASE_URL/mail/login_notify"),
+      body: {
+        "email": email,
+        "deviceId": deviceId,
+        "location": location,
+      },
+    );
+  }
+
+  Future<String> handleGetDeviceInfo() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    if (Platform.isAndroid) {
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      return "${androidInfo.brand} ${androidInfo.model}";
+    } else if (Platform.isIOS) {
+      IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+      print('Running on ${iosInfo.utsname.machine}'); // e.g. "iPod7,1"
+      return iosInfo.utsname.machine;
+    }
+    return 'NULL';
   }
 }

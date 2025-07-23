@@ -79,12 +79,12 @@ class OrderService {
         event.docs.map((e) => OrderModel.fromJson(e.data())).toList());
   }
 
-  Future<void> updatePharmacyEarning(
-      {required String orderId, required int pharmacyEarning}) async {
-    orderCol.doc(orderId).update({
-      "pharmacyEarning": pharmacyEarning,
-    });
-  }
+  // Future<void> updatePharmacyEarning(
+  //     {required String orderId, required int pharmacyEarning}) async {
+  //   orderCol.doc(orderId).update({
+  //     "pharmacyEarning": pharmacyEarning,
+  //   });
+  // }
 
   Future<void> updateQuantity(
       {required String itemId, required int qty}) async {

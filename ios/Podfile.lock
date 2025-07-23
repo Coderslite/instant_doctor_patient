@@ -3,7 +3,7 @@ PODS:
     - Flutter
   - CryptoSwift (1.8.4)
   - Flutter (1.0.0)
-  - flutter_callkit_incoming (0.0.1):
+  - flutter_callkit_incoming_yoer (0.0.1):
     - CryptoSwift
     - Flutter
   - flutter_inappwebview_ios (0.0.1):
@@ -27,8 +27,6 @@ PODS:
   - flutter_volume_controller (0.0.1):
     - Flutter
   - fluttertoast (0.0.2):
-    - Flutter
-  - geocoding_ios (1.0.5):
     - Flutter
   - Google-Maps-iOS-Utils (6.1.0):
     - GoogleMaps (~> 9.0)
@@ -80,7 +78,7 @@ PODS:
 DEPENDENCIES:
   - audio_waveforms (from `.symlinks/plugins/audio_waveforms/ios`)
   - Flutter (from `Flutter`)
-  - flutter_callkit_incoming (from `.symlinks/plugins/flutter_callkit_incoming/ios`)
+  - flutter_callkit_incoming_yoer (from `.symlinks/plugins/flutter_callkit_incoming_yoer/ios`)
   - flutter_inappwebview_ios (from `.symlinks/plugins/flutter_inappwebview_ios/ios`)
   - flutter_keyboard_visibility (from `.symlinks/plugins/flutter_keyboard_visibility/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
@@ -89,7 +87,6 @@ DEPENDENCIES:
   - flutter_vibrate (from `.symlinks/plugins/flutter_vibrate/ios`)
   - flutter_volume_controller (from `.symlinks/plugins/flutter_volume_controller/ios`)
   - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
-  - geocoding_ios (from `.symlinks/plugins/geocoding_ios/ios`)
   - google_maps_flutter_ios (from `.symlinks/plugins/google_maps_flutter_ios/ios`)
   - location (from `.symlinks/plugins/location/ios`)
   - native_device_orientation (from `.symlinks/plugins/native_device_orientation/ios`)
@@ -122,8 +119,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/audio_waveforms/ios"
   Flutter:
     :path: Flutter
-  flutter_callkit_incoming:
-    :path: ".symlinks/plugins/flutter_callkit_incoming/ios"
+  flutter_callkit_incoming_yoer:
+    :path: ".symlinks/plugins/flutter_callkit_incoming_yoer/ios"
   flutter_inappwebview_ios:
     :path: ".symlinks/plugins/flutter_inappwebview_ios/ios"
   flutter_keyboard_visibility:
@@ -140,8 +137,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_volume_controller/ios"
   fluttertoast:
     :path: ".symlinks/plugins/fluttertoast/ios"
-  geocoding_ios:
-    :path: ".symlinks/plugins/geocoding_ios/ios"
   google_maps_flutter_ios:
     :path: ".symlinks/plugins/google_maps_flutter_ios/ios"
   location:
@@ -175,7 +170,7 @@ SPEC CHECKSUMS:
   audio_waveforms: cd736909ebc6b6a164eb74701d8c705ce3241e1c
   CryptoSwift: e64e11850ede528a02a0f3e768cec8e9d92ecb90
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  flutter_callkit_incoming: 417dd1b46541cdd5d855ad795ccbe97d1c18155e
+  flutter_callkit_incoming_yoer: a5936b9f065762a7b422594028d3a20901c88996
   flutter_inappwebview_ios: 6f63631e2c62a7c350263b13fa5427aedefe81d4
   flutter_keyboard_visibility: 0339d06371254c3eb25eeb90ba8d17dca8f9c069
   flutter_local_notifications: 4cde75091f6327eb8517fa068a0a5950212d2086
@@ -184,7 +179,6 @@ SPEC CHECKSUMS:
   flutter_vibrate: 9f4c2ab57008965f78969472367c329dd77eb801
   flutter_volume_controller: e4d5832f08008180f76e30faf671ffd5a425e529
   fluttertoast: 21eecd6935e7064cc1fcb733a4c5a428f3f24f0f
-  geocoding_ios: d7460f56e80e118d57678efe5c2cdc888739ff18
   Google-Maps-iOS-Utils: 0a484b05ed21d88c9f9ebbacb007956edd508a96
   google_maps_flutter_ios: e31555a04d1986ab130f2b9f24b6cdc861acc6d3
   GoogleMaps: 0608099d4870cac8754bdba9b6953db543432438

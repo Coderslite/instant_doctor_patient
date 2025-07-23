@@ -10,6 +10,7 @@ import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../component/ProfileImage.dart';
+import '../../component/check_internet.dart';
 import '../../controllers/ReferController.dart';
 import '../../main.dart';
 import '../../models/UserModel.dart';
@@ -57,6 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  internetCheck(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

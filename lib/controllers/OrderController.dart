@@ -15,6 +15,7 @@ import '../screens/home/Root.dart';
 import '../services/GetUserId.dart';
 import '../services/OrderService.dart';
 import 'PaymentController.dart';
+import 'package:http/http.dart' as http;
 
 class OrderController extends GetxController {
   var cart = <DrugModel>[].obs;
@@ -242,17 +243,51 @@ class OrderController extends GetxController {
     }
   }
 
-  orderNow({required int pharmacyEarning}) async {
+  Future<void> orderNow() async {
     try {
       final orderService = Get.find<OrderService>();
+      final paymentController = Get.find<PaymentController>();
 
       for (var order in orders) {
-        order.pharmacyEarning = pharmacyEarning;
+        // Calculate pharmacy earning for this specific order
+        double surcharge = paymentController.surChargeOrder(
+            order.totalAmount!.toDouble(), order.deliveryFee!.toDouble());
+        int transferFee =
+            paymentController.getTransferFee(order.totalAmount!.toDouble());
+        int platformEarning = paymentController
+            .calculatePlatformEarningForPharmacy(
+                order.totalAmount!.toDouble(), order.deliveryFee!.toDouble())
+            .toInt();
+        int pharmacyEarning =
+            ((order.totalAmount! + surcharge - transferFee) * 100 -
+                    platformEarning)
+                .toInt();
+
+        order.pharmacyEarning = pharmacyEarning ~/ 100; // Convert kobo to Naira
         await orderService.newOrder(order: order);
         for (var item in order.items.validate()) {
           orderService.updateQuantity(
               itemId: item['id'], qty: item['quantity']);
         }
+        // Prepare order details for notification
+        String orderDetails = order.items!
+            .map((item) => "${item['name']} (Qty: ${item['quantity']})")
+            .join(", ");
+        var customer = await userService.getProfileById(userId: order.userId!);
+        String customerName =
+            "${customer.firstName.validate()} ${customer.lastName.validate()}";
+
+        // Send email to pharmacy (existing functionality)
+        await handleSendEmailToPharmacy(
+          email: (await FirebaseFirestore.instance
+                  .collection('Pharmacies')
+                  .doc(order.pharmacyId)
+                  .get())
+              .data()!['email'],
+          orderId: order.trackingId!,
+          orderDetail: orderDetails,
+          customerName: customerName,
+        );
       }
 
       await handleClearCart();
@@ -262,10 +297,24 @@ class OrderController extends GetxController {
       isLoading.value = false;
     } catch (err) {
       print(err);
+      errorSnackBar(title: "Failed to place orders: $err");
     } finally {
       isLoading.value = false;
     }
   }
 
   updateItemQuantity({required String itemId}) async {}
+
+  handleSendEmailToPharmacy(
+      {required String email,
+      required String orderId,
+      required String orderDetail,
+      required String customerName}) async {
+    await http.post(Uri.parse("$FIREBASE_URL/mail/order_received"), body: {
+      "pharmacyEmail": email,
+      "orderId": orderId,
+      "orderDetails": orderDetail,
+      "customerName": customerName,
+    });
+  }
 }

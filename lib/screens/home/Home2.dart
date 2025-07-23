@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/component/check_internet.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/screens/appointment/NewAppointment.dart';
@@ -82,7 +83,7 @@ class _Home2State extends State<Home2> with RouteAware {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.symmetric(
-          vertical: 15,
+          vertical: 8,
           horizontal: 8,
         ),
         child: SingleChildScrollView(
@@ -90,6 +91,7 @@ class _Home2State extends State<Home2> with RouteAware {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              internetCheck(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -173,7 +175,9 @@ class _Home2State extends State<Home2> with RouteAware {
                   Text(
                     "Instant Service",
                     style: boldTextStyle(size: 14),
-                  ),
+                  ).onTap(() {
+                    locationController.handleGetDeviceInfo();
+                  }),
                   Row(
                     children: [
                       Text(

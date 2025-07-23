@@ -27,14 +27,12 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-
 User? user = FirebaseAuth.instance.currentUser;
 var db = FirebaseFirestore.instance;
 var firebaseStorage = FirebaseStorage.instance;
 
 SettingsController settingsController = Get.put(SettingsController());
 
-    
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,7 +58,6 @@ Future<void> initializeTheme() async {
     settingsController.isDarkMode.value ? ThemeMode.dark : ThemeMode.light,
   );
 }
-
 
 Future<void> initializeApp() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -118,6 +115,7 @@ class _MyAppState extends State<MyApp> {
     setOrientationPortrait();
     return Obx(() => GetMaterialApp(
           title: 'Instant Doctor',
+          
           initialBinding: InitialBindings(),
           debugShowCheckedModeBanner: false,
           navigatorKey: widget.navigatorKey,

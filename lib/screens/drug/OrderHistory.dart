@@ -8,6 +8,7 @@ import 'package:instant_doctor/screens/drug/TrackOrder.dart';
 import 'package:instant_doctor/screens/pharmacy/Pharmacies.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+import '../../component/check_internet.dart';
 import '../../component/eachOrder.dart';
 import '../../services/OrderService.dart';
 
@@ -30,6 +31,7 @@ class _OrderHistoryState extends State<OrderHistory> {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
+                internetCheck(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

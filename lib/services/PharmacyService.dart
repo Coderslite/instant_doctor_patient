@@ -17,6 +17,11 @@ class PharmacyService {
         event.docs.map((e) => PharmacyModel.fromJson(e.data())).toList());
   }
 
+  Stream<PharmacyModel> getPharmacyById({required String id}) {
+    var ref = pharmacyCol.doc(id).snapshots();
+    return ref.map((event) => PharmacyModel.fromJson(event.data()!));
+  }
+
   Stream<List<DrugModel>> getPharmacyDrug({required String pharmacyId}) {
     print(pharmacyId);
     var ref = drugService.drugCol

@@ -7,15 +7,23 @@ class SecurityHelper {
 
   /// Encrypts the given text
   String encryptText(String plainText) {
-    final encrypter = Encrypter(AES(_key));
-    final encrypted = encrypter.encrypt(plainText, iv: _iv);
-    return encrypted.base64;
+    if (plainText.isEmpty) {
+      return '';
+    } else {
+      final encrypter = Encrypter(AES(_key));
+      final encrypted = encrypter.encrypt(plainText, iv: _iv);
+      return encrypted.base64;
+    }
   }
 
   /// Decrypts the given encrypted text
   String decryptText(String encryptedText) {
-    final encrypter = Encrypter(AES(_key));
-    final decrypted = encrypter.decrypt64(encryptedText, iv: _iv);
-    return decrypted;
+    if (encryptedText.isEmpty) {
+      return '';
+    } else {
+      final encrypter = Encrypter(AES(_key));
+      final decrypted = encrypter.decrypt64(encryptedText, iv: _iv);
+      return decrypted;
+    }
   }
 }

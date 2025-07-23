@@ -48,6 +48,7 @@ class RootState extends State<Root> with WidgetsBindingObserver {
     await handleOnline();
     await orderController.handleGetSavedCarts();
     await handleUpdateToken();
+    // await locationController.handleGetMyLocation(isLogin: false, email: '');
   }
 
   Future<void> handleUpdateToken() async {

@@ -13,10 +13,6 @@ plugins {
     id("com.google.gms.google-services")
 }
 
-kotlin {
-    jvmToolchain(17)
-}
-
 android {
     namespace = "com.instantdoctor.app"
     compileSdk = flutter.compileSdkVersion
@@ -52,7 +48,6 @@ android {
         }
     }
 
-
     buildTypes {
         getByName("release") {
             signingConfig = signingConfigs.getByName("release")
@@ -67,7 +62,6 @@ android {
             isMinifyEnabled = false
         }
     }
-
 }
 
 dependencies {

@@ -5,6 +5,7 @@ import 'package:instant_doctor/models/MedicationModel.dart';
 import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+import '../../component/check_internet.dart';
 import '../../constant/color.dart';
 import '../../services/formatTime.dart';
 
@@ -530,6 +531,7 @@ class _ActiveMedicationScreenState extends State<ActiveMedicationScreen> {
             physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
+                internetCheck(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

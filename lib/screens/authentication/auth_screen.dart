@@ -129,7 +129,7 @@ class _AuthScreenState extends State<AuthScreen> {
       bool authenticated = await auth.authenticate(
         localizedReason: 'Authenticate to access the app',
         options: const AuthenticationOptions(
-          biometricOnly: true,
+          // biometricOnly: true,
           stickyAuth: true,
         ),
       );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/controllers/ConnectivityController.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/screens/authentication/auth_screen.dart';
 import 'package:instant_doctor/screens/authentication/create_pin.dart';
@@ -30,6 +31,9 @@ class _SplashScreenState extends State<SplashScreen> {
   handleNext() async {
     Future.delayed(const Duration(seconds: 1)).then((value) async {
       // Check if the user is in the OTP stage
+      ConnectivityController connectivityController =
+          Get.put(ConnectivityController());
+      await connectivityController.initConnectivity();
       bool isOTPStage = await _checkOTPStage();
 
       if (isOTPStage) {

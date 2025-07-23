@@ -9,6 +9,7 @@ class PharmacyModel {
   int? discount;
   String? image;
   GeoPoint? location;
+  String? phoneNumber;
 
   PharmacyModel({
     this.id,
@@ -19,6 +20,7 @@ class PharmacyModel {
     this.image,
     this.deliveryCharge,
     this.location,
+    this.phoneNumber,
   });
   factory PharmacyModel.fromJson(Map<String, dynamic> json) {
     return PharmacyModel(
@@ -30,6 +32,7 @@ class PharmacyModel {
       discount: json['discount'],
       deliveryCharge: json['deliveryFee'],
       location: json['location'],
+      phoneNumber: json['phoneNumber'],
     );
   }
 }

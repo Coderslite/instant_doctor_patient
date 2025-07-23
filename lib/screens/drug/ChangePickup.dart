@@ -46,7 +46,8 @@ class _ChangePickupState extends State<ChangePickup> {
   Future<void> _initializeLocation() async {
     if (Get.find<LocationController>().latitude.value == 0 &&
         Get.find<LocationController>().longitude.value == 0) {
-      await Get.find<LocationController>().handleGetMyLocation();
+      await Get.find<LocationController>()
+          .handleGetMyLocation(isLogin: false, email: '');
     }
 
     if (Get.find<LocationController>().address.value.isNotEmpty) {
@@ -298,7 +299,7 @@ class _ChangePickupState extends State<ChangePickup> {
                         icon: Icon(Icons.my_location),
                         onPressed: () async {
                           await Get.find<LocationController>()
-                              .handleGetMyLocation();
+                              .handleGetMyLocation(isLogin: false, email: '');
                           await _moveToLocation(LatLng(
                             Get.find<LocationController>().latitude.value,
                             Get.find<LocationController>().longitude.value,

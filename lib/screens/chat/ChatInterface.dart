@@ -18,24 +18,30 @@ import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/AppointmentModel.dart';
 import 'package:instant_doctor/models/UserModel.dart';
 import 'package:instant_doctor/screens/appointment/reports/CreateReport.dart';
+import 'package:instant_doctor/screens/chat/RateScreen.dart';
 import 'package:instant_doctor/screens/doctors/SingleDoctor.dart';
 import 'package:instant_doctor/screens/profile/help/Help.dart';
+import 'package:instant_doctor/services/ReportService.dart';
+import 'package:instant_doctor/services/ReviewService.dart';
 import 'package:instant_doctor/services/UserService.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:zego_uikit/zego_uikit.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 // import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
-
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../component/IsOnline.dart';
 import '../../component/TimeRemaining.dart';
+import '../../component/check_internet.dart';
 import '../../controllers/BookingController.dart';
 import '../../controllers/PaymentController.dart';
+import '../../models/ReviewsModel.dart';
 import '../../services/AppointmentService.dart';
 import '../../services/DoctorService.dart';
 import '../../services/SecurityHelper.dart';
+import '../appointment/reports/ReportChat.dart';
 import '../prescription/Prescription.dart';
+import '../profile/help/LiveChat.dart';
 import 'ImagePreview.dart';
 
 class ChatInterface extends StatefulWidget {
@@ -72,8 +78,6 @@ class _ChatInterfaceState extends State<ChatInterface> {
   UserModel? me;
   String userName = '';
 
-  int rating = 3;
-  var commentController = TextEditingController();
   var messageController = TextEditingController();
   bool isReviewed = false;
   handleGetUserToken() async {
@@ -86,136 +90,28 @@ class _ChatInterfaceState extends State<ChatInterface> {
 
   final _formKey = GlobalKey<FormState>();
 
-  // handleCheckReview() async {
-  //   var res = await reviewService.getAppointmentReview(
-  //       docId: widget.docId, appointmentId: widget.appointmentId);
-  //   isReviewed = res != null;
-  //   setState(() {});
-  //   if (widget.isExpired) {
-  //     showInDialog(context,
-  //         backgroundColor: Colors.transparent,
-  //         barrierDismissible: false,
-  //         child: Column(
-  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //           children: [
-  //             Container(),
-  //             Container(
-  //               padding: const EdgeInsets.all(20),
-  //               decoration: BoxDecoration(
-  //                   color: kPrimary, borderRadius: BorderRadius.circular(20)),
-  //               child: Column(
-  //                 mainAxisSize: MainAxisSize.min,
-  //                 children: [
-  //                   Row(
-  //                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                     children: [
-  //                       const Text(""),
-  //                       Text(
-  //                         "Rate your session",
-  //                         style: boldTextStyle(),
-  //                       ),
-  //                       const Icon(
-  //                         Icons.close,
-  //                         color: white,
-  //                         size: 12,
-  //                       )
-  //                     ],
-  //                   ),
-  //                   15.height,
-  //                   RatingBar.builder(
-  //                     initialRating: rating.toDouble(),
-  //                     minRating: 1,
-  //                     direction: Axis.horizontal,
-  //                     // allowHalfRating: true,
-  //                     itemCount: 5,
-  //                     itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-  //                     itemBuilder: (context, _) => const Icon(
-  //                       Icons.star,
-  //                       color: Colors.amber,
-  //                     ),
-  //                     onRatingUpdate: (rate) {
-  //                       // print(rating);
-  //                       rating = rate.toInt();
-  //                       setState(() {});
-  //                     },
-  //                   ),
-  //                   10.height,
-  //                   AppTextField(
-  //                     textFieldType: TextFieldType.OTHER,
-  //                     minLines: 3,
-  //                     maxLines: 5,
-  //                     maxLength: 200,
-  //                     controller: commentController,
-  //                     textStyle: primaryTextStyle(color: black),
-  //                     decoration: InputDecoration(
-  //                         hintText: "Type here.....",
-  //                         fillColor: white,
-  //                         filled: true,
-  //                         border: OutlineInputBorder(
-  //                             borderSide: BorderSide.none,
-  //                             borderRadius: BorderRadius.circular(20))),
-  //                   ),
-  //                   10.height,
-  //                   ElevatedButton(
-  //                     onPressed: () async {
-  //                       if (commentController.text.isEmptyOrNull) {
-  //                         toast("Please add comment");
-  //                       } else {
-  //                         reviewService.addReview(
-  //                             review: ReviewsModel(
-  //                           rating: rating,
-  //                           review: commentController.text,
-  //                           doctorId: widget.docId,
-  //                           appointmentId: widget.appointmentId,
-  //                           createdAt: Timestamp.now(),
-  //                           userId: userController.userId.value,
-  //                         ));
-  //                         Navigator.pop(context);
-  //                       }
-  //                     },
-  //                     child: const Text("Submit"),
-  //                   ),
-  //                 ],
-  //               ),
-  //             ).visible(!isReviewed),
-  //             Column(
-  //               children: [
-  //                 ElevatedButton(
-  //                   onPressed: () async {
-  //                     var res = await reportService.getReport(
-  //                         appointmentId: widget.appointmentId);
-  //                     if (res != null) {
-  //                       ReportChatInterface(
-  //                         appointmentReport: res,
-  //                       ).launch(context);
-  //                     } else {
-  //                       CreateReportScreen(
-  //                         userId: widget.appointment.userId.validate(),
-  //                         doctorId: widget.appointment.doctorId.validate(),
-  //                         appointmentId: widget.appointment.id.validate(),
-  //                       ).launch(context);
-  //                     }
-  //                   },
-  //                   child: Text(
-  //                     "Report",
-  //                     style: primaryTextStyle(color: black),
-  //                   ),
-  //                 ),
-  //                 ElevatedButton(
-  //                   onPressed: () {
-  //                     Navigator.pop(context);
-  //                   },
-  //                   child: Text(
-  //                     "Close",
-  //                     style: primaryTextStyle(color: black),
-  //                   ),
-  //                 ),
-  //               ],
-  //             )
-  //           ],
-  //         ));
-  //   }
-  // }
+  handleCheckReview() async {
+    var reviewService = Get.find<ReviewService>();
+
+    var res = await reviewService.getAppointmentReview(
+        docId: widget.docId, appointmentId: widget.appointmentId);
+    isReviewed = res != null;
+    setState(() {});
+    if (widget.isExpired && !isReviewed) {
+      showDialog(
+          context: context,
+          barrierColor: Colors.black87,
+          barrierDismissible: false,
+          builder: (context) => Ratescreen(
+                docId: widget.docId,
+                appointment: widget.appointment,
+                appointmentId: widget.appointmentId,
+                isExpired: widget.isExpired,
+                doctor: doctor!,
+                isReviewed: isReviewed,
+              ));
+    }
+  }
 
   @override
   void initState() {
@@ -225,7 +121,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
       setState(() {});
     });
     handleGetUserToken();
-    // handleCheckReview();
+    handleCheckReview();
   }
 
   void updateSendButtonVisibility() {
@@ -264,6 +160,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
           child: SafeArea(
             child: Column(
               children: [
+                internetCheck(),
                 Container(
                   decoration: BoxDecoration(
                       color: context.cardColor,
@@ -561,13 +458,14 @@ class _ChatInterfaceState extends State<ChatInterface> {
                                   ),
                                   PopupMenuItem(
                                     onTap: () {
-                                      CreateReportScreen(
-                                              userId:
-                                                  userController.userId.value,
-                                              doctorId: doctor!.id.validate(),
-                                              appointmentId:
-                                                  widget.appointmentId)
-                                          .launch(context);
+                                      // CreateReportScreen(
+                                      //         userId:
+                                      //             userController.userId.value,
+                                      //         doctorId: doctor!.id.validate(),
+                                      //         appointmentId:
+                                      //             widget.appointmentId)
+                                      //     .launch(context);
+                                      LiveChatScreen().launch(context);
                                     },
                                     child: Text(
                                       "Report Appointment",

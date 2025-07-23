@@ -75,7 +75,7 @@ class ReportController extends GetxController {
           ? false
           : true;
       var senderId = userController.userId.value;
-      var msgId = await reportService.handleSendMessage(
+      await reportService.handleSendMessage(
           reportId: reportId,
           senderId: senderId,
           files: msgType.value == MessageType.file

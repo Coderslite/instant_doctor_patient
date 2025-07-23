@@ -33,9 +33,6 @@
         android:label="Instant Doctor"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-    <meta-data
-        android:name="com.google.android.geo.API_KEY"
-        android:value="AIzaSyD8nW2BRd9ssOWqimiF-dOS4IeaXkKoBCI" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -61,6 +58,7 @@
             <meta-data
                 android:name="firebase_analytics_collection_enabled"
                 android:value="false" />
+
             <meta-data
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
@@ -88,6 +86,8 @@
 
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
 
+        <meta-data android:name="com.google.android.geo.API_KEY"
+                    android:value="AIzaSyD8nW2BRd9ssOWqimiF-dOS4IeaXkKoBCI"/>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

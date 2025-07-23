@@ -5,11 +5,11 @@ class DrugService {
   var drugCol = db.collection("Products");
   var drugCatCol = db.collection("ProductCategories");
 
-  Stream<List<DrugModel>> getDrugs() {
-    var ref = drugCol.snapshots();
-    return ref.map((event) =>
-        event.docs.map((e) => DrugModel.fromJson(e.data())).toList());
-  }
+  // Stream<List<DrugModel>> getDrugs() {
+  //   var ref = drugCol.snapshots();
+  //   return ref.map((event) =>
+  //       event.docs.map((e) => DrugModel.fromJson(e.data())).toList());
+  // }
 
   Stream<List<DrugCategoryModel>> getDrugCat() {
     var ref = drugCatCol.snapshots();

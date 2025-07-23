@@ -1,65 +1,49 @@
-// import 'dart:async';
-// import 'dart:io';
+import 'dart:async';
+import 'dart:developer' as developer;
 
-// import 'package:connectivity_plus/connectivity_plus.dart';
-// import 'package:flutter/services.dart';
-// import 'package:get/get.dart';
-// import 'package:instant_doctor/component/snackBar.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:instant_doctor/component/snackBar.dart';
 
-// class ConnectivityController extends GetxController {
-//   final Connectivity _connectivity = Connectivity();
+class ConnectivityController extends GetxController {
+  RxList<ConnectivityResult> connectionStatus = [ConnectivityResult.none].obs;
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<List<ConnectivityResult>> connectivitySubscription;
+  RxBool internetConnected = false.obs;
+  @override
+  void onInit() {
+    initConnectivity();
 
-//   var isConnected = false.obs;
+    connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+    super.onInit();
+  }
 
-//   late StreamSubscription<ConnectivityResult> connectivitySubscription;
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initConnectivity() async {
+    late List<ConnectivityResult> result;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      result = await _connectivity.checkConnectivity();
+    } on PlatformException catch (e) {
+      developer.log('Couldn\'t check connectivity status', error: e);
+      return;
+    }
 
-//   @override
-//   void onInit() {
-//     super.onInit();
-//     initConnectivity();
-//     connectivitySubscription =
-//         _connectivity.onConnectivityChanged.listen(_handleConnectivityChange);
-//   }
+    return _updateConnectionStatus(result);
+  }
 
-//   @override
-//   void onClose() {
-//     connectivitySubscription.cancel();
-//     super.onClose();
-//   }
-
-//   Future<void> initConnectivity() async {
-//     try {
-//       final result = await _connectivity.checkConnectivity();
-//       await _handleConnectivityChange(result);
-//     } on PlatformException catch (e) {
-//       print('⚠️ Failed to check connectivity: $e');
-//     }
-//   }
-
-//   Future<void> _handleConnectivityChange(ConnectivityResult result) async {
-//     bool hasInternet = false;
-
-//     if (result != ConnectivityResult.none) {
-//       hasInternet = await _checkInternetAccess();
-//     }
-
-//     isConnected.value = hasInternet;
-
-//     if (hasInternet) {
-//       print("✅ Internet connection is ON");
-//       successSnackBar(title: "Internet Connection ON");
-//     } else {
-//       print("❌ Internet connection is OFF");
-//       errorSnackBarWithClose(title: "Internet Connection is OFF");
-//     }
-//   }
-
-//   Future<bool> _checkInternetAccess() async {
-//     try {
-//       final result = await InternetAddress.lookup('example.com');
-//       return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-//     } on SocketException {
-//       return false;
-//     }
-//   }
-// }
+  Future<void> _updateConnectionStatus(List<ConnectivityResult> result) async {
+    connectionStatus.value = result;
+    if (connectionStatus.isEmpty ||
+        (result.length == 1 && result[0] == ConnectivityResult.none)) {
+      errorSnackBar(title: "No Internet Connection");
+      internetConnected.value = false;
+    } else {
+      internetConnected.value = true;
+    }
+    // ignore: avoid_print
+    print('Connectivity changed: $connectionStatus');
+  }
+}

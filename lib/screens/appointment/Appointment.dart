@@ -15,6 +15,7 @@ import 'package:instant_doctor/screens/appointment/NewAppointment.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../component/EachAppointment.dart';
+import '../../component/check_internet.dart';
 import '../../controllers/BookingController.dart';
 import '../../controllers/PaymentController.dart';
 import '../../controllers/SettingController.dart';
@@ -46,6 +47,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
+                internetCheck(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

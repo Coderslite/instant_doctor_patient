@@ -14,7 +14,7 @@ class AppTheme {
         labelStyle: primaryTextStyle(color: kPrimary), labelColor: kPrimary),
     primaryColor: kPrimary,
     scaffoldBackgroundColor: mobileBackgroundColor,
-    fontFamily: GoogleFonts.roboto().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     bottomNavigationBarTheme:
         const BottomNavigationBarThemeData(backgroundColor: Colors.white),
     iconTheme: const IconThemeData(color: scaffoldSecondaryDark),
@@ -46,7 +46,7 @@ class AppTheme {
         labelStyle: primaryTextStyle(color: kPrimary), labelColor: kPrimary),
     primaryColor: kPrimary,
     scaffoldBackgroundColor: scaffoldColorDark,
-    fontFamily: GoogleFonts.roboto().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: scaffoldSecondaryDark),
     iconTheme: const IconThemeData(color: Colors.white),

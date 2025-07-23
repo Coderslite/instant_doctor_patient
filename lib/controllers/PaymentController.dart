@@ -162,12 +162,7 @@ class PaymentController extends GetxController {
           );
         }
         if (paymentFor == PaymentFor.order) {
-          // Convert platformEarning from kobo to Naira for calculation
-          double pharmacyEarning =
-              (amount + surcharge) - (platformEarning / 100.0);
-          orderController.orderNow(
-            pharmacyEarning: pharmacyEarning.toInt(),
-          );
+          orderController.orderNow();
         }
         if (paymentFor == PaymentFor.labResult) {
           labResultController.handleUploadFiles(context);

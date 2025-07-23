@@ -17,7 +17,7 @@ FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
 
 class FirebaseMessagings {
   void displayLocalNotification(RemoteMessage message) async {
-    AndroidNotification? android = message.notification?.android;
+    // AndroidNotification? android = message.notification?.android;
     AndroidNotificationDetails androidPlatformChannelSpecifics =
         const AndroidNotificationDetails(
       'instantdoctor',
