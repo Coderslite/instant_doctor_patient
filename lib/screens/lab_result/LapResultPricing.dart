@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:instant_doctor/component/AnimatedCard.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/models/LabresultPricingModel.dart';
+import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../constant/color.dart';
@@ -82,7 +83,11 @@ class _LabResultPricingState extends State<LabResultPricing> {
                               children: [
                                 50.height,
                                 Text(
-                                  formatAmount(price!.amount.validate()),
+                                  formatAmount(
+                                      locationController.myCountry.value ==
+                                              'nigeria'
+                                          ? price!.amount.validate()
+                                          : price!.dollarAmount.validate()),
                                   style: boldTextStyle(
                                     color: white,
                                     size: 30,
@@ -131,7 +136,11 @@ class _LabResultPricingState extends State<LabResultPricing> {
                                     toast("please accept policy to continue");
                                   } else {
                                     UploadLabResult(
-                                      amount: price!.amount.validate(),
+                                      amount:
+                                          locationController.myCountry.value ==
+                                                  'nigeria'
+                                              ? price!.amount.validate()
+                                              : price!.dollarAmount.validate(),
                                     ).launch(context);
                                   }
                                 },

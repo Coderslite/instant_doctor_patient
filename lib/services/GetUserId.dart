@@ -19,11 +19,12 @@ getUserId() async {
     userController.pin.value = prefs.getString('pin').toString();
     var userProf =
         await userService.getProfileById(userId: userController.userId.value);
-    userController.currency.value = userProf.currency.validate();
     // userController.isTrialUsed.value = userProf.isTrialUsed.validate();
     locationController.latitude.value = userProf.location!.latitude;
     locationController.longitude.value = userProf.location!.longitude;
     locationController.address.value = userProf.address.validate();
+    locationController.myCountry.value = userProf.country.validate();
+    userController.currency.value = userProf.currency.validate();
     settingsController.trialAvailable.value =
         userProf.isTrialAvailable.validate();
     userController.isFirstTime.value =
@@ -33,5 +34,6 @@ getUserId() async {
     userController.tag.value = userProf.tag.validate();
     userController.fullName.value =
         "${userProf.firstName.validate()} ${userProf.lastName.validate()}";
+    userController.phone.value = userProf.phoneNumber.validate();
   }
 }

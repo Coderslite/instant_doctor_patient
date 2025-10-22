@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:instant_doctor/main.dart';
 
 class UserModel {
   String? id;
@@ -11,7 +12,8 @@ class UserModel {
   String? photoUrl;
   String? maritalStatus;
   String? tag;
- Timestamp? dob;
+  String? gender;
+  Timestamp? dob;
   String? height;
   String? weight;
   String? bloodGroup;
@@ -30,6 +32,7 @@ class UserModel {
   bool? isTrialAvailable;
   GeoPoint? location;
   String? address;
+  String? otherLanguage;
   UserModel({
     this.id,
     this.firstName,
@@ -43,6 +46,7 @@ class UserModel {
     this.photoUrl,
     this.maritalStatus,
     this.tag,
+    this.gender,
     this.dob,
     this.height,
     this.weight,
@@ -60,6 +64,7 @@ class UserModel {
     this.bio,
     this.state,
     this.isTrialAvailable,
+    this.otherLanguage,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -71,12 +76,13 @@ class UserModel {
       country: json['country'],
       address: json['address'],
       location: json['location'] ?? GeoPoint(0, 0),
-      currency: json['currency'],
+      currency: json['currency'] ?? 'USD',
       phoneNumber: json['phoneNumber'],
       photoUrl: json['photoUrl'],
       maritalStatus: json['maritalStatus'],
       dob: json['dob'],
       tag: json['tag'],
+      gender: json['gender'],
       height: json['height'],
       weight: json['weight'],
       bloodGroup: json['bloodGroup'],
@@ -94,7 +100,10 @@ class UserModel {
       workingHours: json['workingHour'],
       bio: json['bio'],
       state: json['stateOfOrigin'],
-      isTrialAvailable: json['isTrialAvailable']??true,
+      isTrialAvailable: settingsController.trialSetting.value == true
+          ? json['isTrialAvailable']
+          : false,
+      otherLanguage: json['otherLanguage'],
     );
   }
 }

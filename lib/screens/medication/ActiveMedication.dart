@@ -5,6 +5,7 @@ import 'package:instant_doctor/models/MedicationModel.dart';
 import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+import '../../component/check_country.dart';
 import '../../component/check_internet.dart';
 import '../../constant/color.dart';
 import '../../services/formatTime.dart';
@@ -532,6 +533,7 @@ class _ActiveMedicationScreenState extends State<ActiveMedicationScreen> {
             child: Column(
               children: [
                 internetCheck(),
+                countryCheck(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

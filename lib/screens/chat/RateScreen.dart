@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/snackBar.dart';
@@ -15,8 +14,6 @@ import '../../models/ReviewsModel.dart';
 import '../../services/GetUserId.dart';
 import '../../services/ReportService.dart';
 import '../../services/ReviewService.dart';
-import '../appointment/reports/CreateReport.dart';
-import '../appointment/reports/ReportChat.dart';
 
 class Ratescreen extends StatefulWidget {
   final String docId;
@@ -25,6 +22,7 @@ class Ratescreen extends StatefulWidget {
   final bool isExpired;
   final bool isReviewed;
   final UserModel doctor;
+  final Function update;
 
   const Ratescreen({
     super.key,
@@ -34,6 +32,7 @@ class Ratescreen extends StatefulWidget {
     required this.isExpired,
     required this.isReviewed,
     required this.doctor,
+    required this.update,
   });
 
   @override
@@ -161,6 +160,7 @@ class _RatescreenState extends State<Ratescreen> {
                                     userId: userController.userId.value,
                                   ));
                                   Navigator.pop(context);
+                                  widget.update();
                                   successSnackBar(
                                       title: "Thank you for your feedback!");
                                 }

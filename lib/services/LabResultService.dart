@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/LabresultPricingModel.dart';
 import 'package:instant_doctor/models/LapResultModel.dart';
+import 'package:instant_doctor/services/CustomMailService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 
 class LabResultService {
@@ -22,6 +23,7 @@ class LabResultService {
     labResultCol.doc(res.id).update({
       "id": res.id,
     });
+    await sendCustomMail(activityName: 'Lab Result');
   }
 
   Stream<List<LabResultModel>> getUserLabResult() {

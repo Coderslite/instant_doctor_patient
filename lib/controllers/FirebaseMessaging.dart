@@ -5,7 +5,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:timezone/timezone.dart' as tz;
 
 import '../constant/color.dart';
 import '../constant/constants.dart';
@@ -17,7 +16,6 @@ FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
 
 class FirebaseMessagings {
   void displayLocalNotification(RemoteMessage message) async {
-    // AndroidNotification? android = message.notification?.android;
     AndroidNotificationDetails androidPlatformChannelSpecifics =
         const AndroidNotificationDetails(
       'instantdoctor',
@@ -29,10 +27,17 @@ class FirebaseMessagings {
       color: kPrimary,
       enableLights: true,
     );
-    NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
+    const DarwinNotificationDetails iosPlatformChannelSpecifics =
+        DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: iosPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.show(
-      DateTime.now().millisecondsSinceEpoch,
+      message.data['id'].hashCode,
       message.notification!.title,
       message.notification!.body,
       platformChannelSpecifics,
@@ -98,40 +103,40 @@ class FirebaseMessagings {
     }
   }
 
-  handleScheduleNotification(
-      tz.TZDateTime scheduledTime, String title, String desc) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-      'com.instantdoctor.schedule',
-      'Instant Doctor',
-      channelShowBadge: true,
-      importance: Importance.max,
-      priority: Priority.high,
-      showWhen: true,
-      playSound: true,
-      ongoing: true,
-      colorized: true,
-      color: kPrimary,
-      enableLights: true,
+  // handleScheduleNotification(
+  //     tz.TZDateTime scheduledTime, String title, String desc) async {
+  //   const AndroidNotificationDetails androidPlatformChannelSpecifics =
+  //       AndroidNotificationDetails(
+  //     'com.instantdoctor.schedule',
+  //     'Instant Doctor',
+  //     channelShowBadge: true,
+  //     importance: Importance.max,
+  //     priority: Priority.high,
+  //     showWhen: true,
+  //     playSound: true,
+  //     ongoing: true,
+  //     colorized: true,
+  //     color: kPrimary,
+  //     enableLights: true,
 
-      // audioAttributesUsage: AudioAttributesUsage.alarm,
-      sound: RawResourceAndroidNotificationSound('tone1'),
-    );
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      UniqueKey().hashCode, // Notification ID
-      title, // Notification title
-      desc, // Notification body
-      scheduledTime, // Scheduled date and time
-      platformChannelSpecifics,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      androidAllowWhileIdle: true,
-      androidScheduleMode:
-          AndroidScheduleMode.exactAllowWhileIdle, // New parameter
-    );
-  }
+  //     // audioAttributesUsage: AudioAttributesUsage.alarm,
+  //     sound: RawResourceAndroidNotificationSound('tone1'),
+  //   );
+  //   const NotificationDetails platformChannelSpecifics =
+  //       NotificationDetails(android: androidPlatformChannelSpecifics);
+  //   await flutterLocalNotificationsPlugin.zonedSchedule(
+  //     UniqueKey().hashCode, // Notification ID
+  //     title, // Notification title
+  //     desc, // Notification body
+  //     scheduledTime, // Scheduled date and time
+  //     platformChannelSpecifics,
+  //     uiLocalNotificationDateInterpretation:
+  //         UILocalNotificationDateInterpretation.absoluteTime,
+  //     androidAllowWhileIdle: true,
+  //     androidScheduleMode:
+  //         AndroidScheduleMode.exactAllowWhileIdle, // New parameter
+  //   );
+  // }
 
   handleInit() async {
     if (isMobile && !kIsWeb) {
@@ -141,45 +146,73 @@ class FirebaseMessagings {
 
       const AndroidInitializationSettings initializationSettingsAndroid =
           AndroidInitializationSettings('@mipmap/ic_launcher');
-      DarwinInitializationSettings darwinInitializationSettings =
-          const DarwinInitializationSettings();
-      InitializationSettings initializationSettings = InitializationSettings(
-          android: initializationSettingsAndroid,
-          iOS: darwinInitializationSettings);
-      await flutterLocalNotificationsPlugin.initialize(
-        initializationSettings,
-        // onDidReceiveNotificationResponse: notificationTapBackground,
-        // onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+      const DarwinInitializationSettings darwinInitializationSettings =
+          DarwinInitializationSettings();
+      const InitializationSettings initializationSettings =
+          InitializationSettings(
+        android: initializationSettingsAndroid,
+        iOS: darwinInitializationSettings,
       );
-      // Request notification permissions
 
-      var result = await flutterLocalNotificationsPlugin
+      await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+      // ✅ Request iOS permission first (important)
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
+
+      // ✅ Request Android notification permission
+      await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>()
           ?.requestNotificationsPermission();
 
-      if (result == true) {
-      } else {}
-      var prefs = await SharedPreferences.getInstance();
-      var token = await firebaseMessaging.getToken();
-      print(token);
-      prefs.setString(MESSAGE_TOKEN, token.toString());
+      // ✅ Wait for APNs token (iOS only)
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        String? apnsToken;
+        int retries = 0;
+        while (apnsToken == null && retries < 10) {
+          apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+          if (apnsToken == null) {
+            await Future.delayed(const Duration(seconds: 1));
+            retries++;
+          }
+        }
+        print('📱 APNs Token: $apnsToken');
+      }
 
+      // ✅ Now safely get the FCM token
+      String? fcmToken;
+      try {
+        fcmToken = await firebaseMessaging.getToken();
+        print('🔥 FCM Token: $fcmToken');
+      } catch (e) {
+        print('❌ Error getting FCM token: $e');
+      }
+
+      // ✅ Store locally
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString(MESSAGE_TOKEN, fcmToken ?? '');
+
+      // ✅ Handle when user taps on a notification
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        var payload = message.data;
+        final payload = message.data;
         if (payload['type'] == 'Call') {
-          // IncomingCall().showCalling(payload['id']);
+          // Navigate to incoming call screen
         }
       });
 
-      // Handle incoming messages and display notifications
+      // ✅ Handle messages while the app is open
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        var payload = message.data;
+        final payload = message.data;
         if (payload['type'] == 'Call') {
-          // IncomingCall().showCalling(payload['id']);
+          // Handle call
         } else if (payload['type'] == NotificationType.appointment ||
             payload['type'] == NotificationType.medication) {
-          // displayScheduleLocalNotification(message);
+          // Handle appointment/medication
         } else {
           displayLocalNotification(message);
         }

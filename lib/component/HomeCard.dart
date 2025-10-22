@@ -44,7 +44,7 @@ class _HomeCardState extends State<HomeCard> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 210,
+      height: 250,
       child: Column(
         children: [
           Expanded(

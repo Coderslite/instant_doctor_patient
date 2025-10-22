@@ -33,41 +33,14 @@ class PharmacyService {
         event.docs.map((e) => DrugModel.fromJson(e.data())).toList());
   }
 
-  Stream<List<PharmacyModel>> getPharmaciesNearby(LatLng userPosition) async* {
-    // First get all active pharmacies
-    var allPharmacies = await pharmacyCol
-        .where('status', isNotEqualTo: 'deleted')
-        .get()
-        .then((snapshot) => snapshot.docs
-            .map((doc) => PharmacyModel.fromJson(doc.data()))
-            .toList());
-
-    // Filter pharmacies within 2km
-    final nearbyPharmacies = allPharmacies.where((pharmacy) {
-      if (pharmacy.location == null) return false;
-
-      final distance = calculateDistance2(
-        userPosition.latitude,
-        userPosition.longitude,
-        pharmacy.location!.latitude,
-        pharmacy.location!.longitude,
-      );
-
-      return distance <= 2000; // 2000 meters = 2km
-    }).toList();
-
-    yield nearbyPharmacies;
-
-    // Also listen for real-time updates
-    yield* pharmacyCol
+  Stream<List<PharmacyModel>> getPharmaciesNearby(LatLng userPosition) {
+    return pharmacyCol
         .where('status', isNotEqualTo: 'deleted')
         .snapshots()
-        .asyncMap((snapshot) async {
+        .map((snapshot) {
       final pharmacies = snapshot.docs
           .map((doc) => PharmacyModel.fromJson(doc.data()))
-          .toList();
-
-      return pharmacies.where((pharmacy) {
+          .where((pharmacy) {
         if (pharmacy.location == null) return false;
 
         final distance = calculateDistance2(
@@ -76,9 +49,12 @@ class PharmacyService {
           pharmacy.location!.latitude,
           pharmacy.location!.longitude,
         );
+        print(distance);
 
-        return distance <= 2000;
+        return distance <= 5; // 2km
       }).toList();
+
+      return pharmacies;
     });
   }
 }

@@ -1,5 +1,4 @@
 // ignore_for_file: use_build_context_synchronously
-
 import 'dart:async';
 import 'dart:io';
 
@@ -17,29 +16,25 @@ import 'package:instant_doctor/controllers/UserController.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/AppointmentModel.dart';
 import 'package:instant_doctor/models/UserModel.dart';
-import 'package:instant_doctor/screens/appointment/reports/CreateReport.dart';
 import 'package:instant_doctor/screens/chat/RateScreen.dart';
 import 'package:instant_doctor/screens/doctors/SingleDoctor.dart';
 import 'package:instant_doctor/screens/profile/help/Help.dart';
-import 'package:instant_doctor/services/ReportService.dart';
 import 'package:instant_doctor/services/ReviewService.dart';
 import 'package:instant_doctor/services/UserService.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:swipe_to/swipe_to.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
-// import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import '../../component/IsOnline.dart';
 import '../../component/TimeRemaining.dart';
+import '../../component/check_country.dart';
 import '../../component/check_internet.dart';
 import '../../controllers/BookingController.dart';
 import '../../controllers/PaymentController.dart';
-import '../../models/ReviewsModel.dart';
 import '../../services/AppointmentService.dart';
 import '../../services/DoctorService.dart';
 import '../../services/SecurityHelper.dart';
-import '../appointment/reports/ReportChat.dart';
 import '../prescription/Prescription.dart';
 import '../profile/help/LiveChat.dart';
 import 'ImagePreview.dart';
@@ -50,6 +45,7 @@ class ChatInterface extends StatefulWidget {
   final String appointmentId;
   final String videocallToken;
   final bool isExpired;
+  final Function update;
 
   const ChatInterface({
     super.key,
@@ -58,13 +54,15 @@ class ChatInterface extends StatefulWidget {
     required this.videocallToken,
     required this.appointment,
     required this.isExpired,
+    required this.update,
   });
 
   @override
   State<ChatInterface> createState() => _ChatInterfaceState();
 }
 
-class _ChatInterfaceState extends State<ChatInterface> {
+class _ChatInterfaceState extends State<ChatInterface>
+    with SingleTickerProviderStateMixin {
   final chatController = Get.find<ChatController>();
   final bookingController = Get.find<BookingController>();
   final paymentController = Get.find<PaymentController>();
@@ -77,10 +75,61 @@ class _ChatInterfaceState extends State<ChatInterface> {
   UserModel? doctor;
   UserModel? me;
   String userName = '';
-
+  String repliedTo = '';
+  String? repliedMessageText;
+  String? repliedMessageSender;
+  bool isReplying = false;
+  final FocusNode _focusNode = FocusNode();
+  final ScrollController _scrollController = ScrollController();
   var messageController = TextEditingController();
   bool isReviewed = false;
-  handleGetUserToken() async {
+  final _formKey = GlobalKey<FormState>();
+  List<AppointmentConversationModel> messages = [];
+  bool isLoading = true;
+  String? highlightedMessageId;
+  late AnimationController _animationController;
+  late Animation<Color?> _highlightAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    messageController.addListener(updateSendButtonVisibility);
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {});
+    });
+    handleGetUserToken();
+    handleCheckReview();
+    _fetchMessages();
+
+    // Initialize animation controller for highlight effect
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    );
+    _highlightAnimation = ColorTween(
+      begin: Colors.yellow.withOpacity(0.5),
+      end: Colors.transparent,
+    ).animate(_animationController)
+      ..addListener(() {
+        setState(() {});
+      });
+  }
+
+  void updateSendButtonVisibility() {
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    timer.cancel();
+    messageController.dispose();
+    _focusNode.dispose();
+    _scrollController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> handleGetUserToken() async {
     token = await userService.getUserToken(userId: widget.docId);
     doctor = await userService.getProfileById(userId: widget.docId);
     me = await userService.getProfileById(userId: userController.userId.value);
@@ -88,11 +137,8 @@ class _ChatInterfaceState extends State<ChatInterface> {
     setState(() {});
   }
 
-  final _formKey = GlobalKey<FormState>();
-
-  handleCheckReview() async {
+  Future<void> handleCheckReview() async {
     var reviewService = Get.find<ReviewService>();
-
     var res = await reviewService.getAppointmentReview(
         docId: widget.docId, appointmentId: widget.appointmentId);
     isReviewed = res != null;
@@ -109,32 +155,249 @@ class _ChatInterfaceState extends State<ChatInterface> {
                 isExpired: widget.isExpired,
                 doctor: doctor!,
                 isReviewed: isReviewed,
+                update: widget.update,
               ));
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    messageController.addListener(updateSendButtonVisibility);
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {});
+  void _fetchMessages() {
+    appointmentService
+        .getConversationQuery(widget.appointmentId)
+        .snapshots()
+        .listen((snapshot) {
+      setState(() {
+        messages = snapshot.docs
+            .map((e) => AppointmentConversationModel.fromJson(
+                e.data() as Map<String, dynamic>))
+            .toList()
+            .reversed
+            .toList();
+        isLoading = false;
+        if (isReplying) {
+          isReplying = false;
+          repliedTo = '';
+          repliedMessageText = null;
+          repliedMessageSender = null;
+        }
+      });
+
+      // Scroll to the bottom when new messages are received
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(_scrollController.position.minScrollExtent);
+        }
+      });
     });
-    handleGetUserToken();
-    handleCheckReview();
   }
 
-  void updateSendButtonVisibility() {
+  void handleReply(AppointmentConversationModel message, String senderName) {
+    String replyText;
+    switch (message.type) {
+      case MessageType.text:
+        replyText = SecurityHelper().decryptText(message.message.validate());
+        break;
+      case MessageType.image:
+        replyText = 'Photo';
+        if (message.message.validate().isNotEmpty) {
+          replyText +=
+              ': ${SecurityHelper().decryptText(message.message.validate())}';
+        }
+        break;
+      case MessageType.voice:
+        replyText = 'Voice message';
+        break;
+      case MessageType.file:
+        replyText = 'File';
+        break;
+      default:
+        replyText = 'Message';
+    }
+    if (replyText.length > 100) {
+      replyText = '${replyText.substring(0, 100)}...';
+    }
     setState(() {
-      // Update the UI based on whether the text field is empty or not
+      isReplying = true;
+      repliedTo = message.id.validate();
+      repliedMessageText = replyText;
+      repliedMessageSender = senderName;
+    });
+    FocusScope.of(context).requestFocus(_focusNode);
+  }
+
+  void cancelReply() {
+    setState(() {
+      isReplying = false;
+      repliedTo = '';
+      repliedMessageText = null;
+      repliedMessageSender = null;
     });
   }
 
-  @override
-  void dispose() {
-    timer.cancel();
-    super.dispose();
+  void showOptions(AppointmentConversationModel message) {
+    if (message.senderId != userController.userId.value) return;
+
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) {
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: context.cardColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.edit),
+                  title: Text('Edit', style: boldTextStyle()),
+                  onTap: () {
+                    Get.back();
+                    editText(message);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete),
+                  title: Text('Delete', style: boldTextStyle()),
+                  onTap: () async {
+                    finish(context);
+                    deleteText(message);
+                  },
+                ),
+              ],
+            ),
+          );
+        });
   }
+
+  Future<void> deleteText(AppointmentConversationModel message) async {
+    showConfirmDialogCustom(
+      context,
+      title: "Are you sure you want to delete this message?",
+      onAccept: (v) async {
+        await appointmentService.deleteChat(
+          appointmentId: widget.appointmentId,
+          chatId: message.id.validate(),
+        );
+      },
+    );
+  }
+
+  void editText(AppointmentConversationModel message) {
+    String currentText = SecurityHelper().decryptText(message.message!);
+    TextEditingController editController =
+        TextEditingController(text: currentText);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: context.cardColor,
+        title: Text('Edit Message', style: boldTextStyle()),
+        content: TextField(
+          controller: editController,
+          minLines: 1,
+          maxLines: 5,
+          style: primaryTextStyle(),
+          decoration: const InputDecoration(hintText: 'Edit your message...'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              String newText = editController.text.trim();
+              if (newText.isNotEmpty && newText != currentText) {
+                String encrypted = SecurityHelper().encryptText(newText);
+                await appointmentService.updateChatText(
+                    appointmentId: widget.appointmentId,
+                    chatId: message.id.validate(),
+                    message: encrypted);
+              }
+              finish(context);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void scrollToRepliedMessage(String repliedToId) {
+    // Find the index of the message with the repliedToId in the reversed list
+    int index = messages.reversed
+        .toList()
+        .indexWhere((message) => message.id == repliedToId);
+    if (index == -1 || !_scrollController.hasClients) return;
+
+    // Calculate the total height of messages up to the target index
+    double totalHeight = 0.0;
+    final reversedMessages = messages.reversed.toList();
+
+    for (int i = 0; i <= index; i++) {
+      final message = reversedMessages[i];
+      double messageHeight = 0.0;
+
+      // Base height based on message type
+      switch (message.type) {
+        case MessageType.text:
+          // Approximate height for text messages (adjust based on content if needed)
+          messageHeight = 50.0; // Base height for short text
+          if (message.isEdited.validate()) {
+            messageHeight += 20.0; // Add height for "edited" label
+          }
+          break;
+        case MessageType.image:
+          messageHeight = 200.0; // Height for image
+          if (message.message.validate().isNotEmpty) {
+            messageHeight += 50.0; // Add height for caption
+          }
+          break;
+        case MessageType.voice:
+          messageHeight = 50.0; // Height for voice message
+          break;
+        case MessageType.file:
+          messageHeight = 70.0; // Height for file icon
+          break;
+        default:
+          messageHeight = 50.0; // Fallback height
+      }
+
+      // Add height for "replied to" section if present
+      if (message.repliedTo != null && message.repliedTo!.isNotEmpty) {
+        messageHeight += 60.0; // Approximate height for reply container
+      }
+
+      totalHeight += messageHeight;
+    }
+
+    // Scroll to the calculated position
+    _scrollController.animateTo(
+      totalHeight,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+
+    // Highlight the message
+    setState(() {
+      highlightedMessageId = repliedToId;
+      _animationController.forward();
+    });
+
+    // Clear highlight after animation
+    Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          highlightedMessageId = null;
+        });
+        _animationController.reset();
+      }
+    });
+  }
+
+  final Map<String, GlobalKey> messageKeys = {};
 
   @override
   Widget build(BuildContext context) {
@@ -145,8 +408,8 @@ class _ChatInterfaceState extends State<ChatInterface> {
     var isOngoing =
         now.compareTo(startTime!) >= 0 && now.compareTo(endTime) <= 0;
     var isYetToCommence = now.compareTo(startTime) <= 0;
+
     return Scaffold(
-      // backgroundColor: kPrimaryLight,
       body: KeyboardDismisser(
         child: Container(
           decoration: const BoxDecoration(
@@ -161,18 +424,20 @@ class _ChatInterfaceState extends State<ChatInterface> {
             child: Column(
               children: [
                 internetCheck(),
+                countryCheck(),
                 Container(
                   decoration: BoxDecoration(
-                      color: context.cardColor,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: dimGray.withOpacity(0.2),
-                          offset: const Offset(0, 2),
-                          spreadRadius: 2,
-                          blurRadius: 2,
-                        )
-                      ]),
+                    color: context.cardColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: dimGray.withOpacity(0.2),
+                        offset: const Offset(0, 2),
+                        spreadRadius: 2,
+                        blurRadius: 2,
+                      ),
+                    ],
+                  ),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   child: Row(
@@ -185,9 +450,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
                               var data = snapshot.data;
                               return Row(
                                 children: [
-                                  const Icon(
-                                    Icons.arrow_back_ios,
-                                  ).onTap(() {
+                                  const Icon(Icons.arrow_back_ios).onTap(() {
                                     finish(context);
                                   }),
                                   Stack(
@@ -209,7 +472,7 @@ class _ChatInterfaceState extends State<ChatInterface> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        "${data.firstName!} ${data.lastName!}",
+                                        "${data.firstName} ${data.lastName}",
                                         style: boldTextStyle(
                                             color: kPrimary, size: 14),
                                       ),
@@ -225,20 +488,20 @@ class _ChatInterfaceState extends State<ChatInterface> {
                                           10.width.visible(
                                               data.status.validate() == ONLINE),
                                           Text(
-                                            timeago.format(
-                                                data.lastSeen!.toDate()),
+                                            data.lastSeen == null
+                                                ? ''
+                                                : timeago.format(
+                                                    data.lastSeen!.toDate()),
                                             style: secondaryTextStyle(size: 10),
-                                          ).visible(
-                                              data.status.validate() == OFFLINE)
+                                          ).visible(data.status.validate() ==
+                                              OFFLINE),
                                         ],
                                       ),
-                                      widget.appointment.isPaid.validate() ==
-                                                  false &&
-                                              !widget.isExpired
-                                          ? SizedBox()
-                                          : TimeRemaining(
-                                              appointment: widget.appointment,
-                                            )
+                                      if (widget.appointment.isPaid
+                                              .validate() ||
+                                          !widget.isExpired)
+                                        TimeRemaining(
+                                            appointment: widget.appointment),
                                     ],
                                   ),
                                 ],
@@ -252,14 +515,14 @@ class _ChatInterfaceState extends State<ChatInterface> {
                               onPressed: () {
                                 showModalBottomSheet(
                                     context: context,
-                                    backgroundColor: transparentColor,
+                                    backgroundColor: Colors.transparent,
                                     builder: (context) {
                                       return Container(
                                         width: double.infinity,
                                         padding: const EdgeInsets.all(20),
                                         decoration: BoxDecoration(
                                           color: context.cardColor,
-                                          borderRadius: BorderRadius.only(
+                                          borderRadius: const BorderRadius.only(
                                             topLeft: Radius.circular(20),
                                             topRight: Radius.circular(20),
                                           ),
@@ -273,33 +536,27 @@ class _ChatInterfaceState extends State<ChatInterface> {
                                                       .spaceBetween,
                                               children: [
                                                 Container(),
-                                                Text(
-                                                  "Select an action",
-                                                  style:
-                                                      boldTextStyle(size: 18),
-                                                ),
+                                                Text("Select an action",
+                                                    style: boldTextStyle(
+                                                        size: 18)),
                                                 CircleAvatar(
                                                   backgroundColor: context
                                                       .scaffoldBackgroundColor,
                                                   child: Icon(
-                                                    Icons.close_rounded,
-                                                    color: context.primaryColor,
-                                                  ),
-                                                ).onTap(() {
-                                                  finish(context);
-                                                }),
+                                                      Icons.close_rounded,
+                                                      color:
+                                                          context.primaryColor),
+                                                ).onTap(() => finish(context)),
                                               ],
                                             ),
                                             10.height,
-                                            Divider(),
+                                            const Divider(),
                                             Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.center,
                                               children: [
-                                                Text(
-                                                  "Video Call",
-                                                  style: boldTextStyle(),
-                                                ),
+                                                Text("Video Call",
+                                                    style: boldTextStyle()),
                                                 ZegoSendCallInvitationButton(
                                                   callID: widget.appointmentId,
                                                   iconSize: const Size(30, 30),
@@ -308,18 +565,16 @@ class _ChatInterfaceState extends State<ChatInterface> {
                                                           .validate() &&
                                                       !isYetToCommence,
                                                   icon: ButtonIcon(
-                                                    // backgroundColor: white,
                                                     icon: Image.asset(
-                                                      "assets/images/video.png",
-                                                      color: kPrimary,
-                                                    ),
+                                                        "assets/images/video.png",
+                                                        color: kPrimary),
                                                   ),
                                                   verticalLayout: false,
                                                   buttonSize:
                                                       const Size(50, 50),
                                                   isVideoCall: true,
                                                   resourceID:
-                                                      "instantdoctorservice", //You need to use the resourceID that you created in the subsequent steps. Please continue reading this document.
+                                                      "instantdoctorservice",
                                                   invitees: [
                                                     ZegoUIKitUser(
                                                       id: widget
@@ -344,24 +599,21 @@ class _ChatInterfaceState extends State<ChatInterface> {
                                                         "Appointment has expired");
                                                 return;
                                               }
-                                              if (widget.appointment.isPaid
-                                                      .validate() ==
-                                                  false) {
+                                              if (!widget.appointment.isPaid
+                                                  .validate()) {
                                                 errorSnackBar(
                                                     title:
-                                                        "You havent made payment for this appointment");
+                                                        "You haven't made payment for this appointment");
                                                 return;
                                               }
                                             }),
-                                            Divider(),
+                                            const Divider(),
                                             Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.center,
                                               children: [
-                                                Text(
-                                                  "Audio Call",
-                                                  style: boldTextStyle(),
-                                                ),
+                                                Text("Audio Call",
+                                                    style: boldTextStyle()),
                                                 ZegoSendCallInvitationButton(
                                                   callID: widget.appointmentId,
                                                   iconSize: const Size(30, 30),
@@ -370,18 +622,15 @@ class _ChatInterfaceState extends State<ChatInterface> {
                                                           .validate() &&
                                                       !isYetToCommence,
                                                   icon: ButtonIcon(
-                                                    // backgroundColor: white,
-                                                    icon: Icon(
-                                                      Icons.call,
-                                                      color: kPrimary,
-                                                    ),
-                                                  ),
+                                                      icon: const Icon(
+                                                          Icons.call,
+                                                          color: kPrimary)),
                                                   verticalLayout: false,
                                                   buttonSize:
                                                       const Size(50, 50),
                                                   isVideoCall: false,
                                                   resourceID:
-                                                      "instantdoctorservice", //You need to use the resourceID that you created in the subsequent steps. Please continue reading this document.
+                                                      "instantdoctorservice",
                                                   invitees: [
                                                     ZegoUIKitUser(
                                                       id: widget
@@ -406,343 +655,362 @@ class _ChatInterfaceState extends State<ChatInterface> {
                                                         "Appointment has expired");
                                                 return;
                                               }
-                                              if (widget.appointment.isPaid
-                                                      .validate() ==
-                                                  false) {
+                                              if (!widget.appointment.isPaid
+                                                  .validate()) {
                                                 errorSnackBar(
                                                     title:
-                                                        "You havent made payment for this appointment");
+                                                        "You haven't made payment for this appointment");
                                                 return;
                                               }
                                             }),
-                                            Divider(),
+                                            const Divider(),
                                           ],
                                         ),
                                       );
                                     });
                               },
-                              icon: Icon(Icons.add_call)),
+                              icon: const Icon(Icons.add_call)),
                           PopupMenuButton(
-                              color: kPrimary,
-                              icon: SizedBox(
-                                  width: 30,
-                                  height: 30,
-                                  child: Image.asset(
-                                    "assets/images/more.png",
-                                    color: settingsController.isDarkMode.value
-                                        ? white
-                                        : black,
-                                  )),
-                              itemBuilder: (context) {
-                                return [
-                                  PopupMenuItem(
-                                    onTap: () {
-                                      SingleDoctorScreen(doctor: doctor!)
-                                          .launch(context);
-                                    },
-                                    child: Text(
-                                      "Doctor Info",
-                                      style: primaryTextStyle(color: white),
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    onTap: () {
-                                      PrescriptionScreen(
-                                        appointment: widget.appointment,
-                                      ).launch(context);
-                                    },
-                                    child: Text(
-                                      "Prescriptions",
-                                      style: primaryTextStyle(color: white),
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    onTap: () {
-                                      // CreateReportScreen(
-                                      //         userId:
-                                      //             userController.userId.value,
-                                      //         doctorId: doctor!.id.validate(),
-                                      //         appointmentId:
-                                      //             widget.appointmentId)
-                                      //     .launch(context);
-                                      LiveChatScreen().launch(context);
-                                    },
-                                    child: Text(
-                                      "Report Appointment",
-                                      style: primaryTextStyle(color: white),
-                                    ),
-                                  ),
-                                ];
-                              })
+                            color: kPrimary,
+                            icon: SizedBox(
+                              width: 30,
+                              height: 30,
+                              child: Image.asset(
+                                "assets/images/more.png",
+                                color: settingsController.isDarkMode.value
+                                    ? white
+                                    : black,
+                              ),
+                            ),
+                            itemBuilder: (context) => [
+                              PopupMenuItem(
+                                onTap: () => SingleDoctorScreen(doctor: doctor!)
+                                    .launch(context),
+                                child: Text("Doctor Info",
+                                    style: primaryTextStyle(color: white)),
+                              ),
+                              PopupMenuItem(
+                                onTap: () => PrescriptionScreen(
+                                        appointment: widget.appointment)
+                                    .launch(context),
+                                child: Text("Prescriptions",
+                                    style: primaryTextStyle(color: white)),
+                              ),
+                              PopupMenuItem(
+                                onTap: () => LiveChatScreen().launch(context),
+                                child: Text("Report Appointment",
+                                    style: primaryTextStyle(color: white)),
+                              ),
+                            ],
+                          ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
                 Expanded(
-                  child: widget.appointment.isPaid.validate() == false &&
-                          !widget.isExpired
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              height: 100,
-                              width: 100,
-                              child: Image.asset("assets/images/error.png"),
-                            ),
-                            10.height,
-                            Text(
-                              "You haven't made payment for this appointment",
-                              textAlign: TextAlign.center,
-                              style: boldTextStyle(
-                                size: 20,
-                                // color: white,
-                              ),
-                            ),
-                            10.height,
-                            Text(
-                              "Contact support",
-                              style: boldTextStyle(
-                                size: 14,
-                                color: fireBrick,
-                              ),
-                            ).onTap(() {
-                              HelpScreen().launch(context);
-                            }),
-                          ],
-                        ).center()
-                      : isYetToCommence
-                          ? Center(
-                              child: Text(
-                                "Appointment is yet to commence",
-                                style: boldTextStyle(
-                                  size: 14,
+                  child:
+                      !widget.appointment.isPaid.validate() && !widget.isExpired
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  height: 100,
+                                  width: 100,
+                                  child: Image.asset("assets/images/error.png"),
                                 ),
-                              ),
-                            )
-                          : StreamBuilder<List<AppointmentConversationModel>>(
-                              stream: appointmentService
-                                  .getConversation(widget.appointmentId),
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData) {
-                                  if (snapshot.data!.isEmpty) {
-                                    return Center(
-                                      child: Text(
-                                        "No Conversation Yet",
-                                        style: boldTextStyle(),
-                                      ),
-                                    );
-                                  } else {
-                                    return ListView.builder(
-                                      itemCount: chatController.message.length,
-                                      reverse: true,
-                                      physics: const BouncingScrollPhysics(),
-                                      itemBuilder: (context, index) {
-                                        AppointmentConversationModel message =
-                                            chatController.message[index];
-                                        appointmentService.updateChatStatus(
-                                            appointmentId: widget.appointmentId,
-                                            userId: widget.docId);
-                                        return message.type == MessageType.image
-                                            ? Column(
-                                                children: [
-                                                  BubbleNormalImage(
-                                                    onTap: () {
-                                                      ImagePreview(
-                                                              imageUrl: message
-                                                                  .fileUrl!)
-                                                          .launch(context);
-                                                    },
-                                                    id: message.id.validate(),
-                                                    tail: true,
-                                                    image: CachedNetworkImage(
-                                                      imageUrl:
-                                                          message.fileUrl!,
-                                                      fit: BoxFit.cover,
-                                                    ),
-                                                    sent: message.senderId !=
-                                                            userController
-                                                                .userId.value
-                                                        ? false
-                                                        : message.status ==
-                                                                MessageStatus
-                                                                    .sent
-                                                            ? true
-                                                            : false,
-                                                    delivered: message
-                                                                .senderId !=
-                                                            userController
-                                                                .userId.value
-                                                        ? false
-                                                        : message.senderId !=
-                                                                userController
-                                                                    .userId
-                                                                    .value
-                                                            ? false
-                                                            : message.status ==
-                                                                    MessageStatus
-                                                                        .delivered
-                                                                ? true
-                                                                : false,
-                                                    seen: message.senderId !=
-                                                            userController
-                                                                .userId.value
-                                                        ? false
-                                                        : message.status ==
-                                                                MessageStatus
-                                                                    .read
-                                                            ? true
-                                                            : false,
-                                                    isSender:
-                                                        message.senderId ==
-                                                            userController
-                                                                .userId.value,
-                                                  ),
-                                                  BubbleSpecialThree(
-                                                    isSender:
-                                                        message.senderId ==
-                                                            userController
-                                                                .userId.value,
-                                                    sent: message.status ==
-                                                            MessageStatus.sent
-                                                        ? true
-                                                        : false,
-                                                    delivered: message
-                                                                .senderId !=
-                                                            userController
-                                                                .userId.value
-                                                        ? false
-                                                        : message.status ==
-                                                                MessageStatus
-                                                                    .delivered
-                                                            ? true
-                                                            : false,
-                                                    seen: message.senderId !=
-                                                            userController
-                                                                .userId.value
-                                                        ? false
-                                                        : message.status ==
-                                                                MessageStatus
-                                                                    .read
-                                                            ? true
-                                                            : false,
-                                                    text: SecurityHelper()
-                                                        .decryptText(message
-                                                            .message
-                                                            .validate()),
-                                                    color: context.cardColor,
-                                                    tail: true,
-                                                    textStyle: primaryTextStyle(
-                                                        size: 16),
-                                                  ).visible(message
-                                                      .message!.isNotEmpty)
-                                                ],
-                                              )
-                                            : message.type == MessageType.voice
-                                                ? BubbleNormalAudio(
-                                                    onSeekChanged: (s) {},
-                                                    onPlayPauseButtonClick:
-                                                        () {},
-                                                    textStyle:
-                                                        primaryTextStyle(),
-                                                    color: context.cardColor,
-                                                    sent: message.senderId !=
-                                                            userController
-                                                                .userId.value
-                                                        ? false
-                                                        : message.status ==
-                                                                MessageStatus
-                                                                    .sent
-                                                            ? true
-                                                            : false,
-                                                    delivered: message
-                                                                .senderId !=
-                                                            userController
-                                                                .userId.value
-                                                        ? false
-                                                        : message.status ==
-                                                                MessageStatus
-                                                                    .delivered
-                                                            ? true
-                                                            : false,
-                                                    seen: message.senderId !=
-                                                            userController
-                                                                .userId.value
-                                                        ? false
-                                                        : message.status ==
-                                                                MessageStatus
-                                                                    .read
-                                                            ? true
-                                                            : false,
-                                                  )
-                                                : message.type ==
-                                                        MessageType.file
-                                                    ? SizedBox(
-                                                        width: 70,
-                                                        height: 70,
-                                                        child: Image.asset(
-                                                          "assets/images/pdf.png",
-                                                          fit: BoxFit.cover,
+                                10.height,
+                                Text(
+                                  "You haven't made payment for this appointment",
+                                  textAlign: TextAlign.center,
+                                  style: boldTextStyle(size: 20),
+                                ),
+                                10.height,
+                                Text(
+                                  "Contact support",
+                                  style:
+                                      boldTextStyle(size: 14, color: fireBrick),
+                                ).onTap(() => HelpScreen().launch(context)),
+                              ],
+                            ).center()
+                          : isYetToCommence
+                              ? Center(
+                                  child: Text(
+                                    "Appointment is yet to commence",
+                                    style: boldTextStyle(size: 14),
+                                  ),
+                                )
+                              : isLoading
+                                  ? const Center(child: Loader())
+                                  : messages.isEmpty
+                                      ? Center(
+                                          child: Text(
+                                            "No conversation yet",
+                                            style: boldTextStyle(color: white),
+                                          ),
+                                        )
+                                      : ListView.builder(
+                                          controller: _scrollController,
+                                          reverse: true, // Changed to false
+                                          itemCount: messages.length,
+                                          itemBuilder: (context, index) {
+                                            // Display messages in reverse order
+                                            int reversedIndex =
+                                                messages.length - 1 - index;
+                                            AppointmentConversationModel
+                                                message =
+                                                messages[reversedIndex];
+
+                                            // Assign a GlobalKey to each message
+                                            messageKeys[message.id.validate()] =
+                                                GlobalKey();
+                                            appointmentService.updateChatStatus(
+                                                appointmentId:
+                                                    widget.appointmentId,
+                                                userId: widget.docId);
+
+                                            String senderName = message
+                                                        .senderId ==
+                                                    userController.userId.value
+                                                ? userName
+                                                : "${doctor?.firstName} ${doctor?.lastName}";
+
+                                            String getReplyText() {
+                                              switch (message.type) {
+                                                case MessageType.text:
+                                                  return SecurityHelper()
+                                                      .decryptText(message
+                                                          .message
+                                                          .validate());
+                                                case MessageType.image:
+                                                  String text = 'Photo';
+                                                  if (message.message
+                                                      .validate()
+                                                      .isNotEmpty) {
+                                                    text +=
+                                                        ': ${SecurityHelper().decryptText(message.message.validate())}';
+                                                  }
+                                                  return text;
+                                                case MessageType.voice:
+                                                  return 'Voice message';
+                                                case MessageType.file:
+                                                  return 'File';
+                                                default:
+                                                  return 'Message';
+                                              }
+                                            }
+
+                                            return Container(
+                                              key: messageKeys[message.id],
+                                              color: highlightedMessageId ==
+                                                      message.id
+                                                  ? _highlightAnimation.value
+                                                  : null,
+                                              child:
+                                                  message.status ==
+                                                          MessageStatus.deleted
+                                                      ? BubbleSpecialThree(
+                                                          isSender: message
+                                                                  .senderId ==
+                                                              userController
+                                                                  .userId.value,
+                                                          text:
+                                                              'unsent message',
+                                                          textStyle:
+                                                              secondaryTextStyle(
+                                                                  size: 10,
+                                                                  fontStyle:
+                                                                      FontStyle
+                                                                          .italic),
+                                                        )
+                                                      : SwipeTo(
+                                                          key: UniqueKey(),
+                                                          onRightSwipe:
+                                                              (details) =>
+                                                                  handleReply(
+                                                                      message,
+                                                                      senderName),
+                                                          child:
+                                                              GestureDetector(
+                                                            onLongPress: () =>
+                                                                showOptions(
+                                                                    message),
+                                                            child: Column(
+                                                              crossAxisAlignment: message
+                                                                          .senderId ==
+                                                                      userController
+                                                                          .userId
+                                                                          .value
+                                                                  ? CrossAxisAlignment
+                                                                      .end
+                                                                  : CrossAxisAlignment
+                                                                      .start,
+                                                              children: [
+                                                                if (message.repliedTo !=
+                                                                        null &&
+                                                                    message
+                                                                        .repliedTo!
+                                                                        .isNotEmpty)
+                                                                  GestureDetector(
+                                                                    onTap: () =>
+                                                                        scrollToRepliedMessage(
+                                                                            message.repliedTo!),
+                                                                    child:
+                                                                        Container(
+                                                                      padding:
+                                                                          const EdgeInsets
+                                                                              .all(
+                                                                              8),
+                                                                      margin: const EdgeInsets
+                                                                          .only(
+                                                                          bottom:
+                                                                              4),
+                                                                      decoration:
+                                                                          BoxDecoration(
+                                                                        color: Colors
+                                                                            .grey
+                                                                            .withOpacity(0.2),
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(8),
+                                                                        border: const Border(
+                                                                            left:
+                                                                                BorderSide(color: Colors.blue, width: 4)),
+                                                                      ),
+                                                                      child:
+                                                                          Column(
+                                                                        crossAxisAlignment:
+                                                                            CrossAxisAlignment.start,
+                                                                        children: [
+                                                                          Text(
+                                                                            message.repliedSender?.validate() ??
+                                                                                'Unknown',
+                                                                            style:
+                                                                                secondaryTextStyle(size: 12, color: Colors.blue),
+                                                                          ),
+                                                                          Text(
+                                                                            SecurityHelper().decryptText(message.repliedText?.validate() ??
+                                                                                ''),
+                                                                            style:
+                                                                                secondaryTextStyle(size: 12),
+                                                                            maxLines:
+                                                                                3,
+                                                                            overflow:
+                                                                                TextOverflow.ellipsis,
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                message.type ==
+                                                                        MessageType
+                                                                            .image
+                                                                    ? Column(
+                                                                        children: [
+                                                                          BubbleNormalImage(
+                                                                            onTap: () =>
+                                                                                ImagePreview(imageUrl: message.fileUrl!).launch(context),
+                                                                            id: message.id.validate(),
+                                                                            tail:
+                                                                                true,
+                                                                            image:
+                                                                                CachedNetworkImage(
+                                                                              imageUrl: message.fileUrl!,
+                                                                              fit: BoxFit.cover,
+                                                                            ),
+                                                                            sent: message.senderId != userController.userId.value
+                                                                                ? false
+                                                                                : message.status == MessageStatus.sent,
+                                                                            delivered: message.senderId != userController.userId.value
+                                                                                ? false
+                                                                                : message.status == MessageStatus.delivered,
+                                                                            seen: message.senderId != userController.userId.value
+                                                                                ? false
+                                                                                : message.status == MessageStatus.read,
+                                                                            isSender:
+                                                                                message.senderId == userController.userId.value,
+                                                                          ),
+                                                                          BubbleSpecialThree(
+                                                                            isSender:
+                                                                                message.senderId == userController.userId.value,
+                                                                            sent:
+                                                                                message.status == MessageStatus.sent,
+                                                                            delivered: message.senderId != userController.userId.value
+                                                                                ? false
+                                                                                : message.status == MessageStatus.delivered,
+                                                                            seen: message.senderId != userController.userId.value
+                                                                                ? false
+                                                                                : message.status == MessageStatus.read,
+                                                                            text:
+                                                                                SecurityHelper().decryptText(message.message.validate()),
+                                                                            color:
+                                                                                context.cardColor,
+                                                                            tail:
+                                                                                true,
+                                                                            textStyle:
+                                                                                primaryTextStyle(size: 16),
+                                                                          ).visible(message
+                                                                              .message!
+                                                                              .isNotEmpty),
+                                                                        ],
+                                                                      )
+                                                                    : message.type ==
+                                                                            MessageType
+                                                                                .voice
+                                                                        ? BubbleNormalAudio(
+                                                                            onSeekChanged:
+                                                                                (s) {},
+                                                                            onPlayPauseButtonClick:
+                                                                                () {},
+                                                                            textStyle:
+                                                                                primaryTextStyle(),
+                                                                            color:
+                                                                                context.cardColor,
+                                                                            sent: message.senderId != userController.userId.value
+                                                                                ? false
+                                                                                : message.status == MessageStatus.sent,
+                                                                            delivered: message.senderId != userController.userId.value
+                                                                                ? false
+                                                                                : message.status == MessageStatus.delivered,
+                                                                            seen: message.senderId != userController.userId.value
+                                                                                ? false
+                                                                                : message.status == MessageStatus.read,
+                                                                          )
+                                                                        : message.type ==
+                                                                                MessageType.file
+                                                                            ? SizedBox(
+                                                                                width: 70,
+                                                                                height: 70,
+                                                                                child: Image.asset("assets/images/pdf.png", fit: BoxFit.cover),
+                                                                              )
+                                                                            : Column(
+                                                                                children: [
+                                                                                  BubbleSpecialThree(
+                                                                                    isSender: message.senderId == userController.userId.value,
+                                                                                    sent: message.status == MessageStatus.sent,
+                                                                                    delivered: message.senderId != userController.userId.value ? false : message.status == MessageStatus.delivered,
+                                                                                    seen: message.senderId != userController.userId.value ? false : message.status == MessageStatus.read,
+                                                                                    text: SecurityHelper().decryptText(message.message!),
+                                                                                    tail: true,
+                                                                                    color: context.cardColor,
+                                                                                    textStyle: primaryTextStyle(size: 16),
+                                                                                  ),
+                                                                                  BubbleSpecialTwo(
+                                                                                    color: transparentColor,
+                                                                                    text: "edited",
+                                                                                    textStyle: secondaryTextStyle(
+                                                                                      size: 10,
+                                                                                      fontStyle: FontStyle.italic,
+                                                                                    ),
+                                                                                  ).visible(message.isEdited.validate()),
+                                                                                ],
+                                                                              ),
+                                                              ],
+                                                            ),
+                                                          ),
                                                         ),
-                                                      )
-                                                    : BubbleSpecialThree(
-                                                        isSender:
-                                                            message.senderId ==
-                                                                userController
-                                                                    .userId
-                                                                    .value,
-                                                        sent: message
-                                                                    .senderId !=
-                                                                userController
-                                                                    .userId
-                                                                    .value
-                                                            ? false
-                                                            : message.status ==
-                                                                    MessageStatus
-                                                                        .sent
-                                                                ? true
-                                                                : false,
-                                                        delivered: message
-                                                                    .senderId !=
-                                                                userController
-                                                                    .userId
-                                                                    .value
-                                                            ? false
-                                                            : message.status ==
-                                                                    MessageStatus
-                                                                        .delivered
-                                                                ? true
-                                                                : false,
-                                                        seen: message
-                                                                    .senderId !=
-                                                                userController
-                                                                    .userId
-                                                                    .value
-                                                            ? false
-                                                            : message.status ==
-                                                                    MessageStatus
-                                                                        .read
-                                                                ? true
-                                                                : false,
-                                                        text: SecurityHelper()
-                                                            .decryptText(message
-                                                                .message!),
-                                                        tail: true,
-                                                        color:
-                                                            context.cardColor,
-                                                        textStyle:
-                                                            primaryTextStyle(
-                                                          size: 16,
-                                                        ),
-                                                      );
-                                      },
-                                    );
-                                  }
-                                }
-                                return const CircularProgressIndicator(
-                                  color: kPrimary,
-                                ).center();
-                              }),
+                                            );
+                                          },
+                                        ),
                 ),
                 Obx(
                   () => Padding(
@@ -750,90 +1018,123 @@ class _ChatInterfaceState extends State<ChatInterface> {
                     child: Column(
                       children: [
                         SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                for (int x = 0;
-                                    x < chatController.images.length;
-                                    x++)
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Stack(
-                                      alignment: Alignment.topRight,
-                                      children: [
-                                        SizedBox(
-                                          width: 70,
-                                          height: 70,
-                                          child: Image.file(
-                                            File(chatController.images[x].path),
-                                            fit: BoxFit.cover,
-                                          ),
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              for (int x = 0;
+                                  x < chatController.images.length;
+                                  x++)
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Stack(
+                                    alignment: Alignment.topRight,
+                                    children: [
+                                      SizedBox(
+                                        width: 70,
+                                        height: 70,
+                                        child: Image.file(
+                                          File(chatController.images[x].path),
+                                          fit: BoxFit.cover,
                                         ),
-                                        Positioned(
-                                          top: 0,
-                                          right: 0,
-                                          child: const Icon(
-                                            Icons.delete,
-                                            color: fireBrick,
-                                          ).onTap(() {
-                                            chatController.handleRemoveImage(x);
-                                          }),
-                                        )
-                                      ],
-                                    ),
-                                  )
+                                      ),
+                                      Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: const Icon(Icons.delete,
+                                                color: fireBrick)
+                                            .onTap(() {
+                                          chatController.handleRemoveImage(x);
+                                        }),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        if (isReplying)
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: context.cardColor.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(8),
+                              border: const Border(
+                                  left: BorderSide(
+                                      color: Colors.green, width: 4)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.reply, color: Colors.green),
+                                8.width,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        repliedMessageSender?.validate() ??
+                                            'Unknown',
+                                        style: secondaryTextStyle(
+                                            color: Colors.green),
+                                      ),
+                                      Text(
+                                        repliedMessageText?.validate() ?? '',
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: secondaryTextStyle(size: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(Icons.close, color: grey)
+                                    .onTap(cancelReply),
                               ],
-                            )),
-                        widget.appointment.isPaid.validate() == false &&
+                            ),
+                          ),
+                        !widget.appointment.isPaid.validate() &&
                                 !widget.isExpired
-                            ? Obx(() {
-                                return bookingController.isLoading.value
-                                    ? Loader()
-                                    : Column(
-                                        children: [
-                                          AppButton(
-                                            width: double.infinity,
-                                            onTap: () async {
-                                              try {
-                                                bookingController
-                                                    .isLoading.value = true;
-
-                                                setState(() {});
-                                                var userInfo = await userService
-                                                    .getProfileById(
-                                                        userId: userController
-                                                            .userId.value);
-                                                await paymentController
-                                                    .makePayment(
-                                                        email: userInfo.email
-                                                            .validate(),
-                                                        context: context,
-                                                        amount: widget
-                                                            .appointment.price
-                                                            .validate(),
-                                                        paymentFor:
-                                                            'Appointment',
-                                                        productId: widget
-                                                            .appointment.id);
-                                              } finally {
-                                                bookingController
-                                                    .isLoading.value = false;
-                                              }
-                                            },
-                                            text: "Make Payment",
-                                            color: white,
-                                            textColor: kPrimary,
-                                          )
-                                        ],
-                                      );
-                              })
+                            ? Obx(() => bookingController.isLoading.value
+                                ? const Loader()
+                                : Column(
+                                    children: [
+                                      AppButton(
+                                        width: double.infinity,
+                                        onTap: () async {
+                                          try {
+                                            bookingController.isLoading.value =
+                                                true;
+                                            setState(() {});
+                                            var userInfo = await userService
+                                                .getProfileById(
+                                                    userId: userController
+                                                        .userId.value);
+                                            await paymentController.makePayment(
+                                              email: userInfo.email.validate(),
+                                              context: context,
+                                              amount: widget.appointment.price
+                                                  .validate(),
+                                              paymentFor: 'Appointment',
+                                              productId: widget.appointment.id,
+                                            );
+                                          } finally {
+                                            bookingController.isLoading.value =
+                                                false;
+                                          }
+                                        },
+                                        text: "Make Payment",
+                                        color: white,
+                                        textColor: kPrimary,
+                                      ),
+                                    ],
+                                  ))
                             : widget.isExpired
                                 ? Container(
-                                    padding: EdgeInsets.all(10),
+                                    padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
                                       color: context.cardColor,
-                                      borderRadius: BorderRadius.only(
+                                      borderRadius: const BorderRadius.only(
                                         topLeft: Radius.circular(20),
                                         topRight: Radius.circular(20),
                                       ),
@@ -842,22 +1143,19 @@ class _ChatInterfaceState extends State<ChatInterface> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Text(
-                                          "View prescription",
-                                          style: boldTextStyle(),
-                                        )
+                                        Text("View prescription",
+                                            style: boldTextStyle()),
                                       ],
                                     ),
-                                  ).onTap(() {
-                                    PrescriptionScreen(
-                                            appointment: widget.appointment)
-                                        .launch(context);
-                                  })
+                                  ).onTap(() => PrescriptionScreen(
+                                        appointment: widget.appointment)
+                                    .launch(context))
                                 : Form(
                                     key: _formKey,
                                     child: AppTextField(
                                       textFieldType: TextFieldType.MULTILINE,
                                       controller: messageController,
+                                      focus: _focusNode,
                                       minLines: 1,
                                       maxLines: 3,
                                       enabled: !isExpired && !isYetToCommence,
@@ -879,122 +1177,106 @@ class _ChatInterfaceState extends State<ChatInterface> {
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   const Icon(
-                                                    Icons
-                                                        .dashboard_customize_outlined,
-                                                    color: kPrimary,
-                                                  ).onTap(() {
-                                                    return showModalBottomSheet(
-                                                        context: context,
-                                                        backgroundColor:
-                                                            Colors.transparent,
-                                                        builder: (BuildContext
-                                                            context1) {
-                                                          return Container(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(20),
-                                                              height: 120,
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                color: context
-                                                                    .cardColor,
-                                                                borderRadius:
-                                                                    const BorderRadius
-                                                                        .only(
-                                                                  topLeft: Radius
-                                                                      .circular(
-                                                                          20),
-                                                                  topRight: Radius
-                                                                      .circular(
-                                                                          20),
-                                                                ),
-                                                              ),
-                                                              child: GridView
-                                                                  .count(
-                                                                crossAxisCount:
-                                                                    3,
-                                                                crossAxisSpacing:
-                                                                    10,
-                                                                mainAxisSpacing:
-                                                                    10,
-                                                                physics:
-                                                                    const NeverScrollableScrollPhysics(),
+                                                          Icons
+                                                              .dashboard_customize_outlined,
+                                                          color: kPrimary)
+                                                      .onTap(() {
+                                                    showModalBottomSheet(
+                                                      context: context,
+                                                      backgroundColor:
+                                                          Colors.transparent,
+                                                      builder: (BuildContext
+                                                          context1) {
+                                                        return Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(20),
+                                                          height: 120,
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: context
+                                                                .cardColor,
+                                                            borderRadius:
+                                                                const BorderRadius
+                                                                    .only(
+                                                              topLeft: Radius
+                                                                  .circular(20),
+                                                              topRight: Radius
+                                                                  .circular(20),
+                                                            ),
+                                                          ),
+                                                          child: GridView.count(
+                                                            crossAxisCount: 3,
+                                                            crossAxisSpacing:
+                                                                10,
+                                                            mainAxisSpacing: 10,
+                                                            physics:
+                                                                const NeverScrollableScrollPhysics(),
+                                                            children: [
+                                                              Column(
                                                                 children: [
-                                                                  Column(
-                                                                    children: [
-                                                                      const CircleAvatar(
-                                                                        child:
-                                                                            Icon(
-                                                                          Icons
-                                                                              .document_scanner,
+                                                                  const CircleAvatar(
+                                                                    child: Icon(
+                                                                        Icons
+                                                                            .document_scanner,
+                                                                        size:
+                                                                            30),
+                                                                  ),
+                                                                  Text(
+                                                                      "Documents",
+                                                                      style: primaryTextStyle(
                                                                           size:
-                                                                              30,
-                                                                          // color: context.iconColor,
-                                                                        ),
-                                                                      ),
-                                                                      Text(
-                                                                        "Documents",
-                                                                        style: primaryTextStyle(
-                                                                            size:
-                                                                                14),
-                                                                      ),
-                                                                    ],
-                                                                  ).onTap(() {
-                                                                    Get.back();
-                                                                    chatController
-                                                                        .handleGetDoc();
-                                                                  }),
-                                                                  Column(
-                                                                    children: [
-                                                                      const CircleAvatar(
-                                                                        child:
-                                                                            Icon(
-                                                                          Icons
-                                                                              .browse_gallery,
-                                                                          size:
-                                                                              30,
-                                                                          // color: context.iconColor,
-                                                                        ),
-                                                                      ),
-                                                                      Text(
-                                                                        "Gallery",
-                                                                        style: primaryTextStyle(
-                                                                            size:
-                                                                                14),
-                                                                      ),
-                                                                    ],
-                                                                  ).onTap(() {
-                                                                    Get.back();
-                                                                    chatController
-                                                                        .handleGetGallery();
-                                                                  }),
-                                                                  Column(
-                                                                    children: [
-                                                                      const CircleAvatar(
-                                                                        child:
-                                                                            Icon(
-                                                                          Icons
-                                                                              .camera,
-                                                                          size:
-                                                                              30,
-                                                                          // color: context.iconColor,
-                                                                        ),
-                                                                      ),
-                                                                      Text(
-                                                                        "Camera",
-                                                                        style: primaryTextStyle(
-                                                                            size:
-                                                                                14),
-                                                                      ),
-                                                                    ],
-                                                                  ).onTap(() {
-                                                                    Get.back();
-                                                                    chatController
-                                                                        .handleGetCamera();
-                                                                  }),
+                                                                              14)),
                                                                 ],
-                                                              ));
-                                                        });
+                                                              ).onTap(() {
+                                                                Get.back();
+                                                                chatController
+                                                                    .handleGetDoc();
+                                                              }),
+                                                              Column(
+                                                                children: [
+                                                                  const CircleAvatar(
+                                                                    child: Icon(
+                                                                        Icons
+                                                                            .browse_gallery,
+                                                                        size:
+                                                                            30),
+                                                                  ),
+                                                                  Text(
+                                                                      "Gallery",
+                                                                      style: primaryTextStyle(
+                                                                          size:
+                                                                              14)),
+                                                                ],
+                                                              ).onTap(() {
+                                                                Get.back();
+                                                                chatController
+                                                                    .handleGetGallery();
+                                                              }),
+                                                              Column(
+                                                                children: [
+                                                                  const CircleAvatar(
+                                                                    child: Icon(
+                                                                        Icons
+                                                                            .camera,
+                                                                        size:
+                                                                            30),
+                                                                  ),
+                                                                  Text("Camera",
+                                                                      style: primaryTextStyle(
+                                                                          size:
+                                                                              14)),
+                                                                ],
+                                                              ).onTap(() {
+                                                                Get.back();
+                                                                chatController
+                                                                    .handleGetCamera();
+                                                              }),
+                                                            ],
+                                                          ),
+                                                        );
+                                                      },
+                                                    );
                                                   }),
                                                   10.width,
                                                   Loader().center().visible(
@@ -1009,23 +1291,26 @@ class _ChatInterfaceState extends State<ChatInterface> {
                                                       ? const CircleAvatar(
                                                           backgroundColor:
                                                               kPrimary,
-                                                          child: Icon(
-                                                            Icons.mic,
-                                                            color: white,
-                                                          ),
+                                                          child: Icon(Icons.mic,
+                                                              color: white),
                                                         ).onTap(() {})
                                                       : const CircleAvatar(
                                                           backgroundColor:
                                                               kPrimary,
                                                           child: Icon(
-                                                            Icons.send,
-                                                            color: white,
-                                                          ),
-                                                        ).onTap(() {
+                                                              Icons.send,
+                                                              color: white),
+                                                        ).onTap(() async {
                                                           if (_formKey
-                                                              .currentState!
-                                                              .validate()) {
-                                                            chatController
+                                                                  .currentState!
+                                                                  .validate() ||
+                                                              chatController
+                                                                  .images
+                                                                  .isNotEmpty ||
+                                                              chatController
+                                                                  .files
+                                                                  .isNotEmpty) {
+                                                            await chatController
                                                                 .handleSendMessage(
                                                               docId:
                                                                   widget.docId,
@@ -1037,9 +1322,16 @@ class _ChatInterfaceState extends State<ChatInterface> {
                                                                   .appointmentId,
                                                               token: token
                                                                   .validate(),
+                                                              repliedTo:
+                                                                  repliedTo,
+                                                              repliedText:
+                                                                  repliedMessageText,
+                                                              repliedSender:
+                                                                  repliedMessageSender,
                                                             );
                                                             messageController
                                                                 .clear();
+                                                            cancelReply();
                                                           }
                                                         }).visible(
                                                           chatController

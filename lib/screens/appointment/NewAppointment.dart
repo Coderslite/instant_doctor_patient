@@ -4,11 +4,15 @@ import 'package:get/get.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/models/AppointmentPricingModel.dart';
+import 'package:instant_doctor/models/UserModel.dart';
+import 'package:instant_doctor/screens/profile/medical/MedicalData.dart';
+import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:instant_doctor/services/format_number.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:nb_utils/nb_utils.dart';
 
-import '../../constant/color.dart'; // Corrected import
+import '../../component/show_location_required.dart';
+import '../../constant/color.dart';
 import '../../controllers/BookingController.dart';
 import '../../controllers/SettingController.dart';
 import '../../services/AppointmentService.dart';
@@ -30,7 +34,6 @@ class _NewAppointmentState extends State<NewAppointment> {
   final settingsController = Get.find<SettingsController>();
   final _formKey = GlobalKey<FormState>();
   final _controller = EasyInfiniteDateTimelineController();
-  final _complainController = TextEditingController();
 
   int _currentStep = 0;
   TimeOfDay? _selectedTime;
@@ -38,38 +41,73 @@ class _NewAppointmentState extends State<NewAppointment> {
   List<Appointmentpricingmodel> price = [];
   bool _isTrialSelected = false;
 
-  final List<String> _commonComplaints = [
-    'Fever and chills',
-    'Headache',
-    'Cough and cold',
-    'Stomach pain',
-    'Back pain',
-    'Skin rash',
-    'Allergy symptoms',
-    'Difficulty breathing',
-    'Joint pain',
-    'Fatigue and weakness'
+  // Enhanced symptoms data structure
+  final List<Map<String, dynamic>> _symptomsData = [
+    {
+      'name': 'Fever',
+      'icon': Icons.thermostat,
+    },
+    {
+      'name': 'Headache',
+      'icon': Icons.sick,
+    },
+    {
+      'name': 'Cough',
+      'icon': Icons.air,
+    },
+    {
+      'name': 'Stomach pain',
+      'icon': Icons.emoji_food_beverage,
+    },
+    {
+      'name': 'Fatigue',
+      'icon': Icons.bedtime,
+    },
+    {
+      'name': 'Skin rash',
+      'icon': Icons.face_retouching_natural,
+    },
+    {
+      'name': 'Joint pain',
+      'icon': Icons.accessibility,
+    },
+    {
+      'name': 'Shortness of breath',
+      'icon': Icons.airline_seat_recline_normal,
+    },
   ];
-
-  String _selectedComplaint = '';
 
   @override
   void initState() {
     super.initState();
-    _loadPrices();
     if (settingsController.trialAvailable.value) {
       _isTrialSelected = true;
       bookingController.package.value = "Trial Consultation";
     }
+    handleInit();
+  }
+
+  handleInit() async {
+    if (locationController.myCountry.value != 'null' &&
+        locationController.myCountry.value.isNotEmpty) {
+      print("not null");
+      print(locationController.myCountry.value);
+    } else {
+      print("location is null");
+      await handleShowRequestLocation(Get.context!);
+    }
+    _loadPrices();
+    setState(() {});
   }
 
   @override
   void dispose() {
-    _complainController.dispose();
+    bookingController.isLoading.value = false;
     super.dispose();
   }
 
   Future<void> _loadPrices() async {
+    await Future.delayed(Duration(seconds: 1));
     price = await appointmentService.getAppointmentPrice();
     if (settingsController.trialAvailable.value) {
       price = price.where((p) => p.name == "Trial Consultation").toList();
@@ -91,128 +129,303 @@ class _NewAppointmentState extends State<NewAppointment> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Obx(
-        () => Stack(
-          alignment: Alignment.center,
-          children: [
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        () => StreamBuilder<UserModel>(
+          stream: userService.getProfile(userId: userController.userId.value),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Center(child: CircularProgressIndicator(color: kPrimary));
+            }
+
+            final data = snapshot.data!;
+            final medicalProfileCompleted =
+                data.bloodGroup.validate().isNotEmpty &&
+                    data.height.validate().isNotEmpty &&
+                    data.weight.validate().isNotEmpty &&
+                    data.genotype.validate().isNotEmpty;
+
+            if (!medicalProfileCompleted) {
+              return Scaffold(
+                body: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        backButton(context),
-                        Text("New Appointment", style: boldTextStyle()),
-                        if (settingsController.trialAvailable.value ||
-                            _isTrialSelected)
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            margin: EdgeInsets.only(right: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.green.withOpacity(0.1),
-                                  blurRadius: 4,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
+                        // Header with back button
+                        Row(
+                          children: [
+                            backButton(context),
+                            SizedBox(width: 16),
+                            Text(
+                              "New Appointment",
+                              style: boldTextStyle(size: 20),
                             ),
-                            child: Text(
-                              "TRIAL VERSION",
-                              style:
-                                  boldTextStyle(size: 12, color: Colors.green),
-                            ),
-                          ),
-                      ],
-                    ),
-                    Expanded(
-                      child: KeyboardDismisser(
-                        child: Form(
-                          key: _formKey,
-                          child: Stepper(
-                            currentStep: _currentStep,
-                            connectorColor: WidgetStatePropertyAll(kPrimary),
-                            onStepContinue: () {
-                              if (_currentStep == 0 && !_validateStep1()) {
-                                return;
-                              }
-                              if (_currentStep == 1 && !_validateStep2()) {
-                                return;
-                              }
-                              if (_currentStep < 3) {
-                                setState(() => _currentStep += 1);
-                              } else {
-                                _confirmBooking();
-                              }
-                            },
-                            onStepCancel: () {
-                              if (_currentStep > 0) {
-                                setState(() => _currentStep -= 1);
-                              }
-                            },
-                            controlsBuilder: (context, details) {
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 16.0),
-                                child: Row(
-                                  children: [
-                                    if (_currentStep != 0)
-                                      Expanded(
-                                        child: OutlinedButton(
-                                          onPressed: details.onStepCancel,
-                                          child: Text(
-                                            'Back',
-                                            style: primaryTextStyle(),
-                                          ),
-                                        ),
-                                      ),
-                                    if (_currentStep != 0) SizedBox(width: 8),
-                                    Expanded(
-                                      child: ElevatedButton(
-                                        onPressed: details.onStepContinue,
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: kPrimary,
-                                        ),
-                                        child: Text(
-                                          _currentStep == 3
-                                              ? 'Confirm Booking'
-                                              : 'Next',
-                                          style: TextStyle(color: white),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                          ],
+                        ),
+
+                        SizedBox(height: 40),
+
+                        // Beautiful illustration
+                        // Center(
+                        //   child: Image.asset(
+                        //     'assets/images/medical_profile.png', // Replace with your asset
+                        //     height: 180,
+                        //     fit: BoxFit.contain,
+                        //   ),
+                        // ),
+
+                        // SizedBox(height: 32),
+
+                        // Title with icon
+                        Center(
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: context.cardColor,
+                                  shape: BoxShape.circle,
                                 ),
-                              ).visible(!bookingController.isLoading.value);
-                            },
-                            steps: [
-                              _buildPackageStep(),
-                              _buildDateTimeStep(),
-                              _buildDetailsStep(),
-                              _buildSummaryStep(),
+                                child: Icon(
+                                  Icons.medical_services,
+                                  size: 58,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                "Complete Your Medical Profile",
+                                style: boldTextStyle(size: 18),
+                              ),
                             ],
                           ),
                         ),
-                      ),
+
+                        SizedBox(height: 16),
+
+                        // Description text
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Text(
+                            "To book an appointment, we need some basic health information to help doctors provide you with the best care possible.",
+                            textAlign: TextAlign.center,
+                            style: primaryTextStyle(size: 14),
+                          ),
+                        ),
+
+                        SizedBox(height: 24),
+
+                        // Missing information list
+                        Container(
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: context.cardColor,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black12,
+                                blurRadius: 10,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              _buildMissingInfoItem(
+                                  Icons.bloodtype,
+                                  "Blood Group",
+                                  data.bloodGroup.validate().isEmpty),
+                              Divider(
+                                height: 24,
+                              ),
+                              _buildMissingInfoItem(Icons.height, "Height",
+                                  data.height.validate().isEmpty),
+                              Divider(height: 24, color: Colors.grey[200]),
+                              _buildMissingInfoItem(Icons.monitor_weight,
+                                  "Weight", data.weight.validate().isEmpty),
+                              Divider(height: 24, color: Colors.grey[200]),
+                              _buildMissingInfoItem(Icons.medical_information,
+                                  "Genotype", data.genotype.validate().isEmpty),
+                            ],
+                          ),
+                        ),
+
+                        Spacer(),
+
+                        // Update button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              MedicalDataScreen().launch(context);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kPrimary,
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                            ),
+                            child: Text(
+                              "Update Medical Profile",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            Positioned(
-              child:
-                  Loader().center().visible(bookingController.isLoading.value),
-            )
-          ],
+              );
+            }
+
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            backButton(context),
+                            Text("New Appointment", style: boldTextStyle()),
+                            if (settingsController.trialAvailable.value ||
+                                _isTrialSelected)
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                margin: EdgeInsets.only(right: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.green.withOpacity(0.1),
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Text(
+                                  "TRIAL VERSION",
+                                  style: boldTextStyle(
+                                      size: 12, color: Colors.green),
+                                ),
+                              ),
+                          ],
+                        ),
+                        Expanded(
+                          child: KeyboardDismisser(
+                            child: Form(
+                              key: _formKey,
+                              child: Stepper(
+                                currentStep: _currentStep,
+                                connectorColor:
+                                    WidgetStatePropertyAll(kPrimary),
+                                onStepContinue: () {
+                                  if (_currentStep == 0 && !_validateStep1()) {
+                                    return;
+                                  }
+                                  if (_currentStep == 1 && !_validateStep2()) {
+                                    return;
+                                  }
+                                  if (_currentStep == 2) {
+                                    if (bookingController
+                                        .complain.value.isEmpty) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'Please describe your condition'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                  }
+                                  if (_currentStep < 3) {
+                                    setState(() => _currentStep += 1);
+                                  } else {
+                                    _confirmBooking();
+                                  }
+                                },
+                                onStepCancel: () {
+                                  if (_currentStep > 0) {
+                                    setState(() => _currentStep -= 1);
+                                  }
+                                },
+                                controlsBuilder: (context, details) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 16.0),
+                                    child: Row(
+                                      children: [
+                                        if (_currentStep != 0)
+                                          Expanded(
+                                            child: OutlinedButton(
+                                              onPressed: details.onStepCancel,
+                                              child: Text(
+                                                'Back',
+                                                style: primaryTextStyle(),
+                                              ),
+                                            ),
+                                          ),
+                                        if (_currentStep != 0)
+                                          SizedBox(width: 8),
+                                        Expanded(
+                                          child: ElevatedButton(
+                                            onPressed: details.onStepContinue,
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: kPrimary,
+                                            ),
+                                            child: Text(
+                                              _currentStep == 3
+                                                  ? 'Confirm Booking'
+                                                  : 'Next',
+                                              style: TextStyle(color: white),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ).visible(!bookingController.isLoading.value);
+                                },
+                                steps: [
+                                  _buildPackageStep(),
+                                  _buildDateTimeStep(),
+                                  _buildSymptomsStep(),
+                                  _buildSummaryStep(),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  child: Loader()
+                      .center()
+                      .visible(bookingController.isLoading.value),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
   Step _buildPackageStep() {
+    bool isNigeria = locationController.myCountry.value == 'nigeria';
     return Step(
       title: Text(
         'Select Package',
@@ -226,164 +439,6 @@ class _NewAppointmentState extends State<NewAppointment> {
             style: secondaryTextStyle(),
           ),
           SizedBox(height: 16),
-          if (settingsController.trialAvailable.value) ...[
-            Card(
-              elevation: 2,
-              color: context.cardColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Choose Version',
-                      style: boldTextStyle(size: 14, color: kPrimary),
-                    ),
-                    SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AnimatedContainer(
-                            duration: Duration(milliseconds: 200),
-                            padding: EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: _isTrialSelected
-                                  ? Colors.green.withOpacity(0.2)
-                                  : Colors.grey.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: _isTrialSelected
-                                    ? Colors.green
-                                    : Colors.grey.shade300,
-                                width: 2,
-                              ),
-                              boxShadow: [
-                                if (_isTrialSelected)
-                                  BoxShadow(
-                                    color: Colors.green.withOpacity(0.3),
-                                    blurRadius: 4,
-                                    offset: Offset(0, 2),
-                                  ),
-                              ],
-                            ),
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _isTrialSelected = true;
-                                  // Select first trial package by default
-                                  final trialPackage = price.firstWhereOrNull(
-                                      (p) => p.name == "Trial Consultation");
-                                  if (trialPackage != null) {
-                                    bookingController.package.value =
-                                        trialPackage.name.validate();
-                                    bookingController.duration.value =
-                                        trialPackage.duration.validate();
-                                    bookingController.price.value =
-                                        trialPackage.amount.validate();
-                                  }
-                                });
-                              },
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.star,
-                                    color: _isTrialSelected
-                                        ? Colors.green
-                                        : Colors.grey,
-                                    size: 20,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Trial Version',
-                                    style: boldTextStyle(
-                                      size: 14,
-                                      color: _isTrialSelected
-                                          ? Colors.green
-                                          : Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: AnimatedContainer(
-                            duration: Duration(milliseconds: 200),
-                            padding: EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: !_isTrialSelected
-                                  ? kPrimary.withOpacity(0.2)
-                                  : Colors.grey.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: !_isTrialSelected
-                                    ? kPrimary
-                                    : Colors.grey.shade300,
-                                width: 2,
-                              ),
-                              boxShadow: [
-                                if (!_isTrialSelected)
-                                  BoxShadow(
-                                    color: kPrimary.withOpacity(0.3),
-                                    blurRadius: 4,
-                                    offset: Offset(0, 2),
-                                  ),
-                              ],
-                            ),
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _isTrialSelected = false;
-                                  // Select first non-trial package by default
-                                  final paidPackage = price.firstWhereOrNull(
-                                      (p) => p.name != "Trial Consultation");
-                                  if (paidPackage != null) {
-                                    bookingController.package.value =
-                                        paidPackage.name.validate();
-                                    bookingController.duration.value =
-                                        paidPackage.duration.validate();
-                                    bookingController.price.value =
-                                        paidPackage.amount.validate();
-                                  }
-                                });
-                              },
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.payment,
-                                    color: !_isTrialSelected
-                                        ? kPrimary
-                                        : Colors.grey,
-                                    size: 20,
-                                  ),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Paid Version',
-                                    style: boldTextStyle(
-                                      size: 14,
-                                      color: !_isTrialSelected
-                                          ? kPrimary
-                                          : Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-          ],
           if (_isTrialSelected || settingsController.trialAvailable.value)
             Container(
               padding: EdgeInsets.all(12),
@@ -431,7 +486,7 @@ class _NewAppointmentState extends State<NewAppointment> {
               ),
             ),
           isLoading
-              ? Center(child: CircularProgressIndicator())
+              ? Loader()
               : Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -444,53 +499,53 @@ class _NewAppointmentState extends State<NewAppointment> {
                     final isSelected =
                         bookingController.package.value == e.name;
                     return ChoiceChip(
-                      color: WidgetStatePropertyAll(isSelected
-                          ? (_isTrialSelected ||
-                                  settingsController.trialAvailable.value
-                              ? Colors.green
-                              : kPrimary)
-                          : context.cardColor),
-                      label: Row(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '${e.name}\n${formatAmount(e.amount.validate())}',
-                                  textAlign: TextAlign.center,
-                                  style: primaryTextStyle(
-                                      color: isSelected ? white : null),
-                                ),
-                                Text(
-                                  formatAmount(e.amount.validate()),
-                                  style: secondaryTextStyle(),
-                                ),
-                              ],
+                        color: WidgetStatePropertyAll(isSelected
+                            ? (_isTrialSelected ||
+                                    settingsController.trialAvailable.value
+                                ? Colors.green
+                                : kPrimary)
+                            : context.cardColor),
+                        label: Row(
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '${e.name}\n${formatAmount(isNigeria ? e.amount.validate() : e.dollarAmount.validate())}',
+                                    textAlign: TextAlign.center,
+                                    style: primaryTextStyle(
+                                        color: isSelected ? white : null),
+                                  ),
+                                  Text(
+                                    formatAmount(isNigeria
+                                        ? e.amount.validate()
+                                        : e.dollarAmount.validate()),
+                                    style: secondaryTextStyle(),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        if (selected) {
-                          bookingController.duration.value =
-                              e.duration.validate();
-                          bookingController.price.value = e.amount.validate();
-                          bookingController.package.value = e.name.validate();
-                          setState(() {});
-                        }
-                      },
-                      selectedColor: _isTrialSelected ||
-                              settingsController.trialAvailable.value
-                          ? Colors.green.withOpacity(0.8)
-                          : kPrimary.withOpacity(0.8),
-                      labelStyle: TextStyle(
-                        color: isSelected ? white : Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
+                          ],
+                        ),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          if (selected) {
+                            bookingController.duration.value =
+                                e.duration.validate();
+                            bookingController.price.value = isNigeria
+                                ? e.amount.validate()
+                                : e.dollarAmount.validate();
+                            bookingController.package.value = e.name.validate();
+                            setState(() {});
+                          }
+                        },
+                        selectedColor: _isTrialSelected ||
+                                settingsController.trialAvailable.value
+                            ? Colors.green.withOpacity(0.8)
+                            : kPrimary.withOpacity(0.8),
+                        labelStyle: boldTextStyle(size: 12));
                   }).toList(),
                 ),
           if (!_validateStep1() && _currentStep == 0)
@@ -576,7 +631,7 @@ class _NewAppointmentState extends State<NewAppointment> {
                     ),
                     child: MediaQuery(
                       data: MediaQuery.of(context).copyWith(
-                        alwaysUse24HourFormat: true, // Force 24-hour format
+                        alwaysUse24HourFormat: true,
                       ),
                       child: child!,
                     ),
@@ -609,10 +664,7 @@ class _NewAppointmentState extends State<NewAppointment> {
                   Text(
                     _selectedTime == null
                         ? 'Select a time'
-                        : _selectedTime!
-                            .format(context)
-                            .replaceAll(' AM', '')
-                            .replaceAll(' PM', ''), // Remove AM/PM
+                        : _selectedTime!.format(context),
                     style: boldTextStyle(),
                   ),
                   Icon(Icons.access_time, color: kPrimary),
@@ -635,163 +687,151 @@ class _NewAppointmentState extends State<NewAppointment> {
     );
   }
 
-  Step _buildDetailsStep() {
+  Step _buildSymptomsStep() {
     return Step(
       title: Text(
-        'Symptoms',
+        'Health Information',
         style: boldTextStyle(size: 16),
       ),
-      content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Card(
-              elevation: 2,
-              color: context.cardColor,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Describe your symptoms',
-                            style: boldTextStyle(size: 14)),
-                        if (_complainController.text.isNotEmpty)
-                          IconButton(
-                            icon:
-                                Icon(Icons.clear, size: 20, color: Colors.red),
-                            onPressed: () {
-                              setState(() {
-                                _complainController.clear();
-                                _selectedComplaint = '';
-                                bookingController.complain.value = '';
-                              });
-                            },
+      content: Form(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                elevation: 2,
+                color: context.cardColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.medical_services,
+                              size: 20, color: kPrimary),
+                          SizedBox(width: 8),
+                          Text(
+                            'Select Symptoms (Optional)',
+                            style: boldTextStyle(size: 14),
                           ),
-                      ],
-                    ),
-                    SizedBox(height: 8),
-                    if (_selectedComplaint.isEmpty) ...[
-                      Text(
-                        'Common complaints:',
-                        style: secondaryTextStyle(size: 12),
+                        ],
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: 12),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: _commonComplaints.map((complaint) {
-                          return ActionChip(
-                            label: Text(complaint),
-                            onPressed: () {
+                        children: _symptomsData.map((symptom) {
+                          final isSelected = bookingController.selectedSymptoms
+                              .contains(symptom['name']);
+                          return InputChip(
+                            backgroundColor: context.cardColor,
+                            label: Text(
+                              symptom['name'],
+                              style: primaryTextStyle(
+                                  color: isSelected ? white : null),
+                            ),
+                            selected: isSelected,
+                            onSelected: (selected) {
                               setState(() {
-                                _selectedComplaint = complaint;
-                                _complainController.text =
-                                    "• Main Symptom: $complaint\n\n";
-                                bookingController.complain.value =
-                                    _complainController.text;
+                                if (selected) {
+                                  bookingController.selectedSymptoms
+                                      .add(symptom['name']);
+                                } else {
+                                  bookingController.selectedSymptoms
+                                      .remove(symptom['name']);
+                                }
                               });
                             },
-                            backgroundColor: context.cardColor,
-                            labelStyle: boldTextStyle(
-                              size: 12,
-                              color: kPrimary,
+                            selectedColor: kPrimary,
+                            checkmarkColor: kPrimary,
+                            labelStyle: TextStyle(
+                              color: isSelected ? kPrimary : textPrimaryColor,
                             ),
+                            avatar: Icon(symptom['icon'],
+                                size: 18,
+                                color: isSelected ? kPrimary : Colors.grey),
                           );
                         }).toList(),
                       ),
-                      SizedBox(height: 16),
                     ],
-                    TextFormField(
-                      controller: _complainController,
-                      maxLines: 8,
-                      style: primaryTextStyle(),
-                      decoration: InputDecoration(
-                        hintText: _selectedComplaint.isEmpty
-                            ? 'Describe your symptoms in detail...'
-                            : 'Provide details about your $_selectedComplaint...',
-                        hintStyle: secondaryTextStyle(),
-                        border: OutlineInputBorder(),
-                        filled: true,
-                        fillColor: context.cardColor,
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please describe your symptoms';
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        bookingController.complain.value = value;
-                        setState(() {});
-                      },
-                    ),
-                    if (_selectedComplaint.isNotEmpty) ...[
-                      SizedBox(height: 12),
-                      Text(
-                        'Add details:',
-                        style: boldTextStyle(size: 12, color: kPrimary),
-                      ),
-                      SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          if (!_complainController.text.contains('• Duration:'))
-                            _buildDetailPrompt('• Duration: '),
-                          if (!_complainController.text
-                              .contains('• Severity (1-10):'))
-                            _buildDetailPrompt('• Severity (1-10): '),
-                          if (!_complainController.text
-                              .contains('• When started:'))
-                            _buildDetailPrompt('• When started: '),
-                          if (!_complainController.text
-                              .contains('• Worse with:'))
-                            _buildDetailPrompt('• Worse with: '),
-                          if (!_complainController.text
-                              .contains('• Better with:'))
-                            _buildDetailPrompt('• Better with: '),
-                          if (!_complainController.text
-                              .contains('• Other symptoms:'))
-                            _buildDetailPrompt('• Other symptoms: '),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Example format:\n\n• Main Symptom: Headache\n• Duration: 2 days\n• Severity (1-10): 7/10\n• When started: Yesterday\n• Worse with: Bright lights\n• Better with: Rest',
-                        style: secondaryTextStyle(size: 11),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+              SizedBox(height: 16),
+              Card(
+                elevation: 2,
+                color: context.cardColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.description, size: 20, color: kPrimary),
+                          SizedBox(width: 8),
+                          Text(
+                            'Describe Your Condition *',
+                            style: boldTextStyle(size: 14, color: kPrimary),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        'Example: "I have had a persistent cough for 3 days with mild fever...',
+                        style: secondaryTextStyle(size: 12),
+                      ),
+                      SizedBox(height: 12),
+                      TextFormField(
+                        maxLines: 5,
+                        minLines: 3,
+                        style: primaryTextStyle(size: 14),
+                        decoration: InputDecoration(
+                          hintText: '',
+                          hintStyle: secondaryTextStyle(size: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: kPrimary),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: kPrimary),
+                          ),
+                          filled: true,
+                          fillColor: context.scaffoldBackgroundColor,
+                        ),
+                        onChanged: (val) {
+                          bookingController.complain.value = val;
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please describe your condition for the doctor';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'This information helps the doctor understand your situation better',
+                        style: secondaryTextStyle(size: 11, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       isActive: _currentStep >= 2,
       state: _currentStep > 2 ? StepState.complete : StepState.indexed,
-    );
-  }
-
-  Widget _buildDetailPrompt(String text) {
-    return GestureDetector(
-      onTap: () {
-        final newText = '${_complainController.text}\n$text';
-        _complainController.text = newText;
-        bookingController.complain.value = newText;
-        _complainController.selection = TextSelection.fromPosition(
-          TextPosition(offset: newText.length),
-        );
-        setState(() {});
-      },
-      child: Chip(
-        label: Text(text.replaceFirst('• ', '')),
-        backgroundColor: context.cardColor,
-        labelStyle: secondaryTextStyle(size: 12, color: kPrimary),
-      ),
     );
   }
 
@@ -807,31 +847,37 @@ class _NewAppointmentState extends State<NewAppointment> {
             Card(
               elevation: 2,
               color: context.cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Appointment Details', style: boldTextStyle(size: 14)),
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today, size: 20, color: kPrimary),
+                        SizedBox(width: 8),
+                        Text(
+                          'Appointment Details',
+                          style: boldTextStyle(size: 14),
+                        ),
+                      ],
+                    ),
                     SizedBox(height: 12),
                     _buildSummaryRow(
-                        'Package', bookingController.package.value),
+                        'Package:', bookingController.package.value),
                     _buildSummaryRow(
-                        'Date', formatDate(bookingController.selectedDate)),
+                        'Date:', formatDate(bookingController.selectedDate)),
                     _buildSummaryRow(
-                        'Duration',
+                        'Duration:',
                         formatDuration(Duration(
                             seconds: bookingController.duration.value))),
-                    Divider(),
-                    Text('Estimated Cost', style: boldTextStyle(size: 14)),
-                    SizedBox(height: 8),
-                    _buildSummaryRow('Consultation Fee',
-                        formatAmount(bookingController.price.value)),
-                    SizedBox(height: 8),
-                    Text(
-                      'Total amount will be charged after appointment confirmation',
-                      style: secondaryTextStyle(size: 12),
-                    ),
+                    Divider(height: 24),
+                    _buildSummaryRow('Consultation Fee:',
+                        formatAmount(bookingController.price.value),
+                        isTotal: true),
                   ],
                 ),
               ),
@@ -840,18 +886,72 @@ class _NewAppointmentState extends State<NewAppointment> {
             Card(
               elevation: 2,
               color: context.cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Your Symptoms', style: boldTextStyle(size: 14)),
-                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.medical_information,
+                            size: 20, color: kPrimary),
+                        SizedBox(width: 8),
+                        Text(
+                          'Health Information',
+                          style: boldTextStyle(size: 14),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12),
+                    if (bookingController.selectedSymptoms.isNotEmpty) ...[
+                      Text(
+                        'Selected Symptoms:',
+                        style: boldTextStyle(size: 12),
+                      ),
+                      SizedBox(height: 8),
+                      ...bookingController.selectedSymptoms
+                          .asMap()
+                          .entries
+                          .map((entry) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 4.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('• ', style: primaryTextStyle(size: 14)),
+                              Expanded(
+                                child: Text(
+                                  entry.value,
+                                  style: primaryTextStyle(size: 14),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                      SizedBox(height: 12),
+                    ],
                     Text(
-                      _complainController.text.isNotEmpty
-                          ? _complainController.text
-                          : 'No symptoms described',
-                      style: primaryTextStyle(),
+                      'Condition Description:',
+                      style: boldTextStyle(size: 12),
+                    ),
+                    SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: context.scaffoldBackgroundColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        bookingController.complain.value.isNotEmpty
+                            ? bookingController.complain.value
+                            : 'No description provided',
+                        style: primaryTextStyle(),
+                      ),
                     ),
                   ],
                 ),
@@ -867,19 +967,24 @@ class _NewAppointmentState extends State<NewAppointment> {
 
   Widget _buildSummaryRow(String label, String value, {bool isTotal = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
-            style: isTotal ? boldTextStyle() : primaryTextStyle(size: 14),
+            style:
+                isTotal ? boldTextStyle(size: 14) : primaryTextStyle(size: 14),
           ),
-          Text(
-            value,
-            style: isTotal
-                ? boldTextStyle(color: kPrimary, size: 16)
-                : secondaryTextStyle(size: 14),
+          10.width,
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: isTotal
+                  ? boldTextStyle(size: 14, color: kPrimary)
+                  : secondaryTextStyle(size: 14),
+            ),
           ),
         ],
       ),
@@ -944,6 +1049,9 @@ class _NewAppointmentState extends State<NewAppointment> {
             onPressed: () async {
               Navigator.pop(context);
               try {
+                bookingController.isLoading.value = true;
+                setState(() {});
+
                 await bookingController.handleBookAppointment(
                     isTrial: settingsController.trialAvailable.value ||
                         _isTrialSelected,
@@ -957,6 +1065,47 @@ class _NewAppointmentState extends State<NewAppointment> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMissingInfoItem(IconData icon, String label, bool isMissing) {
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isMissing ? Colors.red[50] : Colors.green[50],
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: isMissing ? Colors.red : Colors.green,
+          ),
+        ),
+        SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            label,
+            style: boldTextStyle(size: 16),
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isMissing ? Colors.red[50] : Colors.green[50],
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            isMissing ? "Missing" : "Completed",
+            style: TextStyle(
+              color: isMissing ? Colors.red : Colors.green,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

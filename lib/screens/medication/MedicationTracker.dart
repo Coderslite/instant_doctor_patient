@@ -10,6 +10,7 @@ import 'package:instant_doctor/screens/medication/AddMedication.dart';
 import 'package:instant_doctor/services/MedicationService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+import '../../component/check_country.dart';
 import '../../component/check_internet.dart';
 import '../../services/GetUserId.dart';
 import '../../services/LabResultService.dart';
@@ -34,6 +35,8 @@ class _MedicationTrackerState extends State<MedicationTracker> {
           child: Column(
             children: [
               internetCheck(),
+              countryCheck(),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

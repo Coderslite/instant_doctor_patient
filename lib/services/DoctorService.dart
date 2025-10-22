@@ -15,10 +15,11 @@ class DoctorService extends BaseService {
     return result;
   }
 
+
   Stream<List<UserModel>> getAllDocs() {
     var result = userCol
         .where('role', isEqualTo: 'Doctor')
-        // .where('isAvailable', isEqualTo: true)
+        .where('isAvailable', isEqualTo: true)
         .snapshots()
         .map((event) =>
             event.docs.map((e) => UserModel.fromJson(e.data())).toList());
@@ -27,7 +28,7 @@ class DoctorService extends BaseService {
 
   Future<List<String>> getDoctorsToken() async {
     List<String> token = [];
-    var res = await userCol.get();
+    var res = await userCol.where('role', isEqualTo: 'Doctor').get();
     var docs = res.docs;
     for (var doc in docs) {
       token.add(doc.data()['token'] ?? '');

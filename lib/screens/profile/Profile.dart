@@ -1,24 +1,25 @@
+import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/AnimatedCard.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/AuthenticationController.dart';
+import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/screens/profile/about/About.dart';
+import 'package:instant_doctor/screens/profile/help/Help.dart';
 import 'package:instant_doctor/screens/profile/medical/MedicalData.dart';
-import 'package:instant_doctor/screens/profile/wallet_setup/WalletSetup.dart';
+import 'package:instant_doctor/screens/profile/personal/PersonalProfile.dart';
+import 'package:instant_doctor/screens/profile/policy/Policy.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 import '../../component/ProfileImage.dart';
+import '../../component/check_country.dart';
 import '../../component/check_internet.dart';
 import '../../controllers/ReferController.dart';
-import '../../main.dart';
 import '../../models/UserModel.dart';
 import '../../services/GetAppVersion.dart';
 import '../settings/SettingScreen.dart';
-import 'help/Help.dart';
-import 'personal/PersonalProfile.dart';
-import 'policy/Policy.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -28,294 +29,376 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String version = '';
   AuthenticationController authenticationController =
       Get.put(AuthenticationController());
   ReferralController referralController = Get.put(ReferralController());
 
-  handleGetVersion() async {
-    version = await getAppVersion();
-    setState(() {});
-  }
-
   @override
   void initState() {
-    handleGetVersion();
     super.initState();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    settingsController.version.value = await getAppVersion();
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Obx(() {
-        // ignore: unused_local_variable
-        bool isDarkMode = settingsController.isDarkMode.value;
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  internetCheck(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // backButton(context),
-                      Container(),
-                      Text(
-                        "Profile",
-                        style: boldTextStyle(
-                          size: 18,
-                          color: kPrimary,
-                        ),
-                      ),
-                      const Icon(
-                        Icons.settings,
-                        color: kPrimary,
-                      ).onTap(() {
-                        const SettingScreen().launch(context);
-                      })
-                    ],
-                  ),
-                  10.height,
-                  StreamBuilder<UserModel>(
-                      stream: userService.getProfile(
-                          userId: userController.userId.value),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          var data = snapshot.data!;
-                          return profileImage(UserModel(), 100, 100,
-                                  context: context)
-                              .center();
-                        }
-                        return const CircleAvatar(
-                          radius: 100,
-                          child: Icon(Icons.person),
-                        );
-                      }),
-                  10.height,
-                  AnimatedCard(
-                    color1: kPrimary,
-                    color2: kPrimaryDark,
-                    child: StreamBuilder<UserModel>(
-                        stream: userService.getProfile(
-                            userId: userController.userId.value),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            var data = snapshot.data!;
-                            bool profileCompleted = data.dob != null &&
-                                data.address.validate().isNotEmpty;
-                            return !profileCompleted
-                                ? Column(
-                                    children: [
-                                      Text(
-                                        "Please complete your profile setup",
-                                        style: primaryTextStyle(color: white),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          const PersonalProfileScreen()
-                                              .launch(context);
-                                        },
-                                        child: Text(
-                                          "Complete Profile ",
-                                          style: primaryTextStyle(color: black),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "Name",
-                                                style: secondaryTextStyle(
-                                                    size: 14, color: white),
-                                              ),
-                                              Text(
-                                                "${data.firstName} ${data.lastName}",
-                                                style: boldTextStyle(
-                                                    size: 14, color: white),
-                                              ),
-                                            ],
-                                          ),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "Age",
-                                                style: secondaryTextStyle(
-                                                    size: 14, color: white),
-                                              ),
-                                              Text(
-                                                "${(DateTime.now().difference(data.dob!.toDate())).inDays ~/ 365} yrs",
-                                                style: boldTextStyle(
-                                                    size: 14, color: white),
-                                              ),
-                                            ],
-                                          ),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "Blood Group",
-                                                style: secondaryTextStyle(
-                                                    size: 14, color: white),
-                                              ),
-                                              Text(
-                                                data.bloodGroup.validate(),
-                                                style: boldTextStyle(
-                                                    size: 14, color: white),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      40.height,
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "Weight",
-                                                style: secondaryTextStyle(
-                                                    size: 14, color: white),
-                                              ),
-                                              Text(
-                                                "${data.weight.validate()} ft",
-                                                style: boldTextStyle(
-                                                    size: 14, color: white),
-                                              ),
-                                            ],
-                                          ),
-                                          Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "Height",
-                                                style: secondaryTextStyle(
-                                                    size: 14, color: white),
-                                              ),
-                                              Text(
-                                                "${data.height.validate()} ft",
-                                                style: boldTextStyle(
-                                                    size: 14, color: white),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  );
-                          }
-                          return const CircularProgressIndicator(
-                            color: white,
-                          ).center();
-                        }),
-                  ),
-                  20.height,
-                  profileOption("Personal Information",
-                      "manage your personal information", () {
-                    const PersonalProfileScreen().launch(context);
-                  }),
-                  profileOption(
-                      "Medical Data", "manage your medical information", () {
-                    const MedicalDataScreen().launch(context);
-                  }),
-                  profileOption("Wallet Setup", "Please Complete Wallet Setup",
-                      () {
-                    const WalletSetupScreen().launch(context);
-                  }).visible(userController.currency.isEmpty),
-                  // profileOption("Refer 💶", "Refer and earn bonus", () {
-                  //   const ReferScreen().launch(context);
-                  // }),
-                  profileOption("Privacy", "Security Settings", () {}),
-                  profileOption("Policy", "Read about our policy", () {
-                    const PolicyScreen().launch(context);
-                  }),
-                  profileOption("Get Help", "Contact us", () {
-                    const HelpScreen().launch(context);
-                  }),
-                  profileOption("About Us", "About Instant Doctor", () {
-                    AboutScreen(
-                      version: version,
-                    ).launch(context);
-                  }),
-                  10.height,
-                  Text(
-                    "version $version",
-                    style: secondaryTextStyle(),
-                  ).center(),
-                  // 10.height,
-                  TextButton(
-                    onPressed: () {
-                      authenticationController.handleLogout(context);
-                    },
-                    child: Text(
-                      "Sign Out",
-                      style: boldTextStyle(color: redColor, size: 16),
+          top: false,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 200,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    decoration: BoxDecoration(
+                      color: context.scaffoldBackgroundColor,
                     ),
-                  ).center(),
-                  20.height,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildProfileHeader(context),
+                      ],
+                    ),
+                  ),
+                ),
+                pinned: true,
+                actions: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.settings,
+                    ),
+                    onPressed: () => const SettingScreen().launch(context),
+                  ),
                 ],
               ),
-            ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                  child: Column(
+                    children: [
+                      _buildProfileStatsCard(),
+                      24.height,
+                      _buildProfileOptions(),
+                      24.height,
+                      _buildAppVersion(),
+                      16.height,
+                      _buildSignOutButton(),
+                      20.height,
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       }),
     );
   }
 
-  Container profileOption(
-      String title, String description, VoidCallback ontap) {
-    return Container(
-      padding: const EdgeInsets.all(10.0),
-      margin: const EdgeInsets.symmetric(vertical: 2),
-      decoration: BoxDecoration(
-        color: context.cardColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildProfileHeader(BuildContext context) {
+    return StreamBuilder<UserModel>(
+      stream: userService.getProfile(userId: userController.userId.value),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final user = snapshot.data!;
+          return Column(
             children: [
-              Text(
-                title,
-                style: boldTextStyle(size: 14),
+              internetCheck(),
+              countryCheck(),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: gray, width: 2),
+                    ),
+                    child: ClipOval(
+                      child:
+                          profileImage(UserModel(), 100, 100, context: context),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      padding: EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: kPrimary, width: 2),
+                      ),
+                      child: Icon(Icons.edit, size: 16, color: kPrimary),
+                    ).onTap(
+                        () => const PersonalProfileScreen().launch(context)),
+                  ),
+                ],
               ),
-              5.height,
+              12.height,
               Text(
-                description,
-                style: secondaryTextStyle(size: 12),
+                "${user.firstName} ${user.lastName}",
+                style: boldTextStyle(size: 20),
               ),
             ],
+          );
+        }
+        return Loader();
+      },
+    );
+  }
+
+  Widget _buildProfileStatsCard() {
+    return StreamBuilder<UserModel>(
+      stream: userService.getProfile(userId: userController.userId.value),
+      builder: (context, snapshot) {
+        print(
+            'StreamBuilder snapshot: ${snapshot.connectionState}, hasData: ${snapshot.hasData}, error: ${snapshot.error}');
+        if (snapshot.hasData) {
+          final user = snapshot.data!;
+          print(
+              'User data: dob=${user.dob}, address=${user.address}, bloodGroup=${user.bloodGroup}, weight=${user.weight}, height=${user.height}');
+          final isPersonalDataIncomplete =
+              user.dob == null || user.address.validate().isEmpty;
+          final isMedicalDataIncomplete = user.bloodGroup == null ||
+              user.bloodGroup!.isEmpty ||
+              user.weight == null ||
+              user.weight!.isEmpty ||
+              user.height == null ||
+              user.height!.isEmpty;
+
+          if (isPersonalDataIncomplete) {
+            print(
+                'Showing incomplete personal profile card with colors: amber, orange');
+            return _buildIncompleteProfileCard(false);
+          } else if (isMedicalDataIncomplete) {
+            print(
+                'Showing incomplete medical data card with colors: amber, orange');
+            return _buildIncompleteProfileCard(true);
+          }
+
+          print(
+              'Showing complete profile card with colors: $kPrimary, $kPrimaryDark');
+          return AnimatedCard(
+            key: UniqueKey(),
+            color1: kPrimary,
+            color2: kPrimaryDark,
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildStatItem("Age",
+                          "${(DateTime.now().difference(user.dob!.toDate())).inDays ~/ 365} yrs"),
+                      _buildStatItem(
+                          "Blood Group",
+                          user.bloodGroup.validate().isNotEmpty
+                              ? user.bloodGroup!
+                              : "N/A"),
+                      _buildStatItem("Weight", "${user.weight.validate()} kg"),
+                      _buildStatItem("Height", "${user.height.validate()} cm"),
+                    ],
+                  ),
+                  12.height,
+                ],
+              ),
+            ),
+          );
+        } else if (snapshot.hasError) {
+          print('Stream error: ${snapshot.error}');
+          return Text('Error loading profile: ${snapshot.error}');
+        }
+        print('Showing loader');
+        return Loader();
+      },
+    );
+  }
+
+  Widget _buildStatItem(String label, String value) {
+    return Column(
+      children: [
+        Text(value, style: boldTextStyle(size: 14, color: Colors.white)),
+        Text(label,
+            style: secondaryTextStyle(
+                size: 12, color: Colors.white.withOpacity(0.7))),
+      ],
+    );
+  }
+
+  Widget _buildIncompleteProfileCard(bool isMedicalDataIncomplete) {
+    return AnimatedCard(
+      key: UniqueKey(),
+      color1: Colors.amber,
+      color2: Colors.orange,
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(Icons.warning, color: Colors.white),
+                12.width,
+                Expanded(
+                  child: Text(
+                    isMedicalDataIncomplete
+                        ? "Complete medical data to access all features"
+                        : "Complete your profile to access all features",
+                    style: boldTextStyle(size: 14, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            12.height,
+            AvatarGlow(
+              glowShape: BoxShape.rectangle,
+              glowBorderRadius: BorderRadius.circular(20),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                onPressed: () async {
+                  await (isMedicalDataIncomplete
+                      ? const MedicalDataScreen().launch(context)
+                      : const PersonalProfileScreen().launch(context));
+                  setState(() {});
+                },
+                child: Text(
+                  isMedicalDataIncomplete
+                      ? "Complete Medical Data"
+                      : "Complete Profile",
+                  style: boldTextStyle(size: 14, color: Colors.orange),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileOptions() {
+    return Column(
+      children: [
+        _buildProfileOptionTile(
+          icon: Icons.person_outline,
+          title: "Personal Information",
+          subtitle: "Update your personal details",
+          onTap: () => const PersonalProfileScreen().launch(context),
+        ),
+        _buildProfileOptionTile(
+          icon: Icons.medical_services_outlined,
+          title: "Medical Data",
+          subtitle: "Manage your health information",
+          onTap: () => const MedicalDataScreen().launch(context),
+        ),
+        _buildProfileOptionTile(
+          icon: Icons.privacy_tip_outlined,
+          title: "Privacy",
+          subtitle: "Manage your account security",
+          onTap: () {
+            launchUrl(Uri.parse("http://instantdoctor.co/privacy.php"));
+          },
+        ),
+        _buildProfileOptionTile(
+          icon: Icons.policy_outlined,
+          title: "Policy",
+          subtitle: "Read our terms and conditions",
+          onTap: () => const PolicyScreen().launch(context),
+        ),
+        _buildProfileOptionTile(
+          icon: Icons.help_outline,
+          title: "Help & Support",
+          subtitle: "Contact our support team",
+          onTap: () => const HelpScreen().launch(context),
+        ),
+        _buildProfileOptionTile(
+          icon: Icons.info_outline,
+          title: "About Instant Doctor",
+          subtitle: "Learn more about our app",
+          onTap: () => AboutScreen(version: settingsController.version.value)
+              .launch(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileOptionTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      color: context.cardColor,
+      margin: EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 1,
+      child: ListTile(
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: kPrimary.withOpacity(0.1),
+            shape: BoxShape.circle,
           ),
-          const Icon(
-            Icons.arrow_forward_ios,
-            size: 16,
-          )
-        ],
-      ).onTap(ontap),
+          child: Icon(icon, color: kPrimary),
+        ),
+        title: Text(title, style: boldTextStyle(size: 14)),
+        subtitle: Text(subtitle, style: secondaryTextStyle(size: 12)),
+        trailing: Icon(Icons.chevron_right),
+        onTap: onTap,
+      ),
+    );
+  }
+
+  Widget _buildAppVersion() {
+    return Text(
+      "Version ${settingsController.version.value}",
+      style: secondaryTextStyle(size: 12),
+    );
+  }
+
+  Widget _buildSignOutButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          side: BorderSide(color: redColor),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        onPressed: () => authenticationController.handleLogout(context),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.logout, size: 18, color: redColor),
+            8.width,
+            Text(
+              "Sign Out",
+              style: boldTextStyle(size: 16, color: redColor),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

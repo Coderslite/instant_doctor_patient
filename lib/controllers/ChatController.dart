@@ -63,38 +63,39 @@ class ChatController extends GetxController {
     images.removeAt(index);
   }
 
-  handleSendMessage({
+  Future<void> handleSendMessage({
     required String docId,
     required String appointmentId,
     required String token,
     required String message,
     required String myName,
+    String? repliedTo,
+    String? repliedText,
+    String? repliedSender,
   }) async {
     try {
+      isLoading.value = files.isNotEmpty || images.isNotEmpty ? true : false;
       var userController = Get.find<UserController>();
       final appointmentService = Get.find<AppointmentService>();
-      
-      isLoading.value = msgType.value == '' ||
-              msgType.value == MessageType.text ||
-              (files.isEmpty && images.isEmpty)
-          ? false
-          : true;
+
       var senderId = userController.userId.value;
       var receiverId = docId;
       var msgId = await appointmentService.handleSendMessage(
-          appointmentId: appointmentId,
-          senderId: senderId,
-          receiverId: receiverId,
-          files: msgType.value == MessageType.file
-              ? files
-              : msgType.value == MessageType.image
-                  ? images
-                  : [],
-          message: message,
-          type: files.isEmpty && images.isEmpty
-              ? MessageType.text
-              : msgType.value);
-      isLoading.value = false;
+        appointmentId: appointmentId,
+        senderId: senderId,
+        receiverId: receiverId,
+        files: msgType.value == MessageType.file
+            ? files
+            : msgType.value == MessageType.image
+                ? images
+                : [],
+        message: message,
+        type:
+            files.isEmpty && images.isEmpty ? MessageType.text : msgType.value,
+        repliedTo: repliedTo,
+        repliedText: repliedText,
+        repliedSender: repliedSender,
+      );
       sendNotification(
         [token],
         myName,

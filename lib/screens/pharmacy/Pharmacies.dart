@@ -10,6 +10,8 @@ import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../component/eachPharmacy.dart';
+import '../../component/show_location_required.dart';
+import '../../constant/constants.dart';
 import '../../controllers/LocationController.dart';
 import '../../controllers/OrderController.dart';
 import '../../controllers/WaitlistController.dart';
@@ -50,6 +52,7 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
   }
 
   Future<void> _loadSavedLocations() async {
+    await handleShowRequestLocation(Get.context!);
     savedLocations = await userService.getSavedLocations();
     setState(() {});
   }
@@ -310,7 +313,9 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
 
                               var filteredData =
                                   _filterPharmacies(data, selectedCategory);
-
+                              if (filteredData.isEmpty) {
+                                return _buildNoPharmaciesFound();
+                              }
                               return RefreshIndicator(
                                 onRefresh: () async {
                                   setState(() {});
@@ -357,18 +362,35 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
 
   List<PharmacyModel> _filterPharmacies(
       List<PharmacyModel> pharmacies, String category) {
-    // Implement your actual filtering logic here
-    // This is just a placeholder
     if (category == 'All') return pharmacies;
-    // if (category == '24/7') {
-    //   return pharmacies
-    //       .where((pharmacy) => pharmacy.is24Hours ?? false)
-    //       .toList();
-    // }
-    // if (category == 'Nearby') {
-    //   return pharmacies..sort((a, b) => a.distance.compareTo(b.distance));
-    // }
-    // Add other filters as needed
+
+    if (category == 'Nearby') {
+      final userLat = locationController.latitude.value;
+      final userLng = locationController.longitude.value;
+
+      pharmacies.sort((a, b) {
+        final aDist = a.location == null
+            ? double.infinity
+            : calculateDistance2(
+                userLat, userLng, a.location!.latitude, a.location!.longitude);
+
+        final bDist = b.location == null
+            ? double.infinity
+            : calculateDistance2(
+                userLat, userLng, b.location!.latitude, b.location!.longitude);
+
+        return aDist.compareTo(bDist);
+      });
+
+      return pharmacies;
+    }
+
+    if (category == 'Discount') {
+      return pharmacies
+          .where((pharmacy) => pharmacy.discount.validate() > 0)
+          .toList();
+    }
+
     return pharmacies;
   }
 

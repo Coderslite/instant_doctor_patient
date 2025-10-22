@@ -63,11 +63,13 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBKjkgCSIZgzb0B4sogyIYoX9EJGkejY8U',
-    appId: '1:127248616649:ios:85d223b22093a77c651118',
+    appId: '1:127248616649:ios:0379838a45d72acc651118',
     messagingSenderId: '127248616649',
     projectId: 'instant-doctor-a4e4c',
     storageBucket: 'instant-doctor-a4e4c.appspot.com',
-    iosBundleId: 'com.example.instantDoctor',
+    androidClientId: '127248616649-01qc7k64itgp2c273079eibt6vaukhck.apps.googleusercontent.com',
+    iosClientId: '127248616649-tbh8pb8t6nl2ughnth8u50vee0nqvt17.apps.googleusercontent.com',
+    iosBundleId: 'com.instantdoctor.app',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(

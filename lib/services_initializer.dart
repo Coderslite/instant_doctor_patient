@@ -3,7 +3,6 @@
 import 'package:get/get.dart';
 import 'package:instant_doctor/controllers/AuthenticationController.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
-import 'package:instant_doctor/controllers/ConnectivityController.dart';
 import 'package:instant_doctor/controllers/MedicationController.dart';
 import 'package:instant_doctor/controllers/NotificationController.dart';
 import 'package:instant_doctor/controllers/OrderController.dart';
@@ -33,7 +32,7 @@ import 'package:instant_doctor/services/MedicationService.dart';
 import 'package:instant_doctor/services/PresciptionService.dart';
 import 'package:instant_doctor/services/UserService.dart';
 import 'package:instant_doctor/controllers/ChatController.dart';
-import 'package:instant_doctor/controllers/LapResultController.dart';
+import 'package:instant_doctor/controllers/LabResultController.dart';
 import 'package:instant_doctor/controllers/UploadFileController.dart';
 import 'package:instant_doctor/controllers/UserController.dart';
 

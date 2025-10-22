@@ -12,3 +12,4 @@ const appButtonColorDark = Color(0xFF282828);
 const grayColor = Color(0xFF757575);
 const mobileBackgroundColor = Color(0xffE5E5E5);
 const mobileBackgroundColor2 = Color.fromARGB(255, 243, 243, 243);
+const gradientOptions = [];

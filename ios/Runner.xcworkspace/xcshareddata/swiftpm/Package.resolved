@@ -1,5 +1,4 @@
 {
-  "originHash" : "2ba316ce8e73f1b3fd2448530e0ae3ef973bcd34ddfafb883f470da36ac4d1c8",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -60,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/firebase-ios-sdk",
       "state" : {
-        "revision" : "fdc352fabaf5916e7faa1f96ad02b1957e93e5a5",
-        "version" : "11.15.0"
+        "revision" : "b9bf3adac18e6e3059167194aeb632f15a5ba4b2",
+        "version" : "12.1.0"
       }
     },
     {
@@ -69,8 +68,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/flutterfire",
       "state" : {
-        "revision" : "1a4f03a42bf4301502442eade6dfee982872ff8e",
-        "version" : "3.15.1-firebase-core-swift"
+        "revision" : "5129db511ca163774800411439058a4fa330cd20",
+        "version" : "4.0.0-firebase-core-swift"
       }
     },
     {
@@ -78,8 +77,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/googleads/google-ads-on-device-conversion-ios-sdk",
       "state" : {
-        "revision" : "428d8bb138e00f9a3f4f61cc6cd8863607524f65",
-        "version" : "2.1.0"
+        "revision" : "e15f979c3eaf477d24e5bfec9d87f1d76fbac297",
+        "version" : "2.2.0"
       }
     },
     {
@@ -87,8 +86,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/GoogleAppMeasurement.git",
       "state" : {
-        "revision" : "45ce435e9406d3c674dd249a042b932bee006f60",
-        "version" : "11.15.0"
+        "revision" : "883305109ead4599e4ca59591754ee72e81e6b5e",
+        "version" : "12.1.0"
       }
     },
     {
@@ -173,39 +172,12 @@
       }
     },
     {
-      "identity" : "nwwebsocket",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pusher/NWWebSocket.git",
-      "state" : {
-        "revision" : "da32dcf230d9b627a9ef9d79b83605d12b3fbcbd",
-        "version" : "0.5.7"
-      }
-    },
-    {
-      "identity" : "paystack-sdk-ios",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/PaystackHQ/paystack-sdk-ios.git",
-      "state" : {
-        "revision" : "f1311e5f80fa36b8b0625581cc10860157998f61",
-        "version" : "0.0.4"
-      }
-    },
-    {
       "identity" : "promises",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/promises.git",
       "state" : {
         "revision" : "540318ecedd63d883069ae7f1ed811a2df00b6ac",
         "version" : "2.4.0"
-      }
-    },
-    {
-      "identity" : "pusher-websocket-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pusher/pusher-websocket-swift.git",
-      "state" : {
-        "revision" : "d8d7a776fa92c733891790be6e8d3e3532e79c43",
-        "version" : "10.1.6"
       }
     },
     {
@@ -243,16 +215,7 @@
         "revision" : "a634cb7cdfd580006e79a6e74e64417fe9e9783b",
         "version" : "2.7.4"
       }
-    },
-    {
-      "identity" : "tweetnacl-swiftwrap",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/bitmark-inc/tweetnacl-swiftwrap",
-      "state" : {
-        "revision" : "f8fd111642bf2336b11ef9ea828510693106e954",
-        "version" : "1.1.0"
-      }
     }
   ],
-  "version" : 3
+  "version" : 2
 }

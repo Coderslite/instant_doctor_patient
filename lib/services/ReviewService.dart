@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 import 'package:instant_doctor/models/ReviewsModel.dart';
+import 'package:instant_doctor/services/CustomMailService.dart';
+import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../function/send_notification.dart';
@@ -32,18 +34,24 @@ class ReviewService extends BaseService {
         event.docs.map((e) => ReviewsModel.fromJson(e.data())).toList());
   }
 
-
- Future<int> getDoctorReviewsCount({required String docId}) async{
+  Future<int> getDoctorReviewsCount({required String docId}) async {
     var reviewRef = await reviewCol.where('doctorId', isEqualTo: docId).get();
     return reviewRef.docs.length;
   }
+
   Future<void> addReview({required ReviewsModel review}) async {
     var res = await reviewCol.add(review.toJson());
     await updateReview(id: res.id, data: {"id": res.id.validate()});
     var token =
         await userService.getUserToken(userId: review.doctorId.validate());
-    sendNotification([token], "Appointment Review",
-        "You got ${review.rating} star rating", '', '');
+    await sendCustomMail(activityName: 'Doctor Review');
+
+    sendNotification(
+        [token],
+        "Appointment Review",
+        "You got ${review.rating} star rating from ${userController.fullName.value}",
+        '',
+        '');
   }
 
   Future<void> updateReview(

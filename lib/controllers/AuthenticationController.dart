@@ -1,3 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
+
+import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,7 +17,6 @@ import 'package:instant_doctor/screens/authentication/success_signup.dart';
 import 'package:instant_doctor/services/AuthenticationService.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:http/http.dart' as http;
 import '../constant/constants.dart';
 import '../services/GetUserId.dart';
 import '../services/ReferralService.dart';
@@ -90,7 +94,7 @@ class AuthenticationController extends GetxController {
           }
         }
         await zegoCloudController.handleInit();
-        await Get.find<LocationController>()
+        Get.find<LocationController>()
             .handleGetMyLocation(isLogin: true, email: userCred.email);
         CreatePinScreen().launch(context, isNewTask: true);
       }
@@ -99,55 +103,6 @@ class AuthenticationController extends GetxController {
       toast("$error");
     } finally {
       googleSignin.value = false;
-    }
-  }
-
-  Future<void> handleAppleSignIn(BuildContext context) async {
-    try {
-      final zegoCloudController = Get.find<ZegoCloudController>();
-      final appleCredential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-      );
-
-      // Create an OAuth credential using the Apple ID token and access token
-      final oAuthProvider = OAuthProvider("apple.com");
-      final credential = oAuthProvider.credential(
-        idToken: appleCredential.identityToken,
-        accessToken: appleCredential.authorizationCode,
-      );
-
-      // Sign in to Firebase with the Apple credential
-      final authResult =
-          await FirebaseAuth.instance.signInWithCredential(credential);
-
-      // Once signed in, handle saving the user details (similar to Google Sign-In flow)
-      final prefs = await SharedPreferences.getInstance();
-      prefs.setString("userId", authResult.user!.uid);
-      userController.userId.value = authResult.user!.uid;
-
-      // Optionally add user data to Firestore or your database if it's a new user
-      if (authResult.additionalUserInfo?.isNewUser == true) {
-        await AuthenticationService().addUser(
-            firstname: appleCredential.givenName ?? '',
-            lastname: appleCredential.familyName ?? '',
-            email: appleCredential.email ?? '',
-            phoneNumber: '',
-            gender: '',
-            uid: authResult.user!.uid,
-            password: '',
-            photoUrl: '');
-      }
-      await zegoCloudController.handleInit();
-      // Navigate to the home screen or root after successful login
-      // const Root().launch(context);
-      CreatePinScreen().launch(context, isNewTask: true);
-      toast("Login Successful with Apple");
-    } catch (error) {
-      print("Error during Apple Sign-In: $error");
-      toast("Apple Sign-In failed: $error");
     }
   }
 
@@ -172,7 +127,7 @@ class AuthenticationController extends GetxController {
       userController.userId.value = value.user!.uid;
       getUserId();
       await zegoCloudController.handleInit();
-      await Get.find<LocationController>()
+      Get.find<LocationController>()
           .handleGetMyLocation(isLogin: true, email: email);
       CreatePinScreen().launch(context, isNewTask: true);
       toast("Login Successful");
@@ -312,5 +267,121 @@ class AuthenticationController extends GetxController {
     await prefs.remove('otpGender');
     await prefs.remove('otpFor');
     await prefs.remove('otpReferredBy');
+  }
+
+  /// Generates a cryptographically secure random nonce, to be included in a
+  /// credential request.
+  String generateNonce([int length = 32]) {
+    final charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)])
+        .join();
+  }
+
+  /// Returns the sha256 hash of [input] in hex notation.
+  String sha256ofString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  Future<void> handleAppleSignIn(BuildContext context,
+      {required String referredBy}) async {
+    try {
+      isLoading.value = true; // Start loading
+      final zegoCloudController = Get.find<ZegoCloudController>();
+
+      // Generate nonce for secure Apple Sign-In
+      final rawNonce = generateNonce();
+      final nonce = sha256ofString(rawNonce);
+
+      // Perform Apple Sign-In
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: nonce, // Pass the hashed nonce
+      );
+
+      // Validate the idToken
+      if (appleCredential.identityToken == null) {
+        throw Exception("Apple Sign-In failed: No identity token returned.");
+      }
+
+      // Create OAuth credential for Apple
+      final oAuthProvider = OAuthProvider("apple.com");
+      final credential = oAuthProvider.credential(
+        idToken: appleCredential.identityToken!,
+        rawNonce: rawNonce, // Pass the raw nonce
+        accessToken:
+            appleCredential.authorizationCode, // Include authorization code
+      );
+
+      // Sign in to Firebase with the Apple credential
+      final authResult =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      // Get user email (handle private email relay)
+      String email = appleCredential.email ??
+          authResult.user?.email ??
+          "${authResult.user!.uid}@apple.user";
+
+      // Check if user already exists in Firestore
+      bool isNewUser = await handleCheckEmail(email);
+
+      // Store user ID in SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString("userId", authResult.user!.uid);
+      userController.userId.value = authResult.user!.uid;
+
+      // If user is new, add their details to Firestore
+      if (isNewUser) {
+        await AuthenticationService().addUser(
+          firstname: appleCredential.givenName ?? '',
+          lastname: appleCredential.familyName ?? '',
+          email: email,
+          phoneNumber: '',
+          photoUrl: '',
+          gender: '',
+          uid: authResult.user!.uid,
+          password: '',
+        );
+
+        // Handle referral if provided
+        if (referredBy.isNotEmpty) {
+          await referralService.newReferral(
+            userId: userController.userId.value,
+            referredBy: referredBy,
+          );
+        }
+      }
+
+      // Initialize ZegoCloud and location services
+      await zegoCloudController.handleInit();
+      Get.find<LocationController>()
+          .handleGetMyLocation(isLogin: true, email: email);
+
+      // Navigate to CreatePinScreen
+      CreatePinScreen().launch(context, isNewTask: true);
+      toast("Login Successful with Apple");
+    } catch (error) {
+      print("Error during Apple Sign-In: $error");
+      if (error is FirebaseAuthException &&
+          error.code == 'invalid-credential') {
+        toast("Apple Sign-In failed: Invalid credentials. Please try again.");
+      } else if (error is SignInWithAppleAuthorizationException) {
+        if (error.code == AuthorizationErrorCode.canceled) {
+          toast("Apple Sign-In was canceled by the user.");
+        } else {
+          toast("Apple Sign-In failed: ${error.message}");
+        }
+      } else {
+        toast("Apple Sign-In failed: $error");
+      }
+    } finally {
+      isLoading.value = false; // Stop loading
+    }
   }
 }

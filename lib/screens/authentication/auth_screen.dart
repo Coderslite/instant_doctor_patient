@@ -253,8 +253,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     _isLockedOut
                         ? 'Please wait $_countdown before trying again'
                         : 'Enter your PIN or use biometric authentication',
+                    textAlign: TextAlign.center,
                     style: primaryTextStyle(
-                      size: 16,
+                      size: 14,
                       color: Colors.white.withOpacity(0.7),
                     ),
                   ),

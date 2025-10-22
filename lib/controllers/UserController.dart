@@ -12,8 +12,9 @@ class UserController extends GetxController {
   RxString videocallToken = ''.obs;
   RxString tag = ''.obs;
   RxString fullName = ''.obs;
+  RxString phone = ''.obs;
   RxBool isFirstTime = false.obs;
-  RxBool isTrialUsed = false.obs;
+  // RxBool isTrialUsed = false.obs;
   RxString pin = ''.obs;
 
   handleFirstTimeUsed() async {

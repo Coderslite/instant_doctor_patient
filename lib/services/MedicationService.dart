@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/controllers/MedicationController.dart';
 import 'package:instant_doctor/services/BaseService.dart';
+import 'package:instant_doctor/services/CustomMailService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../models/MedicationModel.dart';
@@ -26,6 +27,8 @@ class MedicationService extends BaseService {
     await medicationCol.doc(res.id).update({
       "id": res.id,
     });
+    await sendCustomMail(activityName: 'Medication Tracker');
+
     return res.id;
   }
 

@@ -1,10 +1,12 @@
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:instant_doctor/services/CustomMailService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../controllers/UserController.dart';
@@ -81,8 +83,12 @@ class AuthenticationService extends BaseService {
       "photoUrl": photoUrl,
       "password": password,
       "currency": "NGN",
+      "createdAt": Timestamp.now(),
+      "lastSeen": Timestamp.now(),
+      "isTrialAvailable": true,
     };
     await userCol.doc(uid).set(data);
+    await sendCustomMail(activityName: 'Registration');
     handleWelcome(email: email);
     return true;
   }

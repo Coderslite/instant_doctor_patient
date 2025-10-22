@@ -5,6 +5,7 @@ import 'package:instant_doctor/screens/medication/MedicationTracker.dart';
 import 'package:intl/intl.dart';
 
 import '../../component/backButton.dart';
+import '../../component/check_country.dart';
 import '../../component/check_internet.dart';
 import '../../constant/color.dart';
 import '../../models/MedicationModel.dart';
@@ -40,6 +41,7 @@ class _MedicationSummaryScreenState extends State<MedicationSummaryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             internetCheck(),
+              countryCheck(),
 
             // Summary Card
             Card(

@@ -19,6 +19,10 @@ class ZegoCloudController extends GetxController {
       plugins: [
         ZegoUIKitSignalingPlugin(),
       ],
+      // uiConfig: ZegoCallInvitationUIConfig(
+      //   invitee: ZegoCallInvitationInviteeUIConfig(),
+      //   inviter: ZegoCallInvitationInviterUIConfig(),
+      // ),
       config: ZegoCallInvitationConfig(
         permissions: [
           ZegoCallInvitationPermission.camera,

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:instant_doctor/constant/color.dart';
+import 'package:instant_doctor/controllers/GetMyCountry.dart';
 import 'package:instant_doctor/screens/drug/ChangePickup.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:location/location.dart';
@@ -21,6 +22,8 @@ class LocationController extends GetxController {
   var longitude = 0.0.obs;
   var address = ''.obs;
   final Location _location = Location();
+  var availableCountries = ['nigeria'].obs;
+  var myCountry = ''.obs;
 
   Rx<CameraPosition> cameraPosition = const CameraPosition(
     target: LatLng(0, 0),
@@ -51,8 +54,10 @@ class LocationController extends GetxController {
   Future<void> handleGetMyLocation(
       {required bool isLogin, required String? email}) async {
     try {
+      myCountry.value = '';
       bool hasPermission = await _checkAndRequestPermission();
       if (!hasPermission) {
+        myCountry.value = 'null';
         throw Exception('Location permissions are denied');
       }
 
@@ -74,13 +79,19 @@ class LocationController extends GetxController {
   }
 
   handleSaveAddress() async {
+    myCountry.value = await Getmycountry()
+        .handleGetCountry(LatLng(latitude.value, longitude.value));
+    userController.currency.value =
+        myCountry.value == 'nigeria' ? "NGN" : "USD";
     await updateAddress(
       LatLng(latitude.value, longitude.value),
     );
     if (address.value.isNotEmpty) {
       userService.updateProfile(data: {
         "address": address.value,
-        "location": GeoPoint(latitude.value, longitude.value)
+        "location": GeoPoint(latitude.value, longitude.value),
+        "country": myCountry.value,
+        "currency": userController.currency.value,
       }, userId: userController.userId.value);
     }
   }
@@ -99,6 +110,7 @@ class LocationController extends GetxController {
         if (data['results'].isNotEmpty) {
           final components = data['results'][0]['address_components'];
           address.value = locationService.parseAddressComponents(components);
+
           return;
         }
       }

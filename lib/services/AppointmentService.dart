@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/models/AppointmentPricingModel.dart';
+import 'package:instant_doctor/services/CustomMailService.dart';
 import 'package:instant_doctor/services/DoctorService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:instant_doctor/services/formatDate.dart';
@@ -234,6 +235,7 @@ class AppointmentService {
     required String docId,
     required String userId,
     required String complain,
+    required List symptoms,
     required int price,
     required String package,
     required Timestamp endTime,
@@ -245,9 +247,11 @@ class AppointmentService {
       "userId": userId,
       "status": "pending",
       "complain": complain,
+      "symptoms": symptoms,
       "startTime": startTime,
       "endTime": endTime,
       "price": price,
+      "currency": userController.currency.value,
       "package": package,
       "createdAt": Timestamp.now(),
       "updatedAt": Timestamp.now(),
@@ -263,6 +267,7 @@ class AppointmentService {
 
   Future<bool> updateAppointmentAfterPayment({
     required String appointmentId,
+    required bool isTrial,
   }) async {
     final doctorService = Get.find<DoctorService>();
 
@@ -279,13 +284,14 @@ class AppointmentService {
       });
 
       var appointment = await getAppointment(appointmentId: appointmentId);
+      await sendCustomMail(activityName: 'Appointment');
 
-      await notificationService.newNotification(
-        userId: appointment.doctorId.validate(),
-        type: NotificationType.appointment,
-        title:
-            "You received an appointment ${formatDate(appointment.startTime!.toDate())} - ${formatDate(appointment.endTime!.toDate())}",
-      );
+      // await notificationService.newNotification(
+      //   userId: appointment.doctorId.validate(),
+      //   type: NotificationType.appointment,
+      //   title:
+      //       "You received an appointment ${formatDate(appointment.startTime!.toDate())} - ${formatDate(appointment.endTime!.toDate())}",
+      // );
 
       await notificationService.newNotification(
         userId: userController.userId.value,
@@ -294,7 +300,13 @@ class AppointmentService {
             "You have successfully scheduled an appointment ${formatDate(appointment.startTime!.toDate())} - ${formatDate(appointment.endTime!.toDate())}",
       );
 
-      var docTokens = await doctorService.getDoctorsToken();
+      var docTokens = [];
+      if (isTrial) {
+        var docToken = await userService.getUserToken(userId: TRIAL_DOCTOR_ID);
+        docTokens.add(docToken);
+      } else {
+        docTokens = await doctorService.getDoctorsToken();
+      }
       sendNotification(
         docTokens,
         "New Appointment",
@@ -368,6 +380,14 @@ class AppointmentService {
     return query;
   }
 
+  Query getConversationQuery(String appointmentId) {
+    var query = appointmentCollection
+        .doc(appointmentId)
+        .collection("conversation")
+        .orderBy('createdAt', descending: true);
+    return query;
+  }
+
   Stream<List<AppointmentConversationModel>> getUnreadChat(
       String appointmentId, String userId) {
     var query = appointmentCollection
@@ -388,12 +408,49 @@ class AppointmentService {
         .doc(appointmentId)
         .collection("conversation")
         .where('senderId', isEqualTo: userId)
-        .where('status', isNotEqualTo: MessageStatus.read)
-        .get();
+        .where(
+      'status',
+      whereNotIn: [MessageStatus.read, MessageStatus.deleted],
+    ).get();
     for (var i = 0; i < result.docs.length; i++) {
       var data = result.docs[i];
       updateReadChat(appointmentId: appointmentId, chatId: data.id);
     }
+  }
+
+  Future deleteChat({
+    required String appointmentId,
+    required String chatId,
+  }) async {
+    print("deleted");
+    await appointmentCollection
+        .doc(appointmentId)
+        .collection("conversation")
+        .doc(chatId)
+        .update(
+      {
+        "status": MessageStatus.deleted,
+        "isDeleted": true,
+        "deleted": Timestamp.now(),
+      },
+    );
+    return;
+  }
+
+  Future updateChatText(
+      {required String appointmentId,
+      required String chatId,
+      required String message}) async {
+    await appointmentCollection
+        .doc(appointmentId)
+        .collection("conversation")
+        .doc(chatId)
+        .update({
+      "message": message,
+      "isEdited": true,
+      "edited": Timestamp.now(),
+    });
+    return;
   }
 
   Future updateReadChat(
@@ -409,6 +466,9 @@ class AppointmentService {
   Future<String> handleSendMessage(
       {required String appointmentId,
       String? message,
+      String? repliedTo,
+      String? repliedText,
+      String? repliedSender,
       List? files,
       required String senderId,
       required String receiverId,
@@ -419,6 +479,9 @@ class AppointmentService {
     if (files!.isEmpty) {
       var data = {
         "message": SecurityHelper().encryptText(message.validate()),
+        "repliedTo": repliedTo ?? '',
+        "repliedText": SecurityHelper().encryptText(repliedText.validate()),
+        "repliedSender": repliedSender ?? '',
         "senderId": senderId,
         "receiverId": receiverId,
         "type": type,
@@ -437,6 +500,9 @@ class AppointmentService {
         var data = {
           "message":
               count > 0 ? '' : SecurityHelper().encryptText(message.validate()),
+          "repliedTo": repliedTo ?? '',
+          "repliedText": SecurityHelper().encryptText(repliedText.validate()),
+          "repliedSender": repliedSender ?? '',
           "senderId": senderId,
           "receiverId": receiverId,
           "type": type,

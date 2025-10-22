@@ -16,8 +16,11 @@ import 'package:ionicons/ionicons.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:upgrader/upgrader.dart';
 
+import '../../component/show_forced_update.dart';
+import '../../component/show_location_required.dart';
 import '../../constant/constants.dart';
 import '../../controllers/OrderController.dart';
+import '../../services/GetAppVersion.dart';
 import '../../services/GetUserId.dart';
 import '../appointment/Appointment.dart';
 
@@ -49,6 +52,8 @@ class RootState extends State<Root> with WidgetsBindingObserver {
     await orderController.handleGetSavedCarts();
     await handleUpdateToken();
     // await locationController.handleGetMyLocation(isLogin: false, email: '');
+    // settingsController.version.value = await getAppVersion();
+    // handleShowUpdateAvailable(Get.context!);
   }
 
   Future<void> handleUpdateToken() async {
@@ -100,13 +105,15 @@ class RootState extends State<Root> with WidgetsBindingObserver {
         }
         await handleOnline();
         break;
+
       case AppLifecycleState.paused:
         // App went to the background
-        _shouldLock = true;
+        // _shouldLock = true;
         await handleOffline();
         break;
       case AppLifecycleState.inactive:
         // App is in an inactive state (e.g., during a phone call)
+        // _shouldLock = true;
         await handleOffline();
         break;
       case AppLifecycleState.detached:
@@ -133,40 +140,43 @@ class RootState extends State<Root> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (settingsController.selectedIndex.value == 0) {
-          return exit(0); // Use exit(0) for a cleaner exit
-        } else {
-          selectedTab(0);
-          return false;
-        }
-      },
-      child: Scaffold(
-        bottomNavigationBar: AnimatedBottomNavigationBar(
-          elevation: 0.1,
-          icons: iconList,
-          iconSize: 30,
-          blurEffect: false,
-          safeAreaValues: SafeAreaValues(),
-          scaleFactor: 2,
-          activeIndex: settingsController.selectedIndex.value,
-          gapLocation: GapLocation.none,
-          activeColor: kPrimary,
-          inactiveColor: grey,
-          backgroundColor: context.cardColor,
-          notchSmoothness: NotchSmoothness.defaultEdge,
-          leftCornerRadius: 30,
-          rightCornerRadius: 30,
-          onTap: (index) =>
-              setState(() => settingsController.selectedIndex.value = index),
-        ),
-        resizeToAvoidBottomInset: true,
-        body: UpgradeAlert(
-          upgrader: Upgrader(
-            durationUntilAlertAgain: const Duration(minutes: 1),
+    return UpgradeAlert(
+      showLater: false,
+      showIgnore: false,
+      shouldPopScope: () => false,
+      upgrader: Upgrader(
+        durationUntilAlertAgain: const Duration(minutes: 1),
+      ),
+      child: WillPopScope(
+        onWillPop: () async {
+          if (settingsController.selectedIndex.value == 0) {
+            return exit(0); // Use exit(0) for a cleaner exit
+          } else {
+            selectedTab(0);
+            return false;
+          }
+        },
+        child: Scaffold(
+          bottomNavigationBar: AnimatedBottomNavigationBar(
+            elevation: 0.1,
+            icons: iconList,
+            iconSize: 30,
+            blurEffect: false,
+            safeAreaValues: SafeAreaValues(),
+            scaleFactor: 2,
+            activeIndex: settingsController.selectedIndex.value,
+            gapLocation: GapLocation.none,
+            activeColor: kPrimary,
+            inactiveColor: grey,
+            backgroundColor: context.cardColor,
+            notchSmoothness: NotchSmoothness.defaultEdge,
+            leftCornerRadius: 30,
+            rightCornerRadius: 30,
+            onTap: (index) =>
+                setState(() => settingsController.selectedIndex.value = index),
           ),
-          child: SafeArea(
+          resizeToAvoidBottomInset: true,
+          body: SafeArea(
             child: IndexedStack(
               index: settingsController.selectedIndex.value,
               children: const [

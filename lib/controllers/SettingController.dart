@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/services/SettingService.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -9,12 +10,24 @@ import '../constant/constants.dart';
 import '../services/getVideoCallKeys.dart';
 
 class SettingsController extends GetxController {
-  Rx<bool> isDarkMode = false.obs;
+  Rx<bool> isDarkMode =
+      ThemeMode.system == ThemeMode.dark ? true.obs : false.obs;
   String selectedLanguage = defaultLanguage;
   AppLocalizations? appLocale;
   RxInt selectedIndex = 0.obs;
   var trialAvailable = false.obs;
   var loggedIn = false.obs;
+
+  var currentVersionCode = 0.obs;
+  var version = ''.obs;
+  var marquee = ''.obs;
+  var showMarquee = false.obs;
+  var anonymous = false.obs;
+  var trialSetting = false.obs;
+  var trialDoctor = ''.obs;
+  var updateVersion = ''.obs;
+  var updateVersionCode = 0.obs;
+  var forceUpdate = false.obs;
 
   RxBool shouldLock = false.obs;
   RxBool isAuthScreenActive = false.obs;
@@ -52,7 +65,7 @@ class SettingsController extends GetxController {
       defaultLoaderBgColorGlobal = scaffoldSecondaryDark;
       appButtonBackgroundColorGlobal = appButtonColorDark;
       shadowColorGlobal = Colors.white12;
-      setStatusBarColor(Colors.transparent, systemNavigationBarColor: null);
+      setStatusBarColor(transparentColor, systemNavigationBarColor: null);
     } else {
       textPrimaryColorGlobal = textPrimaryColor;
       textSecondaryColorGlobal = textSecondaryColor;
@@ -70,5 +83,24 @@ class SettingsController extends GetxController {
     appSign = data.appSign!;
     print("app Id $appId");
     print("app Sign $appSign");
+  }
+
+  handleGetSettings() async {
+    var res = await SettingService().getSettings();
+    marquee.value = res.marquee.validate();
+    showMarquee.value = res.showMarquee.validate();
+    anonymous.value = res.anonymous.validate();
+    updateVersion.value = res.currentVersion.validate();
+    updateVersionCode.value = res.versionCode.validate();
+    trialSetting.value = res.trial.validate();
+    trialDoctor.value = res.trialDoctor.validate();
+    version.value = res.currentVersion.validate();
+    forceUpdate.value = res.forceUpdate.validate();
+  }
+
+  @override
+  void onInit() {
+    handleGetSettings();
+    super.onInit();
   }
 }

@@ -66,21 +66,21 @@ Container eachPharmacy(BuildContext context, PharmacyModel pharmacy) {
                 size: 16,
               ),
             ),
-            Row(
-              children: [
-                Icon(
-                  Icons.star,
-                  color: gold,
-                  size: 14,
-                ),
-                Text(
-                  "4.5 (+500 Reviews)",
-                  style: primaryTextStyle(
-                    size: 12,
-                  ),
-                ),
-              ],
-            ),
+            // Row(
+            //   children: [
+            //     Icon(
+            //       Icons.star,
+            //       color: gold,
+            //       size: 14,
+            //     ),
+            //     Text(
+            //       "4.5 (+500 Reviews)",
+            //       style: primaryTextStyle(
+            //         size: 12,
+            //       ),
+            //     ),
+            //   ],
+            // ),
           ],
         ),
         5.height,
@@ -103,7 +103,7 @@ Container eachPharmacy(BuildContext context, PharmacyModel pharmacy) {
             Text(
               "${calculateDistance2(locationController.latitude.value, locationController.longitude.value, pharmacy.location!.latitude, pharmacy.location!.longitude)}km",
               style: boldTextStyle(
-                size: 16,
+                size: 14,
               ),
             ),
           ],

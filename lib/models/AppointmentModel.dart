@@ -64,6 +64,13 @@ class AppointmentConversationModel {
   String? type;
   String? status;
   Timestamp? createdAt;
+  String? repliedTo;
+  String? repliedText;
+  String? repliedSender;
+  bool? isDeleted;
+  Timestamp? deleted;
+  bool? isEdited;
+  Timestamp? edited;
 
   AppointmentConversationModel({
     this.id,
@@ -74,6 +81,13 @@ class AppointmentConversationModel {
     this.type,
     this.status,
     this.createdAt,
+    this.repliedSender,
+    this.repliedText,
+    this.repliedTo,
+    this.isDeleted,
+    this.deleted,
+    this.isEdited,
+    this.edited,
   });
 
   factory AppointmentConversationModel.fromJson(Map<String, dynamic> json) {
@@ -85,6 +99,13 @@ class AppointmentConversationModel {
       fileUrl: json['fileUrl'],
       type: json['type'],
       status: json['status'],
+      repliedTo: json['repliedTo'],
+      repliedText: json['repliedText'],
+      repliedSender: json['repliedSender'],
+      deleted: json['deleted'],
+      edited: json['edited'],
+      isDeleted: json['isDeleted'],
+      isEdited: json['isEdited'],
     );
   }
 
@@ -97,6 +118,9 @@ class AppointmentConversationModel {
     data['fileUrl'] = fileUrl;
     data['type'] = type;
     data['status'] = status;
+    data['repliedTo'] = repliedTo;
+    data['repliedText'] = repliedText;
+    data['repliedSender'] = repliedSender;
     return data;
   }
 }

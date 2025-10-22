@@ -2,20 +2,35 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+
+	<!-- 🔒 Privacy Usage Descriptions -->
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs access to location to determine user distance from pharmacies.</string>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>$(PRODUCT_NAME) photos add description.</string>
-
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>$(PRODUCT_NAME)photos description.</string>
-
+	<string>This app needs access to your location to determine distance from pharmacies and doctors near you.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app may access your location even when running in the background to help locate nearby pharmacies and doctors when needed.</string>
+	
 	<key>NSCameraUsageDescription</key>
-	<string>$(PRODUCT_NAME) camera description.</string>
-
+	<string>Instant Doctor requires access to your camera for video consultations and uploading identification.</string>
+	
 	<key>NSMicrophoneUsageDescription</key>
-	<string>We require microphone access to connect</string>
+	<string>Instant Doctor needs access to your microphone so you can communicate clearly with your doctor during consultations.</string>
+	
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Instant Doctor may access your photo library if you wish to upload health documents or test results.</string>
+	
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Instant Doctor may save photos such as prescriptions or reports to your library upon request.</string>
+	
+	<key>NSFaceIDUsageDescription</key>
+	<string>Instant Doctor uses Face ID to help you log in securely and verify your identity.</string>
 
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+	<string>applinks:instantdoctor.co</string>
+	</array>
+
+
+	<!-- ⚙️ App Configuration -->
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -42,6 +57,8 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<!-- 🔔 Notifications & Background -->
 	<key>aps-environment</key>
 	<string>production</string>
 	<key>UIBackgroundModes</key>
@@ -49,6 +66,8 @@
 		<string>fetch</string>
 		<string>remote-notification</string>
 	</array>
+
+	<!-- 📱 Interface -->
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -66,24 +85,31 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSFaceIDUsageDescription</key>
-	<string>Why is my app authenticating using face id?</string>
+
+	<!-- 🗺 Google Services -->
 	<key>GIDClientID</key>
 	<string>127248616649-tbh8pb8t6nl2ughnth8u50vee0nqvt17.apps.googleusercontent.com</string>
-	<!-- Google Sign-in Section -->
-<key>CFBundleURLTypes</key>
-<array>
-	<dict>
-		<key>CFBundleTypeRole</key>
-		<string>Editor</string>
-		<key>CFBundleURLSchemes</key>
-		<array>
-			<!-- TODO Replace this value: -->
-			<!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
-			<string>com.googleusercontent.apps.127248616649-tbh8pb8t6nl2ughnth8u50vee0nqvt17</string>
-		</array>
-	</dict>
-</array>
-<!-- End of the Google Sign-in Section -->
+	<key>GoogleMapsApiKey</key>
+	<string>AIzaSyD8nW2BRd9ssOWqimiF-dOS4IeaXkKoBCI</string>
+
+	<!-- 🔐 Apple Sign-In -->
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+
+	<!-- 🌐 URL Schemes (Google Sign-In) -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.127248616649-tbh8pb8t6nl2ughnth8u50vee0nqvt17</string>
+			</array>
+		</dict>
+	</array>
+
 </dict>
 </plist>

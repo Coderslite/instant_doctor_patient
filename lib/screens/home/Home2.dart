@@ -1,16 +1,22 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/component/check_country.dart';
 import 'package:instant_doctor/component/check_internet.dart';
 import 'package:instant_doctor/constant/color.dart';
+import 'package:instant_doctor/controllers/TutorialCoachController.dart';
 import 'package:instant_doctor/main.dart';
+import 'package:instant_doctor/screens/anonymous/Anonymous.dart';
 import 'package:instant_doctor/screens/appointment/NewAppointment.dart';
-import 'package:instant_doctor/screens/healthtips/HealthTipsHome.dart';
+import 'package:instant_doctor/screens/home/AllServices.dart';
 import 'package:instant_doctor/screens/lab_result/LabResult.dart';
 import 'package:instant_doctor/screens/medication/MedicationTracker.dart';
 import 'package:instant_doctor/screens/pharmacy/Pharmacies.dart';
 import 'package:lottie/lottie.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:nb_utils/nb_utils.dart' hide Marquee;
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import '../../component/HomeCard.dart';
 import '../../component/ProfileImage.dart';
@@ -20,8 +26,10 @@ import '../../services/DoctorService.dart';
 import '../../services/GetUserId.dart';
 import '../../services/NotificationService.dart';
 import '../../services/greetings.dart';
+import '../healthtips/HealthTipsHome.dart';
 import '../notification/Notification.dart';
 import 'TrialAvailable.dart';
+import 'package:marquee/marquee.dart';
 
 class Home2 extends StatefulWidget {
   const Home2({super.key});
@@ -34,6 +42,25 @@ class _Home2State extends State<Home2> with RouteAware {
   final notificationService = Get.find<NotificationService>();
   final doctorService = Get.find<DoctorService>();
   final RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
+  Tutorialcoachcontroller tutorialcoachcontroller =
+      Get.put(Tutorialcoachcontroller());
+  late TutorialCoachMark tutorialCoachMark;
+  @override
+  void initState() {
+    handleCheckFirstTimeTutorial();
+    super.initState();
+  }
+
+  handleCheckFirstTimeTutorial() async {
+    var prefs = await SharedPreferences.getInstance();
+
+    bool isFirstTime = true;
+    isFirstTime = prefs.getBool('isFirstTimeTutorial').validate();
+    if (isFirstTime) {
+      createTutorial();
+      Future.delayed(Duration.zero, showTutorial);
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -44,7 +71,6 @@ class _Home2State extends State<Home2> with RouteAware {
   @override
   void dispose() {
     routeObserver.unsubscribe(this);
-    userController.isTrialUsed.value = true;
     super.dispose();
   }
 
@@ -78,6 +104,45 @@ class _Home2State extends State<Home2> with RouteAware {
     }
   }
 
+  void createTutorial() async {
+    var prefs = await SharedPreferences.getInstance();
+    prefs.setBool('isFirstTimeTutorial', false);
+    tutorialCoachMark = TutorialCoachMark(
+      targets: tutorialcoachcontroller.createTargets(),
+      colorShadow: kPrimaryDark,
+      textSkip: "SKIP",
+      hideSkip: true,
+      paddingFocus: 20,
+      opacityShadow: 0.8,
+      imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+      onFinish: () {
+        print("Tutorial finished");
+        setState(() {});
+      },
+      onClickTarget: (target) {
+        print('Clicked target: $target');
+      },
+      onClickOverlay: (target) {
+        print('Clicked overlay: $target');
+      },
+      onSkip: () {
+        print("Tutorial skipped");
+        return true;
+      },
+    );
+  }
+
+  void showTutorial() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      print("KeyButton1: ${tutorialcoachcontroller.keyButton1.currentContext}");
+      print("KeyButton2: ${tutorialcoachcontroller.keyButton2.currentContext}");
+      print("KeyButton3: ${tutorialcoachcontroller.keyButton3.currentContext}");
+      var prefs = await SharedPreferences.getInstance();
+
+      tutorialCoachMark.show(context: context);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,6 +157,24 @@ class _Home2State extends State<Home2> with RouteAware {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               internetCheck(),
+              countryCheck(),
+              SizedBox(
+                height: 50,
+                child: Marquee(
+                  text: settingsController.marquee.value,
+                  style: boldTextStyle(color: darkOrange, size: 16),
+                  scrollAxis: Axis.horizontal,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  blankSpace: 20.0,
+                  velocity: 30.0,
+                  // pauseAfterRound: Duration(seconds: 1),
+                  startPadding: 10.0,
+                  // accelerationDuration: Duration(seconds: 1),
+                  // accelerationCurve: Curves.linear,
+                  // decelerationDuration: Duration(milliseconds: 500),
+                  // decelerationCurve: Curves.easeOut,
+                ),
+              ).visible(settingsController.showMarquee.value),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -113,7 +196,7 @@ class _Home2State extends State<Home2> with RouteAware {
                                 children: [
                                   Text(
                                     "${data!.firstName!} ${data.lastName!}",
-                                    style: boldTextStyle(),
+                                    style: boldTextStyle(size: 18),
                                   ),
                                   Text(
                                     getGreeting(),
@@ -173,16 +256,16 @@ class _Home2State extends State<Home2> with RouteAware {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Instant Service",
-                    style: boldTextStyle(size: 14),
-                  ).onTap(() {
-                    locationController.handleGetDeviceInfo();
-                  }),
+                    "Healthcare Services",
+                    style: primaryTextStyle(size: 14),
+                  ),
                   Row(
                     children: [
                       Text(
                         "view all",
-                        style: boldTextStyle(size: 14, color: kPrimary),
+                        style: primaryTextStyle(
+                          size: 14,
+                        ),
                       ),
                       5.width,
                       Icon(
@@ -191,10 +274,12 @@ class _Home2State extends State<Home2> with RouteAware {
                         color: kPrimary,
                       )
                     ],
-                  )
+                  ).onTap(() {
+                    AllServicesScreen().launch(context);
+                  })
                 ],
               ),
-              10.height,
+              15.height,
               StaggeredGrid.count(
                 crossAxisCount: 4,
                 mainAxisSpacing: 5,
@@ -203,6 +288,7 @@ class _Home2State extends State<Home2> with RouteAware {
                   StaggeredGridTile.count(
                     crossAxisCellCount: 2,
                     mainAxisCellCount: 3,
+                    key: tutorialcoachcontroller.keyButton1,
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
@@ -215,7 +301,7 @@ class _Home2State extends State<Home2> with RouteAware {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Book Appointment",
+                                "Talk to a doctor",
                                 style: boldTextStyle(
                                   size: 14,
                                 ),
@@ -247,6 +333,7 @@ class _Home2State extends State<Home2> with RouteAware {
                   StaggeredGridTile.count(
                     crossAxisCellCount: 2,
                     mainAxisCellCount: 2,
+                    key: tutorialcoachcontroller.keyButton2,
                     child: Container(
                       height: 100,
                       width: double.infinity,
@@ -261,13 +348,13 @@ class _Home2State extends State<Home2> with RouteAware {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Pharmacies",
+                                "Interpret Lab Result",
                                 style: boldTextStyle(
                                   size: 14,
                                 ),
                               ),
                               Text(
-                                "Order drug from the nearest pharmacy",
+                                "Upload lab result for instant interpretation",
                                 style: secondaryTextStyle(
                                   size: 10,
                                 ),
@@ -278,8 +365,8 @@ class _Home2State extends State<Home2> with RouteAware {
                             child: SizedBox(
                               width: double.infinity,
                               height: 100,
-                              child: Image.asset(
-                                "assets/images/pharmacy.png",
+                              child: Lottie.asset(
+                                "assets/lottie/lottie5.json",
                                 fit: BoxFit.fitHeight,
                                 width: 30,
                                 height: 100,
@@ -289,12 +376,13 @@ class _Home2State extends State<Home2> with RouteAware {
                         ],
                       ),
                     ).onTap(() {
-                      PharmaciesScreen().launch(context);
+                      LabResultScreen().launch(context);
                     }),
                   ),
                   StaggeredGridTile.count(
                     crossAxisCellCount: 2,
                     mainAxisCellCount: 2,
+                    key: tutorialcoachcontroller.keyButton3,
                     child: Container(
                       height: 100,
                       decoration: BoxDecoration(
@@ -352,13 +440,63 @@ class _Home2State extends State<Home2> with RouteAware {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Upload Lab Report",
+                                "Pharmacies",
                                 style: boldTextStyle(
                                   size: 14,
                                 ),
                               ),
                               Text(
-                                "Upload lab result for instant interpretation ",
+                                "Order drug from the nearest pharmacy",
+                                style: secondaryTextStyle(
+                                  size: 10,
+                                ),
+                              ),
+                            ],
+                          ).paddingAll(10),
+                          Expanded(
+                            child: SizedBox(
+                              child: Image.asset(
+                                'assets/images/pharmacy.png',
+                                width: 150,
+                                height: 150,
+                                fit: BoxFit.contain,
+                              ),
+                            ).paddingAll(10),
+                          )
+                        ],
+                      ),
+                    ).onTap(() {
+                      PharmaciesScreen().launch(context);
+                      // QuestionAnswerScreen().launch(context);
+                    }),
+                  ),
+                  StaggeredGridTile.count(
+                    crossAxisCellCount: 2,
+                    mainAxisCellCount: 1,
+                    child: Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: context.cardColor,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                settingsController.anonymous.value
+                                    ? "Anonymous"
+                                    : "Health Tips",
+                                style: boldTextStyle(
+                                  size: 14,
+                                ),
+                              ),
+                              Text(
+                                settingsController.anonymous.value
+                                    ? "Send anonymous Message"
+                                    : "Learn more about your health",
                                 style: secondaryTextStyle(
                                   size: 10,
                                 ),
@@ -369,7 +507,7 @@ class _Home2State extends State<Home2> with RouteAware {
                             child: SizedBox(
                               width: double.infinity,
                               child: Lottie.asset(
-                                'assets/lottie/lottie5.json',
+                                'assets/lottie/lottie3.json',
                                 fit: BoxFit.contain,
                               ),
                             ),
@@ -377,53 +515,9 @@ class _Home2State extends State<Home2> with RouteAware {
                         ],
                       ),
                     ).onTap(() {
-                      LabResultScreen().launch(context);
-                    }),
-                  ),
-                  StaggeredGridTile.count(
-                    crossAxisCellCount: 2,
-                    mainAxisCellCount: 1,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: context.cardColor,
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "HealthTips",
-                                  style: boldTextStyle(
-                                    size: 14,
-                                  ),
-                                ),
-                                Text(
-                                  "Learn More",
-                                  style: secondaryTextStyle(
-                                    size: 10,
-                                  ),
-                                ),
-                              ],
-                            ).paddingAll(10),
-                          ),
-                          Expanded(
-                            child: SizedBox(
-                              child: Lottie.asset(
-                                'assets/lottie/lottie3.json',
-                                width: 150,
-                                height: 150,
-                                fit: BoxFit.contain,
-                              ),
-                            ).paddingAll(10),
-                          )
-                        ],
-                      ),
-                    ).onTap(() {
-                      HealthTipsHome().launch(context);
+                      settingsController.anonymous.value
+                          ? QuestionAnswerScreen().launch(context)
+                          : HealthTipsHome().launch(context);
                     }),
                   ),
                 ],

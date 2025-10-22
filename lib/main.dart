@@ -1,6 +1,7 @@
 // main.dart
 import 'dart:async';
 
+import 'package:app_links/app_links.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/controllers/FirebaseMessaging.dart';
 import 'package:instant_doctor/firebase_options.dart';
+import 'package:instant_doctor/screens/home/Root.dart';
 import 'package:instant_doctor/screens/splash_screen/splash_screen.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -76,17 +78,46 @@ Future<void> initializeApp() async {
 }
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   tz.initializeTimeZones();
-  await initializeApp();
 
-  defaultToastBackgroundColor = Colors.black;
-  defaultToastTextColor = Colors.white;
-  defaultToastGravityGlobal = ToastGravity.CENTER;
-  defaultRadius = 30;
-  defaultAppButtonRadius = 30;
-  defaultLoaderAccentColorGlobal = kPrimary;
+  // ✅ Initialize Firebase safely
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    ).timeout(const Duration(seconds: 10));
+    print('🔥 Firebase initialized successfully');
+  } catch (e) {
+    print('❌ Firebase initialization failed: $e');
+  }
 
+  // Run the Flutter app first
   runApp(MyApp(navigatorKey: navigatorKey));
+
+  // ✅ Then perform platform-dependent setups after runApp()
+  unawaited(_postRunInitialization());
+}
+
+Future<void> _postRunInitialization() async {
+  try {
+    // Initialize FCM handling
+    await FirebaseMessagings().handleInit();
+
+    // Initialize Zego calling service
+    ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(navigatorKey);
+    ZegoUIKitPrebuiltCallInvitationService().useSystemCallingUI([
+      ZegoUIKitSignalingPlugin(),
+    ]);
+
+    // Load local app settings
+    await initialize();
+    await initializeTheme();
+    settingsController.handleGetVideoCallKeys();
+
+    print('✅ Post-run initialization completed successfully');
+  } catch (e) {
+    print('⚠️ Post-run initialization error: $e');
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -98,6 +129,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late final AppLinks _appLinks;
+
   Future<void> init() async {
     settingsController.setTheme(
       settingsController.isDarkMode.value ? ThemeMode.dark : ThemeMode.light,
@@ -106,8 +139,31 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
-    init();
     super.initState();
+    init();
+    _initAppLinks(); // Initialize deep link listener
+  }
+
+  Future<void> _initAppLinks() async {
+    _appLinks = AppLinks();
+
+    // When app is already running or in background
+    _appLinks.uriLinkStream.listen((uri) {
+      print('🔗 App link detected (foreground): $uri');
+      _consumeLink(uri);
+    });
+
+    // When app is opened from a terminated state
+    final initialUri = await _appLinks.getInitialLink();
+    if (initialUri != null) {
+      print('🚀 App opened via link: $initialUri');
+      _consumeLink(initialUri);
+    }
+  }
+
+  void _consumeLink(Uri uri) {
+    // 👇 Do nothing except log it — this tells iOS that the app handled it
+    print('✅ Consumed link: $uri');
   }
 
   @override
@@ -115,7 +171,6 @@ class _MyAppState extends State<MyApp> {
     setOrientationPortrait();
     return Obx(() => GetMaterialApp(
           title: 'Instant Doctor',
-          
           initialBinding: InitialBindings(),
           debugShowCheckedModeBanner: false,
           navigatorKey: widget.navigatorKey,

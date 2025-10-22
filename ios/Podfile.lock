@@ -47,6 +47,8 @@ PODS:
   - OrderedSet (6.0.3)
   - permission_handler_apple (9.3.0):
     - Flutter
+  - sign_in_apple (0.0.1):
+    - Flutter
   - sign_in_with_apple (0.0.1):
     - Flutter
   - vibration (3.0.0):
@@ -92,6 +94,7 @@ DEPENDENCIES:
   - native_device_orientation (from `.symlinks/plugins/native_device_orientation/ios`)
   - nb_utils (from `.symlinks/plugins/nb_utils/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - sign_in_apple (from `.symlinks/plugins/sign_in_apple/ios`)
   - sign_in_with_apple (from `.symlinks/plugins/sign_in_with_apple/ios`)
   - vibration (from `.symlinks/plugins/vibration/ios`)
   - zego_callkit (from `.symlinks/plugins/zego_callkit/ios`)
@@ -147,6 +150,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/nb_utils/ios"
   permission_handler_apple:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
+  sign_in_apple:
+    :path: ".symlinks/plugins/sign_in_apple/ios"
   sign_in_with_apple:
     :path: ".symlinks/plugins/sign_in_with_apple/ios"
   vibration:
@@ -167,41 +172,42 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/zego_zpns/ios"
 
 SPEC CHECKSUMS:
-  audio_waveforms: cd736909ebc6b6a164eb74701d8c705ce3241e1c
+  audio_waveforms: a6dde7fe7c0ea05f06ffbdb0f7c1b2b2ba6cedcf
   CryptoSwift: e64e11850ede528a02a0f3e768cec8e9d92ecb90
-  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  flutter_callkit_incoming_yoer: a5936b9f065762a7b422594028d3a20901c88996
-  flutter_inappwebview_ios: 6f63631e2c62a7c350263b13fa5427aedefe81d4
-  flutter_keyboard_visibility: 0339d06371254c3eb25eeb90ba8d17dca8f9c069
-  flutter_local_notifications: 4cde75091f6327eb8517fa068a0a5950212d2086
-  flutter_logs: 5d0dca26963e0f30b11a995a764744ef77d5d428
-  flutter_ringtone_player: 15eba85187230b87b2512f0e1b92225618bc03e7
-  flutter_vibrate: 9f4c2ab57008965f78969472367c329dd77eb801
-  flutter_volume_controller: e4d5832f08008180f76e30faf671ffd5a425e529
-  fluttertoast: 21eecd6935e7064cc1fcb733a4c5a428f3f24f0f
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_callkit_incoming_yoer: 83891ececea86d92a7430d1bae162b6c0934c954
+  flutter_inappwebview_ios: b89ba3482b96fb25e00c967aae065701b66e9b99
+  flutter_keyboard_visibility: 4625131e43015dbbe759d9b20daaf77e0e3f6619
+  flutter_local_notifications: ad39620c743ea4c15127860f4b5641649a988100
+  flutter_logs: 30a36079651dcdfb260dbff875bf882bbbcaa22e
+  flutter_ringtone_player: a77c42464250845611eaa44c27e8714acc800138
+  flutter_vibrate: 207bbbeb62dd5638b479846c8e46168d7229f14a
+  flutter_volume_controller: c2be490cb0487e8b88d0d9fc2b7e1c139a4ebccb
+  fluttertoast: 2c67e14dce98bbdb200df9e1acf610d7a6264ea1
   Google-Maps-iOS-Utils: 0a484b05ed21d88c9f9ebbacb007956edd508a96
-  google_maps_flutter_ios: e31555a04d1986ab130f2b9f24b6cdc861acc6d3
+  google_maps_flutter_ios: 0291eb2aa252298a769b04d075e4a9d747ff7264
   GoogleMaps: 0608099d4870cac8754bdba9b6953db543432438
-  location: d5cf8598915965547c3f36761ae9cc4f4e87d22e
+  location: 155caecf9da4f280ab5fe4a55f94ceccfab838f8
   Masonry: 678fab65091a9290e40e2832a55e7ab731aad201
-  native_device_orientation: 348b10c346a60ebbc62fb235a4fdb5d1b61a8f55
-  nb_utils: 68f1f405e47c19c92dbd4bbf4528dae7dd0fb257
+  native_device_orientation: e3580675687d5034770da198f6839ebf2122ef94
+  nb_utils: f4e2d76a9018f7ac0ed7823d8efd6eca639c01a5
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
-  permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
-  sign_in_with_apple: f3bf75217ea4c2c8b91823f225d70230119b8440
-  vibration: 3797858f8cbf53d841e189ef8bd533d96e4ca93c
-  zego_callkit: 72593f46ed01779c4cee6bc65d2e0e1cde86b42c
-  zego_express_engine: 1ebcdc2f1c642a890ac8adc3ef2d798a3fccbede
-  zego_uikit: 6ceebb00df6af92b2a7a16b15f98330035a5d911
-  zego_uikit_prebuilt_call: 13173d7a3c6dcc1695cbdff15d19463acd1ca39c
-  zego_uikit_signaling_plugin: 7fdfcd9f796b591c9cb8770609f4fa85178aa40e
-  zego_zim: dcf385cfc4a0d974d5ddf855df41d76f3a7473ec
-  zego_zpns: 282d9f9926ea5dff87efbafae8cf33fdada41f4f
+  permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
+  sign_in_apple: 8dc723ca4030d519d6b41dd5e35b5eec8075fde7
+  sign_in_with_apple: c5dcc141574c8c54d5ac99dd2163c0c72ad22418
+  vibration: 69774ad57825b11c951ee4c46155f455d7a592ce
+  zego_callkit: 8e3bc2e9fc6895cff1b27841b1de1100344d2613
+  zego_express_engine: 1164f43c703759f55e0751377425f660d15b2904
+  zego_uikit: 0843069d9d4d0e4845abf0ea9b24efa95c1760fa
+  zego_uikit_prebuilt_call: 7fe09774f68ec5344fd16378ff2d3bc2de36c6f8
+  zego_uikit_signaling_plugin: 89c53a021d449903c6e6a0642383bb7e5791e46e
+  zego_zim: 54ca1d71cbd91c83bb56d63126016bd4a81f2777
+  zego_zpns: e2ef9b972e9b6be00b78b32b71c550c426584752
   ZegoUIKitReport: a993f7ccc5d243998a7e601a60e16fcd6c084417
   ZIM-Private: 70c76400eb99981920e6e1edc7c7ebe09aba7bfe
   ZIPFoundation: b8c29ea7ae353b309bc810586181fd073cb3312c
   ZPNs: 73bad0046a74e37315201053f9a0e7ac625d9436
 
-PODFILE CHECKSUM: d6a539f7397d160792725c0298933a91659c57f3
+PODFILE CHECKSUM: c83b21314f23df709b24078011811f7a6e4eb4ff
 
 COCOAPODS: 1.16.2

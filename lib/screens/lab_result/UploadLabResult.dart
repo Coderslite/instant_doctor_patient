@@ -12,7 +12,7 @@ import 'package:nb_utils/nb_utils.dart';
 import 'package:path/path.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../../controllers/LapResultController.dart';
+import '../../controllers/LabResultController.dart';
 
 class UploadLabResult extends StatefulWidget {
   final int amount;

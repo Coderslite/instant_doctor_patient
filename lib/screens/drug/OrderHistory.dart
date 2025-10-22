@@ -8,6 +8,7 @@ import 'package:instant_doctor/screens/drug/TrackOrder.dart';
 import 'package:instant_doctor/screens/pharmacy/Pharmacies.dart';
 import 'package:nb_utils/nb_utils.dart';
 
+import '../../component/check_country.dart';
 import '../../component/check_internet.dart';
 import '../../component/eachOrder.dart';
 import '../../services/OrderService.dart';
@@ -27,24 +28,23 @@ class _OrderHistoryState extends State<OrderHistory> {
       body: Obx(() {
         var d = settingsController.isDarkMode.value;
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                internetCheck(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Order History",
-                      style: boldTextStyle(
-                        size: 18,
-                        color: kPrimary,
-                      ),
-                    ),
-                  ],
+          child: Column(
+            children: [
+              internetCheck(),
+              countryCheck(),
+              Text(
+                "Order History",
+                textAlign: TextAlign.center,
+                style: boldTextStyle(
+                  size: 18,
+                  color: kPrimary,
                 ),
-                Expanded(
+              ),
+              10.height,
+              Divider(),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
                   child: StreamBuilder<List<OrderModel>>(
                       stream: orderService.getMyOrders(),
                       builder: (context, snapshot) {
@@ -67,8 +67,8 @@ class _OrderHistoryState extends State<OrderHistory> {
                         return Loader();
                       }),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       }),

@@ -23,7 +23,7 @@ class BookingController extends GetxController {
   RxInt price = 0.obs;
   RxString package = ''.obs;
   RxInt duration = 0.obs;
-
+  RxList selectedSymptoms = [].obs;
   RxString docId = ''.obs;
   RxString docToken = ''.obs;
   RxString userToken = ''.obs;
@@ -67,7 +67,7 @@ class BookingController extends GetxController {
 
       // Calculate end time
       var endDate = isTrial
-          ? selectedDate.add(Duration(days: 1))
+          ? selectedDate.add(Duration(minutes: 30))
           : selectedDate.add(Duration(seconds: duration.value));
       startTime = Timestamp.fromDate(selectedDate);
       endTime = Timestamp.fromDate(endDate);
@@ -90,7 +90,7 @@ class BookingController extends GetxController {
         await userService.updateProfile(
             data: {"isTrialAvailable": false, "isPaid": true},
             userId: userController.userId.value);
-        await updateAppointmentAfterPayment(appointmentId);
+        await updateAppointmentAfterPayment(appointmentId, isTrial);
       } else {
         // Proceed with payment for regular appointments
         await paymentController.makePayment(
@@ -109,9 +109,14 @@ class BookingController extends GetxController {
 
   Future<String> newBooking(bool isTrial) async {
     var res = await appointmentService.createAppointment(
-      docId: docId.value,
+      docId: isTrial
+          ? settingsController.trialDoctor.value.isEmpty
+              ? TRIAL_DOCTOR_ID
+              : settingsController.trialDoctor.value
+          : docId.value,
       userId: userController.userId.value,
       complain: complain.value,
+      symptoms: selectedSymptoms,
       price: price.value,
       package: package.value,
       startTime: startTime!,
@@ -126,9 +131,10 @@ class BookingController extends GetxController {
     }
   }
 
-  Future<void> updateAppointmentAfterPayment(String appointmentId) async {
+  Future<void> updateAppointmentAfterPayment(
+      String appointmentId, bool isTrial) async {
     var res = await appointmentService.updateAppointmentAfterPayment(
-        appointmentId: appointmentId);
+        appointmentId: appointmentId, isTrial: isTrial);
 
     if (res) {
       isLoading.value = false;
@@ -137,6 +143,7 @@ class BookingController extends GetxController {
       price.value = 0;
       package.value = '';
       duration.value = 0;
+      selectedSymptoms.value = [];
       SuccessScreen().launch(Get.context!);
     } else {
       errorSnackBar(title: "Something went wrong");

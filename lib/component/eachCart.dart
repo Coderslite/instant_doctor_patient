@@ -55,9 +55,11 @@ class _EachcartState extends State<Eachcart> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      "${widget.drug.name}",
-                      style: boldTextStyle(size: 14),
+                    Expanded(
+                      child: Text(
+                        "${widget.drug.name}",
+                        style: boldTextStyle(size: 14),
+                      ),
                     ),
                     Icon(Icons.close).onTap(() async {
                       orderController.handleRemoveFromCart(drug: widget.drug);

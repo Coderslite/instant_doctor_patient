@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/WaillistModel.dart';
+import 'package:instant_doctor/services/CustomMailService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 
 class WaitlistService {
@@ -13,6 +14,7 @@ class WaitlistService {
 
   Future<void> updateWaitlist(String id, Map<String, dynamic> data) async {
     await waitlistCol.doc(id).update(data);
+    await sendCustomMail(activityName: 'Waitlist');
   }
 
   Future<bool> checkNotified() async {
@@ -26,6 +28,4 @@ class WaitlistService {
         .get();
     return res.docs.isNotEmpty;
   }
-
-  
 }

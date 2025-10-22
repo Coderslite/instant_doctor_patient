@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/models/DrugModel.dart';
+import 'package:instant_doctor/services/CustomMailService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 
@@ -50,6 +51,7 @@ class OrderService {
     //     userId: userController.userId.value,
     //     amount: order.totalAmount.validate(),
     //     type: TransactionType.debit);
+    await sendCustomMail(activityName: 'Order');
     notificationService.newNotification(
         userId: userController.userId.value,
         type: NotificationType.transaction,

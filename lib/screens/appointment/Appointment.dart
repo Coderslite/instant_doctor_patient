@@ -13,8 +13,10 @@ import 'package:instant_doctor/controllers/UserController.dart';
 import 'package:instant_doctor/models/AppointmentModel.dart';
 import 'package:instant_doctor/screens/appointment/NewAppointment.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import '../../component/EachAppointment.dart';
+import '../../component/check_country.dart';
 import '../../component/check_internet.dart';
 import '../../controllers/BookingController.dart';
 import '../../controllers/PaymentController.dart';
@@ -34,204 +36,297 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
   final SettingsController settingsController = Get.find();
   AppointmentService appointmentService = AppointmentService();
   UserController userController = Get.put(UserController());
+  final _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Obx(() {
-        // ignore: unused_local_variable
-        bool isDarkMode = settingsController.isDarkMode.value;
-
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                internetCheck(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "My Appointments",
-                      style: boldTextStyle(
-                        color: kPrimary,
-                        size: 18,
-                      ),
-                    ),
-                  ],
+    return Obx(() {
+      bool isDarkMode = settingsController.isDarkMode.value;
+      return Scaffold(
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: kPrimary,
+          onPressed: () => NewAppointment().launch(context),
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              internetCheck(),
+              countryCheck(),
+              // Header Section
+              Text(
+                "My Appointments",
+                textAlign: TextAlign.center,
+                style: boldTextStyle(
+                  size: 18,
+                  color: kPrimary,
                 ),
-                10.height,
-                Expanded(
-                    child: RefreshIndicator(
-                  onRefresh: () {
-                    return Future.delayed(
-                      const Duration(seconds: 2),
-                    );
-                  },
+              ),
+
+              10.height,
+              Divider(),
+              // Main Content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
                   child: StreamBuilder<List<AppointmentModel>>(
-                      stream: userController.userId.isEmpty
-                          ? null
-                          : appointmentService
-                              .getAllAppointment(userController.userId.value),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasError) {
-                          return Text(snapshot.error.toString()).center();
-                        }
-                        if (snapshot.hasData) {
-                          if (snapshot.data!.isEmpty) {
-                            return _buildNoAppointmentFound();
-                          } else {
-                            return ListView.builder(
-                                itemCount: snapshot.data!.length,
-                                physics: const BouncingScrollPhysics(),
-                                itemBuilder: (context, index) {
-                                  var appointment = snapshot.data![index];
-                                  var startTime = appointment.startTime;
-                                  var endTime = appointment.endTime;
-                                  var now = Timestamp.now();
-                                  var isExpired = now.compareTo(endTime!) > 0;
-                                  var isOngoing =
-                                      now.compareTo(startTime!) >= 0 &&
-                                          now.compareTo(endTime) <= 0;
+                    stream: userController.userId.isEmpty
+                        ? null
+                        : appointmentService
+                            .getAllAppointment(userController.userId.value),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return _buildErrorState(snapshot.error.toString());
+                      }
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return _buildLoadingState();
+                      }
+                      if (snapshot.hasData) {
+                        if (snapshot.data!.isEmpty) {
+                          return _buildEmptyState();
+                        } else {
+                          return ListView.builder(
+                            itemCount: snapshot.data!.length,
+                            physics: const BouncingScrollPhysics(),
+                            itemBuilder: (context, index) {
+                              var appointment = snapshot.data![index];
+                              var startTime = appointment.startTime;
+                              var endTime = appointment.endTime;
+                              var now = Timestamp.now();
+                              var isExpired = now.compareTo(endTime!) > 0;
+                              var isOngoing = now.compareTo(startTime!) >= 0 &&
+                                  now.compareTo(endTime) <= 0;
 
-                                  return Slidable(
-                                    enabled: isExpired,
-                                    key: ValueKey(appointment.id.validate()),
-                                    startActionPane: ActionPane(
-                                      // A motion is a widget used to control how the pane animates.
-                                      motion: const ScrollMotion(),
-
-                                      // A pane can dismiss the Slidable.
-                                      dismissible: DismissiblePane(
-                                          onDismissed: () async {
-                                        await appointmentService
-                                            .deleteAppointment(
-                                                appointmentId:
-                                                    appointment.id.validate());
-                                      }),
-
-                                      // All actions are defined in the children parameter.
-                                      children: [
-                                        // A SlidableAction can have an icon and/or a label.
-                                        SlidableAction(
-                                          onPressed: (s) async {
-                                            await appointmentService
-                                                .deleteAppointment(
-                                                    appointmentId: appointment
-                                                        .id
-                                                        .validate());
-                                          },
-                                          backgroundColor:
-                                              const Color(0xFFFE4A49),
-                                          foregroundColor: Colors.white,
-                                          icon: Icons.delete,
-                                          label: 'Delete',
-                                        ),
-                                        // SlidableAction(
-                                        //   onPressed: doNothing,
-                                        //   backgroundColor: Color(0xFF21B7CA),
-                                        //   foregroundColor: Colors.white,
-                                        //   icon: Icons.share,
-                                        //   label: 'Share',
-                                        // ),
-                                      ],
+                              return AnimationConfiguration.staggeredList(
+                                position: index,
+                                duration: const Duration(milliseconds: 375),
+                                child: SlideAnimation(
+                                  verticalOffset: 50.0,
+                                  child: FadeInAnimation(
+                                    child: _buildAppointmentCard(
+                                      context,
+                                      appointment,
+                                      isExpired,
+                                      isOngoing,
                                     ),
-                                    child: eachAppointment(
-                                            context: context,
-                                            docId:
-                                                appointment.doctorId.validate(),
-                                            appointment: appointment,
-                                            isExpired: isExpired,
-                                            isOngoing: isOngoing)
-                                        .onTap(() async {
-                                      if (isExpired &&
-                                          appointment.isPaid == false) {
-                                        errorSnackBar(
-                                            title:
-                                                "This appointment has expired");
-                                        return;
-                                      }
-                                      if (!appointment.isPaid.validate() &&
-                                          !appointment.isTrial.validate()) {
-                                        await showConfirmDialog(context,
-                                            "Do you want to make payment now ?",
-                                            onAccept: () {
-                                          handleMakePayment(appointment);
-                                        });
-                                        return;
-                                      }
-                                      if (appointment.doctorId
-                                          .validate()
-                                          .isEmpty) {
-                                        errorSnackBar(
-                                            title:
-                                                "Appointment is not assigned to a doctor yet");
-                                        return;
-                                      }
-                                      ChatInterface(
-                                        appointmentId: appointment.id!,
-                                        docId: appointment.doctorId!,
-                                        appointment: appointment,
-                                        videocallToken: appointment
-                                            .videocallToken
-                                            .validate(),
-                                        isExpired: isExpired,
-                                      ).launch(context);
-                                    }),
-                                  );
-                                });
-                          }
+                                  ),
+                                ),
+                              );
+                            },
+                          );
                         }
-                        return const Center(
-                          child: CircularProgressIndicator(
-                            color: kPrimary,
-                          ),
-                        );
-                      }),
-                ))
-              ],
-            ),
+                      }
+                      return _buildEmptyState();
+                    },
+                  ),
+                ),
+              )
+            ],
           ),
-        );
+        ),
+      );
+    });
+  }
+
+  Widget _buildAppointmentCard(
+    BuildContext context,
+    AppointmentModel appointment,
+    bool isExpired,
+    bool isOngoing,
+  ) {
+    return Slidable(
+      enabled: isExpired || !appointment.isPaid.validate(),
+      key: ValueKey(appointment.id.validate()),
+      startActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        dismissible: DismissiblePane(
+          onDismissed: () async {
+            await _showDeleteConfirmation(appointment);
+          },
+        ),
+        children: [
+          SlidableAction(
+            onPressed: (s) async {
+              await _showDeleteConfirmation(appointment);
+            },
+            backgroundColor: const Color(0xFFFE4A49),
+            foregroundColor: Colors.white,
+            icon: Icons.delete,
+            label: 'Delete',
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ],
+      ),
+      child: eachAppointment(
+        context: context,
+        docId: appointment.doctorId.validate(),
+        appointment: appointment,
+        isExpired: isExpired,
+        isOngoing: isOngoing,
+      ).onTap(() {
+        _handleAppointmentTap(appointment, isExpired);
       }),
     );
   }
 
-  Widget _buildNoAppointmentFound() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(CupertinoIcons.calendar_circle, size: 80, color: Colors.grey[400]),
-        SizedBox(height: 20),
-        Text(
-          "No Appointment Found",
-          style: boldTextStyle(size: 18),
-        ),
-        SizedBox(height: 10),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40.0),
-          child: Text(
-            "You haven't made any appointment yet, click on the button below to start",
-            textAlign: TextAlign.center,
-            style: primaryTextStyle(size: 14, color: Colors.grey),
+  Future<void> _showDeleteConfirmation(AppointmentModel appointment) async {
+    bool confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Delete Appointment"),
+        content: Text("Are you sure you want to delete this appointment?"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, false);
+              setState(() {});
+            },
+            child: Text("Cancel"),
           ),
-        ),
-        SizedBox(height: 30),
-        ElevatedButton(
-          onPressed: () => NewAppointment().launch(context),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kPrimary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text("Delete", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await appointmentService.deleteAppointment(
+          appointmentId: appointment.id.validate());
+      successSnackBar(title: "Appointment deleted");
+    }
+  }
+
+  Future<void> _handleAppointmentTap(
+      AppointmentModel appointment, bool isExpired) async {
+    if (isExpired && appointment.isPaid == false) {
+      print("clicked");
+      errorSnackBar(title: "This appointment has expired");
+      return;
+    }
+
+    if (!appointment.isPaid.validate() && !appointment.isTrial.validate()) {
+      await _showPaymentDialog(appointment);
+      return;
+    }
+
+    if (appointment.doctorId.validate().isEmpty) {
+      errorSnackBar(title: "Appointment is not assigned to a doctor yet");
+      return;
+    }
+
+    ChatInterface(
+      appointmentId: appointment.id!,
+      docId: appointment.doctorId!,
+      appointment: appointment,
+      videocallToken: appointment.videocallToken.validate(),
+      isExpired: isExpired,
+      update: handleUpdate,
+    ).launch(context);
+  }
+
+  handleUpdate() async {
+    print("update");
+    setState(() {});
+  }
+
+  Future<void> _showPaymentDialog(AppointmentModel appointment) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Payment Required"),
+        content:
+            Text("You need to complete payment to access this appointment"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Later"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              handleMakePayment(appointment);
+            },
+            child: Text("Pay Now", style: TextStyle(color: kPrimary)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return SingleChildScrollView(
+      physics: AlwaysScrollableScrollPhysics(),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(height: MediaQuery.of(context).size.height * 0.15),
+          Icon(CupertinoIcons.calendar_circle,
+              size: 80, color: Colors.grey[400]),
+          SizedBox(height: 20),
+          Text(
+            "No Appointments Yet",
+            style: boldTextStyle(size: 22),
+          ),
+          SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40.0),
+            child: Text(
+              "You don't have any appointments scheduled yet. Tap the + button to book your first consultation.",
+              textAlign: TextAlign.center,
+              style: secondaryTextStyle(size: 14),
             ),
-            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
           ),
-          child: Text(
-            "Book Appointment",
-            style: boldTextStyle(color: white),
+          SizedBox(height: 30),
+          ElevatedButton(
+            onPressed: () => NewAppointment().launch(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            child: Text(
+              "Book Appointment",
+              style: boldTextStyle(color: white),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(color: kPrimary),
+          SizedBox(height: 16),
+          Text("Loading your appointments...", style: secondaryTextStyle()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 48, color: Colors.red),
+          SizedBox(height: 16),
+          Text("Something went wrong", style: boldTextStyle()),
+          SizedBox(height: 8),
+          Text(error, style: secondaryTextStyle(), textAlign: TextAlign.center),
+          SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => setState(() {}),
+            child: Text("Try Again"),
+          ),
+        ],
+      ),
     );
   }
 
