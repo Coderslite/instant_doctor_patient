@@ -28,47 +28,50 @@ class _OrderHistoryState extends State<OrderHistory> {
       body: Obx(() {
         var d = settingsController.isDarkMode.value;
         return SafeArea(
-          child: Column(
-            children: [
-              internetCheck(),
-              countryCheck(),
-              Text(
-                "Order History",
-                textAlign: TextAlign.center,
-                style: boldTextStyle(
-                  size: 18,
-                  color: kPrimary,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                internetCheck(),
+                countryCheck(),
+                Text(
+                  "Order History",
+                  textAlign: TextAlign.center,
+                  style: boldTextStyle(
+                    size: 18,
+                    color: kPrimary,
+                  ),
                 ),
-              ),
-              10.height,
-              Divider(),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: StreamBuilder<List<OrderModel>>(
-                      stream: orderService.getMyOrders(),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          var data = snapshot.data!;
-                          return data.isEmpty
-                              ? _buildNoOrderFound()
-                              : ListView.builder(
-                                  itemCount: data.length,
-                                  itemBuilder: (context, index) {
-                                    return eachOrder(context, data[index])
-                                        .onTap(() {
-                                      OrderTracker(
-                                        orderId: data[index].id.validate(),
-                                      ).launch(context);
-                                    });
-                                  },
-                                );
-                        }
-                        return Loader();
-                      }),
+                10.height,
+                Divider(),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: StreamBuilder<List<OrderModel>>(
+                        stream: orderService.getMyOrders(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            var data = snapshot.data!;
+                            return data.isEmpty
+                                ? _buildNoOrderFound()
+                                : ListView.builder(
+                                    itemCount: data.length,
+                                    itemBuilder: (context, index) {
+                                      return eachOrder(context, data[index])
+                                          .onTap(() {
+                                        OrderTracker(
+                                          orderId: data[index].id.validate(),
+                                        ).launch(context);
+                                      });
+                                    },
+                                  );
+                          }
+                          return Loader();
+                        }),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       }),

@@ -1,3 +1,5 @@
+// import 'dart:convert';
+
 // import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
 // import 'package:get/get.dart';
@@ -8,17 +10,18 @@
 // import 'package:instant_doctor/services/AppointmentService.dart';
 // import 'package:instant_doctor/services/WalletService.dart';
 // import 'package:nb_utils/nb_utils.dart';
-// import 'package:pay_with_paystack/pay_with_paystack.dart';
+// import 'package:paystack_flutter_sdk/paystack_flutter_sdk.dart';
 
-// import '../services/GetUserId.dart';
 // import '../services/UserService.dart';
 // import 'OrderController.dart';
+// import 'package:http/http.dart' as http;
 
 // class PaymentController extends GetxController {
 //   var amount = '0'.obs;
 //   var isLoading = false.obs;
 //   final walletService = Get.find<WalletService>();
 //   final userService = Get.find<UserService>();
+//   final _paystack = Paystack();
 
 //   double surChargeOrder(double amount, double deliveryFee) {
 //     const double surchargeRate = 0.02; // 2% user surcharge
@@ -86,7 +89,21 @@
 //     return totalFee;
 //   }
 
-//   Future makePaystackPayment({
+//   initialize() async {
+//     try {
+//       final response = await _paystack.initialize(
+//           PaystackKey.publicKey, true); // allow logging
+//       if (response) {
+//         log("Sucessfully initialised the SDK");
+//       } else {
+//         log("Unable to initialise the SDK");
+//       }
+//     } on PlatformException catch (e) {
+//       log(e.message!);
+//     }
+//   }
+
+//   Future makePayment({
 //     required String email,
 //     required BuildContext context,
 //     required int amount,
@@ -94,6 +111,7 @@
 //     String? productId,
 //     bool? isTrial,
 //   }) async {
+//     String reference = "";
 //     try {
 //       final orderController = Get.find<OrderController>();
 //       final bookingController = Get.find<BookingController>();
@@ -123,51 +141,77 @@
 //       var recipientEarning =
 //           ((amount + surcharge + transferFee) * 100) - platformEarning;
 
-//       // Paystack processes amounts in kobo\\
+//       // Paystack processes amounts in kobo
+//       var accessCode = await getAccessCode(
+//           email,
+//           ((amount + surcharge) * 100).toString(),
+//           paymentFor,
+//           recipientEarning.toInt());
+//       final response = await _paystack.launch(accessCode);
 
-//       final uniqueTransRef = PayWithPayStack().generateUuidV4();
-
-//       PayWithPayStack().now(
-//           context: context,
-//           secretKey: "pk_live_fa9a859fed46fd231e65483c85f9611c98f0d173",
-//           customerEmail: email,
-//           reference: uniqueTransRef,
-//           currency: userController.currency.value,
-//           amount: recipientEarning,
-//           callbackUrl: "https://instantdoctor.co",
-//           transactionCompleted: (paymentData) {
-//             if (paymentFor == PaymentFor.appointment) {
-//               // Convert platformEarning from kobo to Naira for calculation
-//               double doctorEarning =
-//                   (amount + surcharge) - (platformEarning / 100.0);
-//               bookingController.updateAppointmentAfterPayment(
-//                   productId.validate(), isTrial.validate());
-//               AppointmentService().updateDoctorEarning(
-//                 appointmentId: productId.validate(),
-//                 doctorEarning: doctorEarning.toInt(),
-//               );
-//             }
-//             if (paymentFor == PaymentFor.order) {
-//               orderController.orderNow();
-//             }
-//             if (paymentFor == PaymentFor.labResult) {
-//               labResultController.handleUploadFiles(context);
-//             }
-//           },
-//           transactionNotCompleted: (reason) {
-//             if (paymentFor == 'Appointment') {
-//               bookingController.isLoading.value = false;
-//               errorSnackBar(title: "Payment not successful");
-//             }
-//             if (paymentFor == 'Order') {
-//               orderController.isLoading.value = false;
-//               errorSnackBar(title: "Payment not successful");
-//             }
-//           });
+//       if (response.status == "success") {
+//         reference = response.reference;
+//         log(reference);
+//         if (paymentFor == PaymentFor.appointment) {
+//           // Convert platformEarning from kobo to Naira for calculation
+//           double doctorEarning =
+//               (amount + surcharge) - (platformEarning / 100.0);
+//           bookingController.updateAppointmentAfterPayment(
+//               productId.validate(), isTrial.validate());
+//           AppointmentService().updateDoctorEarning(
+//             appointmentId: productId.validate(),
+//             doctorEarning: doctorEarning.toInt(),
+//           );
+//         }
+//         if (paymentFor == PaymentFor.order) {
+//           orderController.orderNow();
+//         }
+//         if (paymentFor == PaymentFor.labResult) {
+//           labResultController.handleUploadFiles(context);
+//         }
+//       } else if (response.status == "cancelled") {
+//         if (paymentFor == 'Appointment') {
+//           bookingController.isLoading.value = false;
+//           errorSnackBar(title: "Payment not successful");
+//         }
+//         if (paymentFor == 'Order') {
+//           orderController.isLoading.value = false;
+//           errorSnackBar(title: "Payment not successful");
+//         }
+//       } else {
+//         log(response.message);
+//       }
 //     } on PlatformException catch (e) {
 //       log(e.message!);
 //     } finally {
 //       isLoading.value = false;
 //     }
+//   }
+
+//   Future<String> getAccessCode(String email, String amount, String paymentFor,
+//       int recipientEarning) async {
+//     var res = await http.post(
+//         Uri.parse("https://api.paystack.co/transaction/initialize"),
+//         headers: {
+//           "Authorization": "Bearer ${PaystackKey.secretKey}",
+//           // "Content-Type": "application/json",
+//         },
+//         body: {
+//           "email": email,
+//           "amount": amount,
+//           "subaccount": paymentFor == PaymentFor.order
+//               ? PaystackKey.pharmcySubAccount
+//               : paymentFor == PaymentFor.appointment
+//                   ? PaystackKey.doctorSubAccount
+//                   : '',
+//           "bearer": "subaccount",
+//           "transaction_charge": (recipientEarning).toString(),
+//         });
+//     var responseData = jsonDecode(res.body);
+//     print(responseData);
+//     if (responseData['status'] == true) {
+//       return responseData['data']['access_code'];
+//     }
+//     return '';
 //   }
 // }

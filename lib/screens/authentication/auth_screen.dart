@@ -39,6 +39,7 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _initialize() async {
+    await Future.delayed(Duration(seconds: 2));
     await _checkBiometricAvailability();
     await _loadLockoutData();
     _updateCountdown();

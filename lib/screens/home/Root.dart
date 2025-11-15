@@ -157,35 +157,103 @@ class RootState extends State<Root> with WidgetsBindingObserver {
           }
         },
         child: Scaffold(
-          bottomNavigationBar: AnimatedBottomNavigationBar(
-            elevation: 0.1,
-            icons: iconList,
-            iconSize: 30,
-            blurEffect: false,
-            safeAreaValues: SafeAreaValues(),
-            scaleFactor: 2,
-            activeIndex: settingsController.selectedIndex.value,
-            gapLocation: GapLocation.none,
-            activeColor: kPrimary,
-            inactiveColor: grey,
-            backgroundColor: context.cardColor,
-            notchSmoothness: NotchSmoothness.defaultEdge,
-            leftCornerRadius: 30,
-            rightCornerRadius: 30,
-            onTap: (index) =>
-                setState(() => settingsController.selectedIndex.value = index),
-          ),
-          resizeToAvoidBottomInset: true,
-          body: SafeArea(
-            child: IndexedStack(
-              index: settingsController.selectedIndex.value,
-              children: const [
-                Home2(),
-                AppointmentScreen(),
-                OrderHistory(),
-                ProfileScreen(),
-              ],
-            ),
+          // bottomNavigationBar: AnimatedBottomNavigationBar(
+          //   elevation: 0.1,
+          //   icons: iconList,
+          //   iconSize: 30,
+          //   blurEffect: false,
+          //   safeAreaValues: SafeAreaValues(),
+          //   scaleFactor: 2,
+          //   activeIndex: settingsController.selectedIndex.value,
+          //   gapLocation: GapLocation.none,
+          //   activeColor: kPrimary,
+          //   inactiveColor: grey,
+          //   backgroundColor: context.cardColor,
+          //   notchSmoothness: NotchSmoothness.defaultEdge,
+          //   leftCornerRadius: 30,
+          //   rightCornerRadius: 30,
+          //   onTap: (index) =>
+          //       setState(() => settingsController.selectedIndex.value = index),
+          // ),
+          // resizeToAvoidBottomInset: true,
+          body: Column(
+            children: [
+              Expanded(
+                child: IndexedStack(
+                  index: settingsController.selectedIndex.value,
+                  children: const [
+                    Home2(),
+                    AppointmentScreen(),
+                    OrderHistory(),
+                    ProfileScreen(),
+                  ],
+                ),
+              ),
+              BottomNavigationBar(
+                unselectedItemColor: grey,
+                backgroundColor: context.scaffoldBackgroundColor,
+                showSelectedLabels: true,
+                showUnselectedLabels: true,
+                currentIndex: settingsController.selectedIndex.value,
+                fixedColor: kPrimary,
+                type: BottomNavigationBarType.fixed,
+                onTap: (value) {
+                  setState(() {
+                    settingsController.selectedIndex.value = value;
+                  });
+                },
+                items: [
+                  BottomNavigationBarItem(
+                    label: "Home",
+                    icon: SizedBox(
+                        width: 30, height: 30, child: Icon(iconList[0])),
+                    activeIcon: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: Icon(
+                          iconList[0],
+                          color: kPrimary,
+                        )),
+                  ),
+                  BottomNavigationBarItem(
+                    label: "Appointments",
+                    icon: SizedBox(
+                        width: 30, height: 30, child: Icon(iconList[1])),
+                    activeIcon: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: Icon(
+                          iconList[1],
+                          color: kPrimary,
+                        )),
+                  ),
+                  BottomNavigationBarItem(
+                    label: "Orders",
+                    icon: SizedBox(
+                        width: 30, height: 30, child: Icon(iconList[2])),
+                    activeIcon: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: Icon(
+                          iconList[2],
+                          color: kPrimary,
+                        )),
+                  ),
+                  BottomNavigationBarItem(
+                    label: "Profile",
+                    icon: SizedBox(
+                        width: 30, height: 30, child: Icon(iconList[3])),
+                    activeIcon: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: Icon(
+                          iconList[3],
+                          color: kPrimary,
+                        )),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

@@ -146,383 +146,385 @@ class _Home2State extends State<Home2> with RouteAware {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 8,
-          horizontal: 8,
-        ),
-        child: SingleChildScrollView(
-          physics: BouncingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              internetCheck(),
-              countryCheck(),
-              SizedBox(
-                height: 50,
-                child: Marquee(
-                  text: settingsController.marquee.value,
-                  style: boldTextStyle(color: darkOrange, size: 16),
-                  scrollAxis: Axis.horizontal,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  blankSpace: 20.0,
-                  velocity: 30.0,
-                  // pauseAfterRound: Duration(seconds: 1),
-                  startPadding: 10.0,
-                  // accelerationDuration: Duration(seconds: 1),
-                  // accelerationCurve: Curves.linear,
-                  // decelerationDuration: Duration(milliseconds: 500),
-                  // decelerationCurve: Curves.easeOut,
-                ),
-              ).visible(settingsController.showMarquee.value),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  StreamBuilder<UserModel>(
-                      stream: userController.userId.value.isNotEmpty
-                          ? userService.getProfile(
-                              userId: userController.userId.value)
-                          : null,
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          var data = snapshot.data;
-                          return Row(
-                            children: [
-                              profileImage(UserModel(), 40, 40,
-                                  context: context),
-                              10.width,
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "${data!.firstName!} ${data.lastName!}",
-                                    style: boldTextStyle(size: 18),
-                                  ),
-                                  Text(
-                                    getGreeting(),
-                                    style: primaryTextStyle(size: 12),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
-                        }
-                        return Container();
-                      }),
-                  Stack(
-                    alignment: Alignment.topRight,
-                    clipBehavior: Clip.none,
-                    children: [
-                      Icon(
-                        Icons.notifications_active,
-                      ),
-                      Positioned(
-                          top: -4,
-                          right: 0,
-                          child: StreamBuilder<List<NotificationModel>>(
-                              stream: notificationService
-                                  .getUserUnSeenNotifications(
-                                      userId: userController.userId.value),
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData) {
-                                  var data = snapshot.data;
-                                  return Container(
-                                    padding: const EdgeInsets.all(3),
-                                    decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: fireBrick),
-                                    child: Text(
-                                      data!.length > 9
-                                          ? "9+"
-                                          : data.length.toString(),
-                                      textAlign: TextAlign.center,
-                                      style:
-                                          boldTextStyle(color: white, size: 10),
-                                    ).center(),
-                                  ).visible(data.isNotEmpty);
-                                }
-                                return const Text("");
-                              }))
-                    ],
-                  ).onTap(() {
-                    const NotificationScreen().launch(context);
-                  })
-                ],
-              ),
-              10.height,
-              HomeCard(),
-              15.height,
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Healthcare Services",
-                    style: primaryTextStyle(size: 14),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            vertical: 8,
+            horizontal: 8,
+          ),
+          child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                internetCheck(),
+                countryCheck(),
+                SizedBox(
+                  height: 50,
+                  child: Marquee(
+                    text: settingsController.marquee.value,
+                    style: boldTextStyle(color: darkOrange, size: 16),
+                    scrollAxis: Axis.horizontal,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    blankSpace: 20.0,
+                    velocity: 30.0,
+                    // pauseAfterRound: Duration(seconds: 1),
+                    startPadding: 10.0,
+                    // accelerationDuration: Duration(seconds: 1),
+                    // accelerationCurve: Curves.linear,
+                    // decelerationDuration: Duration(milliseconds: 500),
+                    // decelerationCurve: Curves.easeOut,
                   ),
-                  Row(
-                    children: [
-                      Text(
-                        "view all",
-                        style: primaryTextStyle(
-                          size: 14,
+                ).visible(settingsController.showMarquee.value),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    StreamBuilder<UserModel>(
+                        stream: userController.userId.value.isNotEmpty
+                            ? userService.getProfile(
+                                userId: userController.userId.value)
+                            : null,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            var data = snapshot.data;
+                            return Row(
+                              children: [
+                                profileImage(UserModel(), 40, 40,
+                                    context: context),
+                                10.width,
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "${data!.firstName!} ${data.lastName!}",
+                                      style: boldTextStyle(size: 18),
+                                    ),
+                                    Text(
+                                      getGreeting(),
+                                      style: primaryTextStyle(size: 12),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            );
+                          }
+                          return Container();
+                        }),
+                    Stack(
+                      alignment: Alignment.topRight,
+                      clipBehavior: Clip.none,
+                      children: [
+                        Icon(
+                          Icons.notifications_active,
                         ),
-                      ),
-                      5.width,
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 12,
-                        color: kPrimary,
-                      )
-                    ],
-                  ).onTap(() {
-                    AllServicesScreen().launch(context);
-                  })
-                ],
-              ),
-              15.height,
-              StaggeredGrid.count(
-                crossAxisCount: 4,
-                mainAxisSpacing: 5,
-                crossAxisSpacing: 5,
-                children: [
-                  StaggeredGridTile.count(
-                    crossAxisCellCount: 2,
-                    mainAxisCellCount: 3,
-                    key: tutorialcoachcontroller.keyButton1,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: context.cardColor,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Talk to a doctor",
-                                style: boldTextStyle(
-                                  size: 14,
-                                ),
-                              ),
-                              Text(
-                                "Schedule a session with a professional medical practitioner",
-                                style: secondaryTextStyle(
-                                  size: 10,
-                                ),
-                              ),
-                            ],
-                          ).paddingAll(10),
-                          Expanded(
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: Image.asset(
-                                "assets/images/man_doc.png",
-                                fit: BoxFit.cover,
-                                alignment: Alignment.topCenter,
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
+                        Positioned(
+                            top: -4,
+                            right: 0,
+                            child: StreamBuilder<List<NotificationModel>>(
+                                stream: notificationService
+                                    .getUserUnSeenNotifications(
+                                        userId: userController.userId.value),
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    var data = snapshot.data;
+                                    return Container(
+                                      padding: const EdgeInsets.all(3),
+                                      decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: fireBrick),
+                                      child: Text(
+                                        data!.length > 9
+                                            ? "9+"
+                                            : data.length.toString(),
+                                        textAlign: TextAlign.center,
+                                        style: boldTextStyle(
+                                            color: white, size: 10),
+                                      ).center(),
+                                    ).visible(data.isNotEmpty);
+                                  }
+                                  return const Text("");
+                                }))
+                      ],
                     ).onTap(() {
-                      NewAppointment().launch(context);
-                    }),
-                  ),
-                  StaggeredGridTile.count(
-                    crossAxisCellCount: 2,
-                    mainAxisCellCount: 2,
-                    key: tutorialcoachcontroller.keyButton2,
-                    child: Container(
-                      height: 100,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: context.cardColor,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Interpret Lab Result",
-                                style: boldTextStyle(
-                                  size: 14,
-                                ),
-                              ),
-                              Text(
-                                "Upload lab result for instant interpretation",
-                                style: secondaryTextStyle(
-                                  size: 10,
-                                ),
-                              ),
-                            ],
-                          ).paddingAll(10),
-                          Expanded(
-                            child: SizedBox(
-                              width: double.infinity,
-                              height: 100,
-                              child: Lottie.asset(
-                                "assets/lottie/lottie5.json",
-                                fit: BoxFit.fitHeight,
-                                width: 30,
-                                height: 100,
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
+                      const NotificationScreen().launch(context);
+                    })
+                  ],
+                ),
+                10.height,
+                HomeCard(),
+                15.height,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Healthcare Services",
+                      style: primaryTextStyle(size: 14),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          "view all",
+                          style: primaryTextStyle(
+                            size: 14,
+                          ),
+                        ),
+                        5.width,
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 12,
+                          color: kPrimary,
+                        )
+                      ],
                     ).onTap(() {
-                      LabResultScreen().launch(context);
-                    }),
-                  ),
-                  StaggeredGridTile.count(
-                    crossAxisCellCount: 2,
-                    mainAxisCellCount: 2,
-                    key: tutorialcoachcontroller.keyButton3,
-                    child: Container(
-                      height: 100,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: context.cardColor,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Medication Tracker",
-                                style: boldTextStyle(
-                                  size: 14,
+                      AllServicesScreen().launch(context);
+                    })
+                  ],
+                ),
+                15.height,
+                StaggeredGrid.count(
+                  crossAxisCount: 4,
+                  mainAxisSpacing: 5,
+                  crossAxisSpacing: 5,
+                  children: [
+                    StaggeredGridTile.count(
+                      crossAxisCellCount: 2,
+                      mainAxisCellCount: 3,
+                      key: tutorialcoachcontroller.keyButton1,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: context.cardColor,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Talk to a doctor",
+                                  style: boldTextStyle(
+                                    size: 14,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                "Get instant Reminder to take your medication ",
-                                style: secondaryTextStyle(
-                                  size: 10,
+                                Text(
+                                  "Schedule a session with a professional medical practitioner",
+                                  style: secondaryTextStyle(
+                                    size: 10,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ).paddingAll(10),
-                          Expanded(
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: Lottie.asset(
-                                'assets/lottie/lottie4.json',
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ).onTap(() {
-                      MedicationTracker().launch(context);
-                    }),
-                  ),
-                  StaggeredGridTile.count(
-                    crossAxisCellCount: 2,
-                    mainAxisCellCount: 2,
-                    child: Container(
-                      height: 100,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: context.cardColor,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Pharmacies",
-                                style: boldTextStyle(
-                                  size: 14,
-                                ),
-                              ),
-                              Text(
-                                "Order drug from the nearest pharmacy",
-                                style: secondaryTextStyle(
-                                  size: 10,
-                                ),
-                              ),
-                            ],
-                          ).paddingAll(10),
-                          Expanded(
-                            child: SizedBox(
-                              child: Image.asset(
-                                'assets/images/pharmacy.png',
-                                width: 150,
-                                height: 150,
-                                fit: BoxFit.contain,
-                              ),
+                              ],
                             ).paddingAll(10),
-                          )
-                        ],
-                      ),
-                    ).onTap(() {
-                      PharmaciesScreen().launch(context);
-                      // QuestionAnswerScreen().launch(context);
-                    }),
-                  ),
-                  StaggeredGridTile.count(
-                    crossAxisCellCount: 2,
-                    mainAxisCellCount: 1,
-                    child: Container(
-                      height: 100,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        color: context.cardColor,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                settingsController.anonymous.value
-                                    ? "Anonymous"
-                                    : "Health Tips",
-                                style: boldTextStyle(
-                                  size: 14,
+                            Expanded(
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: Image.asset(
+                                  "assets/images/man_doc.png",
+                                  fit: BoxFit.cover,
+                                  alignment: Alignment.topCenter,
                                 ),
                               ),
-                              Text(
-                                settingsController.anonymous.value
-                                    ? "Send anonymous Message"
-                                    : "Learn more about your health",
-                                style: secondaryTextStyle(
-                                  size: 10,
+                            )
+                          ],
+                        ),
+                      ).onTap(() {
+                        NewAppointment().launch(context);
+                      }),
+                    ),
+                    StaggeredGridTile.count(
+                      crossAxisCellCount: 2,
+                      mainAxisCellCount: 2,
+                      key: tutorialcoachcontroller.keyButton2,
+                      child: Container(
+                        height: 100,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: context.cardColor,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Interpret Lab Result",
+                                  style: boldTextStyle(
+                                    size: 14,
+                                  ),
+                                ),
+                                Text(
+                                  "Upload lab result for instant interpretation",
+                                  style: secondaryTextStyle(
+                                    size: 10,
+                                  ),
+                                ),
+                              ],
+                            ).paddingAll(10),
+                            Expanded(
+                              child: SizedBox(
+                                width: double.infinity,
+                                height: 100,
+                                child: Lottie.asset(
+                                  "assets/lottie/lottie5.json",
+                                  fit: BoxFit.fitHeight,
+                                  width: 30,
+                                  height: 100,
                                 ),
                               ),
-                            ],
-                          ).paddingAll(10),
-                          Expanded(
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: Lottie.asset(
-                                'assets/lottie/lottie3.json',
-                                fit: BoxFit.contain,
+                            )
+                          ],
+                        ),
+                      ).onTap(() {
+                        LabResultScreen().launch(context);
+                      }),
+                    ),
+                    StaggeredGridTile.count(
+                      crossAxisCellCount: 2,
+                      mainAxisCellCount: 2,
+                      key: tutorialcoachcontroller.keyButton3,
+                      child: Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: context.cardColor,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Medication Tracker",
+                                  style: boldTextStyle(
+                                    size: 14,
+                                  ),
+                                ),
+                                Text(
+                                  "Get instant Reminder to take your medication ",
+                                  style: secondaryTextStyle(
+                                    size: 10,
+                                  ),
+                                ),
+                              ],
+                            ).paddingAll(10),
+                            Expanded(
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: Lottie.asset(
+                                  'assets/lottie/lottie4.json',
+                                  fit: BoxFit.contain,
+                                ),
                               ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ).onTap(() {
-                      settingsController.anonymous.value
-                          ? QuestionAnswerScreen().launch(context)
-                          : HealthTipsHome().launch(context);
-                    }),
-                  ),
-                ],
-              ),
-            ],
+                            )
+                          ],
+                        ),
+                      ).onTap(() {
+                        MedicationTracker().launch(context);
+                      }),
+                    ),
+                    StaggeredGridTile.count(
+                      crossAxisCellCount: 2,
+                      mainAxisCellCount: 2,
+                      child: Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: context.cardColor,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Pharmacies",
+                                  style: boldTextStyle(
+                                    size: 14,
+                                  ),
+                                ),
+                                Text(
+                                  "Order drug from the nearest pharmacy",
+                                  style: secondaryTextStyle(
+                                    size: 10,
+                                  ),
+                                ),
+                              ],
+                            ).paddingAll(10),
+                            Expanded(
+                              child: SizedBox(
+                                child: Image.asset(
+                                  'assets/images/pharmacy.png',
+                                  width: 150,
+                                  height: 150,
+                                  fit: BoxFit.contain,
+                                ),
+                              ).paddingAll(10),
+                            )
+                          ],
+                        ),
+                      ).onTap(() {
+                        PharmaciesScreen().launch(context);
+                        // QuestionAnswerScreen().launch(context);
+                      }),
+                    ),
+                    StaggeredGridTile.count(
+                      crossAxisCellCount: 2,
+                      mainAxisCellCount: 1,
+                      child: Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: context.cardColor,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  settingsController.anonymous.value
+                                      ? "Anonymous"
+                                      : "Health Tips",
+                                  style: boldTextStyle(
+                                    size: 14,
+                                  ),
+                                ),
+                                Text(
+                                  settingsController.anonymous.value
+                                      ? "Send anonymous Message"
+                                      : "Learn more about your health",
+                                  style: secondaryTextStyle(
+                                    size: 10,
+                                  ),
+                                ),
+                              ],
+                            ).paddingAll(10),
+                            Expanded(
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: Lottie.asset(
+                                  'assets/lottie/lottie3.json',
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      ).onTap(() {
+                        settingsController.anonymous.value
+                            ? QuestionAnswerScreen().launch(context)
+                            : HealthTipsHome().launch(context);
+                      }),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

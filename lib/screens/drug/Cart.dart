@@ -79,7 +79,42 @@ class _CartScreenState extends State<CartScreen> {
       context,
       title: "Do you want to proceed with checkout?",
       onAccept: (v) async {
-        await orderController.makeOrder();
+        showModalBottomSheet(
+            context: context,
+            builder: (context) {
+              return Column(
+                children: [
+                  AppButton(
+                    onTap: () async {
+                      await orderController.makeOrder(true);
+                    },
+                    width: double.infinity,
+                    child: Row(
+                      children: [
+                        Text(
+                          "Paystack",
+                          style: boldTextStyle(color: white),
+                        )
+                      ],
+                    ),
+                  ),
+                  AppButton(
+                    onTap: () async {
+                      await orderController.makeOrder(false);
+                    },
+                    width: double.infinity,
+                    child: Row(
+                      children: [
+                        Text(
+                          "Flutterwave",
+                          style: boldTextStyle(color: white),
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            });
       },
     );
   }

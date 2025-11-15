@@ -11,8 +11,10 @@ class HealthTipService extends BaseService {
   var healthCatCol = db.collection("HealthTipsCategory");
 
   Stream<List<HealthTipModel>> getHealthTips({required String category}) {
-    var healthRef =
-        healthCol.where('category', isEqualTo: category).snapshots();
+    var healthRef = healthCol
+        .where('category', isEqualTo: category)
+        .where('publishedAt', isLessThanOrEqualTo: Timestamp.now())
+        .snapshots();
     var res = healthRef.map((event) =>
         event.docs.map((e) => HealthTipModel.fromJson(e.data())).toList());
     return res;
@@ -20,8 +22,10 @@ class HealthTipService extends BaseService {
 
   Future<List<HealthTipModel>> getHealthTipsByCategory(
       {required String categoryId}) async {
-    var healthRef =
-        await healthCol.where('categoryId', isEqualTo: categoryId).get();
+    var healthRef = await healthCol
+        .where('categoryId', isEqualTo: categoryId)
+        .where('publishedAt', isLessThanOrEqualTo: Timestamp.now())
+        .get();
     var res =
         healthRef.docs.map((e) => HealthTipModel.fromJson(e.data())).toList();
     return res;
@@ -31,8 +35,10 @@ class HealthTipService extends BaseService {
     required String categoryId,
     required String healthTipId,
   }) async {
-    var healthRef =
-        await healthCol.where('categoryId', isEqualTo: categoryId).get();
+    var healthRef = await healthCol
+        .where('categoryId', isEqualTo: categoryId)
+        .where('publishedAt', isLessThanOrEqualTo: Timestamp.now())
+        .get();
 
     // Map results, filter out the specified healthTipId, and limit to 5
     var res = healthRef.docs
@@ -111,8 +117,10 @@ class HealthTipService extends BaseService {
 
   // get articles count
   Stream<int> getArticleCount({required String categoryId}) {
-    var healthRef =
-        healthCol.where('categoryId', isEqualTo: categoryId).snapshots();
+    var healthRef = healthCol
+        .where('categoryId', isEqualTo: categoryId)
+        .where('publishedAt', isLessThanOrEqualTo: Timestamp.now())
+        .snapshots();
     var res = healthRef.map((event) => event.docs.length);
     return res;
   }

@@ -38,6 +38,7 @@ class BookingController extends GetxController {
   Future handleBookAppointment({
     required doctorId,
     required bool isTrial,
+    required bool isPaystack,
     required BuildContext context,
   }) async {
     docId.value = doctorId;
@@ -93,13 +94,23 @@ class BookingController extends GetxController {
         await updateAppointmentAfterPayment(appointmentId, isTrial);
       } else {
         // Proceed with payment for regular appointments
-        await paymentController.makePayment(
-          email: email,
-          context: Get.context!,
-          amount: price.value,
-          paymentFor: PaymentFor.appointment,
-          productId: appointmentId,
-        );
+        if (isPaystack) {
+          await paymentController.makePaystackPayment(
+            email: email,
+            context: Get.context!,
+            amount: price.value,
+            paymentFor: PaymentFor.appointment,
+            productId: appointmentId,
+          );
+        } else {
+          await paymentController.makeFlutterwavePayment(
+            email: email,
+            context: Get.context!,
+            amount: price.value,
+            paymentFor: PaymentFor.appointment,
+            productId: appointmentId,
+          );
+        }
       }
     } catch (err) {
       isLoading.value = false;

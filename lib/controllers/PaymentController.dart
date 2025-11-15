@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutterwave_standard/flutterwave.dart';
-import 'package:flutterwave_standard/models/subaccount.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/constant/constants.dart';
@@ -12,7 +10,7 @@ import 'package:instant_doctor/services/AppointmentService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:instant_doctor/services/WalletService.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:uuid/uuid.dart';
+import 'package:pay_with_paystack/pay_with_paystack.dart';
 
 import '../services/UserService.dart';
 import 'OrderController.dart';
@@ -85,7 +83,7 @@ class PaymentController extends GetxController {
     return totalFee;
   }
 
-  Future makePayment({
+  Future makeFlutterwavePayment({
     required String email,
     required BuildContext context,
     required int amount,
@@ -123,29 +121,7 @@ class PaymentController extends GetxController {
       var transferFee = getTransferFee(amount.toDouble());
 
       // Total amount to charge (in Naira)
-      double totalAmount = amount + surcharge;
-
-      // Recipient's earning (in kobo)
-      var recipientEarning =
-          ((amount + surcharge + transferFee) * 100) - platformEarning;
-
-      // Calculate subaccount split ratio (as percentage)
-      int splitRatio = paymentFor == PaymentFor.labResult
-          ? 100 // Lab results: subaccount gets 100% (minus Flutterwave fee)
-          : ((recipientEarning / (totalAmount * 100)) * 100).round();
-
-      // Define subaccount
-      List<SubAccount> subAccounts = [];
-      if (paymentFor != PaymentFor.labResult) {
-        subAccounts.add(SubAccount(
-          id: paymentFor == PaymentFor.order
-              ? 'RS_7C07E6AB1D0088E7F838A63E3020BAC6' // Replace with actual ID
-              : 'RS_A22ECC233CDCDEAA5C771EB554DF5AB1', // Replace with actual ID
-          transactionSplitRatio: splitRatio,
-          transactionChargeType: 'percentage',
-          transactionPercentage: (splitRatio / 100.0),
-        ));
-      }
+      double totalAmount = amount + surcharge + transferFee;
 
       final Customer customer =
           Customer(name: name, phoneNumber: phone, email: email);
@@ -159,7 +135,6 @@ class PaymentController extends GetxController {
         redirectUrl: "https://instantdoctor.co",
         isTestMode: false,
         currency: userController.currency.value,
-        subAccounts: subAccounts,
       );
 
       final ChargeResponse response = await flutterwave.charge(context);
@@ -202,6 +177,95 @@ class PaymentController extends GetxController {
       isLoading.value = false;
       // bookingController.isLoading.value = false;
       orderController.isLoading.value = false;
+    }
+  }
+
+  Future makePaystackPayment({
+    required String email,
+    required BuildContext context,
+    required int amount,
+    required String paymentFor,
+    String? productId,
+    bool? isTrial,
+  }) async {
+    try {
+      final orderController = Get.find<OrderController>();
+      final bookingController = Get.find<BookingController>();
+      var labResultController = Get.find<LabResultController>();
+      isLoading.value = true;
+      await initialize();
+
+      // Calculate platform earnings (in kobo)
+      int platformEarning = paymentFor == PaymentFor.order
+          ? calculatePlatformEarningForPharmacy(amount.toDouble(),
+                  orderController.deliveryFee.value.toDouble())
+              .toInt()
+          : paymentFor == PaymentFor.appointment
+              ? calculatePlatformEarningForDoctors(amount.toDouble()).toInt()
+              : 0;
+
+      // Calculate surcharge (in Naira)
+      var surcharge = paymentFor == PaymentFor.order
+          ? surChargeOrder(
+              amount.toDouble(), orderController.deliveryFee.value.toDouble())
+          : paymentFor == PaymentFor.appointment
+              ? surChargeAppointment(amount.toDouble())
+              : surChargeLabresult(amount.toDouble());
+      var transferFee = getTransferFee(amount.toDouble());
+
+      // Total amount in Naira
+      double totalAmount = amount + surcharge + transferFee;
+
+      // Convert to kobo for Paystack
+      int paystackAmount = (totalAmount * 100).toInt();
+
+      print("Total Paystack Amount (in kobo): $paystackAmount");
+
+      final uniqueTransRef = PayWithPayStack().generateUuidV4();
+
+      PayWithPayStack().now(
+        context: context,
+        secretKey: "sk_live_c07e9ad43ea5365e467383dab49c9dcefc1975cf",
+        customerEmail: email,
+        reference: uniqueTransRef,
+        currency: userController.currency.value,
+        amount: paystackAmount / 100, // <-- must be in kobo
+        callbackUrl: "https://instantdoctor.co",
+        transactionCompleted: (paymentData) {
+          if (paymentFor == PaymentFor.appointment) {
+            double doctorEarning =
+                (amount + surcharge) - (platformEarning / 100.0);
+            bookingController.updateAppointmentAfterPayment(
+                productId.validate(), isTrial.validate());
+            AppointmentService().updateDoctorEarning(
+              appointmentId: productId.validate(),
+              doctorEarning: doctorEarning.toInt(),
+            );
+          }
+          if (paymentFor == PaymentFor.order) {
+            orderController.orderNow();
+          }
+          if (paymentFor == PaymentFor.labResult) {
+            labResultController.handleUploadFiles(context);
+          }
+          successSnackBar(title: "Payment Successful");
+        },
+        transactionNotCompleted: (reason) {
+          if (paymentFor == PaymentFor.appointment) {
+            bookingController.isLoading.value = false;
+            errorSnackBar(title: "Payment not successful");
+          }
+          if (paymentFor == PaymentFor.order) {
+            orderController.isLoading.value = false;
+            errorSnackBar(title: "Payment not successful");
+          }
+          errorSnackBar(title: "Payment Cancelled");
+        },
+      );
+    } on PlatformException catch (e) {
+      log(e.message!);
+    } finally {
+      isLoading.value = false;
     }
   }
 }

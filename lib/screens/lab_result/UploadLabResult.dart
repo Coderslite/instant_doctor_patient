@@ -1,4 +1,3 @@
-
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -7,6 +6,7 @@ import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/controllers/PaymentController.dart';
 import 'package:instant_doctor/controllers/UploadFileController.dart';
+import 'package:instant_doctor/controllers/showPayment.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:path/path.dart';
@@ -288,13 +288,7 @@ class _UploadLabResultState extends State<UploadLabResult> {
     final user =
         await userService.getProfileById(userId: userController.userId.value);
     final email = user.email.validate();
-
-    paymentController.makePayment(
-      email: email,
-      context: context,
-      amount: widget.amount,
-      paymentFor: PaymentFor.labResult,
-    );
+    handleShowPaymentOptionLab(context, amount: widget.amount, email: email);
   }
 }
 

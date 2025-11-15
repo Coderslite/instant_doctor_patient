@@ -21,6 +21,7 @@ import '../../component/check_internet.dart';
 import '../../controllers/BookingController.dart';
 import '../../controllers/PaymentController.dart';
 import '../../controllers/SettingController.dart';
+import '../../controllers/showPayment.dart';
 import '../../services/AppointmentService.dart';
 import '../../services/GetUserId.dart';
 import '../chat/ChatInterface.dart';
@@ -48,80 +49,85 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           onPressed: () => NewAppointment().launch(context),
           child: const Icon(Icons.add, color: Colors.white),
         ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              internetCheck(),
-              countryCheck(),
-              // Header Section
-              Text(
-                "My Appointments",
-                textAlign: TextAlign.center,
-                style: boldTextStyle(
-                  size: 18,
-                  color: kPrimary,
-                ),
-              ),
-
-              10.height,
-              Divider(),
-              // Main Content
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                  child: StreamBuilder<List<AppointmentModel>>(
-                    stream: userController.userId.isEmpty
-                        ? null
-                        : appointmentService
-                            .getAllAppointment(userController.userId.value),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return _buildErrorState(snapshot.error.toString());
-                      }
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return _buildLoadingState();
-                      }
-                      if (snapshot.hasData) {
-                        if (snapshot.data!.isEmpty) {
-                          return _buildEmptyState();
-                        } else {
-                          return ListView.builder(
-                            itemCount: snapshot.data!.length,
-                            physics: const BouncingScrollPhysics(),
-                            itemBuilder: (context, index) {
-                              var appointment = snapshot.data![index];
-                              var startTime = appointment.startTime;
-                              var endTime = appointment.endTime;
-                              var now = Timestamp.now();
-                              var isExpired = now.compareTo(endTime!) > 0;
-                              var isOngoing = now.compareTo(startTime!) >= 0 &&
-                                  now.compareTo(endTime) <= 0;
-
-                              return AnimationConfiguration.staggeredList(
-                                position: index,
-                                duration: const Duration(milliseconds: 375),
-                                child: SlideAnimation(
-                                  verticalOffset: 50.0,
-                                  child: FadeInAnimation(
-                                    child: _buildAppointmentCard(
-                                      context,
-                                      appointment,
-                                      isExpired,
-                                      isOngoing,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        }
-                      }
-                      return _buildEmptyState();
-                    },
+        body: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SafeArea(
+            child: Column(
+              children: [
+                internetCheck(),
+                countryCheck(),
+                // Header Section
+                Text(
+                  "My Appointments",
+                  textAlign: TextAlign.center,
+                  style: boldTextStyle(
+                    size: 18,
+                    color: kPrimary,
                   ),
                 ),
-              )
-            ],
+
+                10.height,
+                Divider(),
+                // Main Content
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: StreamBuilder<List<AppointmentModel>>(
+                      stream: userController.userId.isEmpty
+                          ? null
+                          : appointmentService
+                              .getAllAppointment(userController.userId.value),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return _buildErrorState(snapshot.error.toString());
+                        }
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return _buildLoadingState();
+                        }
+                        if (snapshot.hasData) {
+                          if (snapshot.data!.isEmpty) {
+                            return _buildEmptyState();
+                          } else {
+                            return ListView.builder(
+                              itemCount: snapshot.data!.length,
+                              physics: const BouncingScrollPhysics(),
+                              itemBuilder: (context, index) {
+                                var appointment = snapshot.data![index];
+                                var startTime = appointment.startTime;
+                                var endTime = appointment.endTime;
+                                var now = Timestamp.now();
+                                var isExpired = now.compareTo(endTime!) > 0;
+                                var isOngoing =
+                                    now.compareTo(startTime!) >= 0 &&
+                                        now.compareTo(endTime) <= 0;
+
+                                return AnimationConfiguration.staggeredList(
+                                  position: index,
+                                  duration: const Duration(milliseconds: 375),
+                                  child: SlideAnimation(
+                                    verticalOffset: 50.0,
+                                    child: FadeInAnimation(
+                                      child: _buildAppointmentCard(
+                                        context,
+                                        appointment,
+                                        isExpired,
+                                        isOngoing,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          }
+                        }
+                        return _buildEmptyState();
+                      },
+                    ),
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       );
@@ -332,18 +338,10 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
 
   handleMakePayment(AppointmentModel appointment) async {
     final bookingController = Get.find<BookingController>();
-    final paymentController = Get.find<PaymentController>();
     try {
       bookingController.isLoading.value = true;
       setState(() {});
-      var userInfo =
-          await userService.getProfileById(userId: userController.userId.value);
-      await paymentController.makePayment(
-          email: userInfo.email.validate(),
-          context: context,
-          amount: appointment.price.validate(),
-          paymentFor: 'Appointment',
-          productId: appointment.id);
+      handleShowPaymentOption(context, appointment: appointment);
     } finally {
       bookingController.isLoading.value = false;
     }

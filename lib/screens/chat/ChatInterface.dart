@@ -1102,26 +1102,108 @@ class _ChatInterfaceState extends State<ChatInterface>
                                       AppButton(
                                         width: double.infinity,
                                         onTap: () async {
-                                          try {
-                                            bookingController.isLoading.value =
-                                                true;
-                                            setState(() {});
-                                            var userInfo = await userService
-                                                .getProfileById(
-                                                    userId: userController
-                                                        .userId.value);
-                                            await paymentController.makePayment(
-                                              email: userInfo.email.validate(),
+                                          showModalBottomSheet(
                                               context: context,
-                                              amount: widget.appointment.price
-                                                  .validate(),
-                                              paymentFor: 'Appointment',
-                                              productId: widget.appointment.id,
-                                            );
-                                          } finally {
-                                            bookingController.isLoading.value =
-                                                false;
-                                          }
+                                              builder: (context) {
+                                                return Column(
+                                                  children: [
+                                                    AppButton(
+                                                      onTap: () async {
+                                                        try {
+                                                          bookingController
+                                                              .isLoading
+                                                              .value = true;
+                                                          setState(() {});
+                                                          var userInfo = await userService
+                                                              .getProfileById(
+                                                                  userId:
+                                                                      userController
+                                                                          .userId
+                                                                          .value);
+                                                          await paymentController
+                                                              .makePaystackPayment(
+                                                            email: userInfo
+                                                                .email
+                                                                .validate(),
+                                                            context: context,
+                                                            amount: widget
+                                                                .appointment
+                                                                .price
+                                                                .validate(),
+                                                            paymentFor:
+                                                                'Appointment',
+                                                            productId: widget
+                                                                .appointment.id,
+                                                          );
+                                                        } finally {
+                                                          bookingController
+                                                              .isLoading
+                                                              .value = false;
+                                                        }
+                                                      },
+                                                      width: double.infinity,
+                                                      child: Row(
+                                                        children: [
+                                                          Text(
+                                                            "Paystack",
+                                                            style:
+                                                                boldTextStyle(
+                                                                    color:
+                                                                        white),
+                                                          )
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    AppButton(
+                                                      onTap: () async {
+                                                        try {
+                                                          bookingController
+                                                              .isLoading
+                                                              .value = true;
+                                                          setState(() {});
+                                                          var userInfo = await userService
+                                                              .getProfileById(
+                                                                  userId:
+                                                                      userController
+                                                                          .userId
+                                                                          .value);
+                                                          await paymentController
+                                                              .makeFlutterwavePayment(
+                                                            email: userInfo
+                                                                .email
+                                                                .validate(),
+                                                            context: context,
+                                                            amount: widget
+                                                                .appointment
+                                                                .price
+                                                                .validate(),
+                                                            paymentFor:
+                                                                'Appointment',
+                                                            productId: widget
+                                                                .appointment.id,
+                                                          );
+                                                        } finally {
+                                                          bookingController
+                                                              .isLoading
+                                                              .value = false;
+                                                        }
+                                                      },
+                                                      width: double.infinity,
+                                                      child: Row(
+                                                        children: [
+                                                          Text(
+                                                            "Flutterwave",
+                                                            style:
+                                                                boldTextStyle(
+                                                                    color:
+                                                                        white),
+                                                          )
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                );
+                                              });
                                         },
                                         text: "Make Payment",
                                         color: white,

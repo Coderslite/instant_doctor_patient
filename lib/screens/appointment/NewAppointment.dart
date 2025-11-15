@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/component/snackBar.dart';
+import 'package:instant_doctor/controllers/showPayment.dart';
 import 'package:instant_doctor/models/AppointmentPricingModel.dart';
 import 'package:instant_doctor/models/UserModel.dart';
 import 'package:instant_doctor/screens/profile/medical/MedicalData.dart';
@@ -1051,12 +1052,7 @@ class _NewAppointmentState extends State<NewAppointment> {
               try {
                 bookingController.isLoading.value = true;
                 setState(() {});
-
-                await bookingController.handleBookAppointment(
-                    isTrial: settingsController.trialAvailable.value ||
-                        _isTrialSelected,
-                    doctorId: '',
-                    context: context);
+                handleShowPaymentOptionBook(context);
               } catch (e) {
                 errorSnackBar(title: e.toString());
               }

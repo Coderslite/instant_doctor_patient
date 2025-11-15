@@ -175,7 +175,7 @@ class OrderController extends GetxController {
     }
   }
 
-  Future<void> makeOrder() async {
+  Future<void> makeOrder(bool isPaystack) async {
     try {
       isLoading.value = true;
       orders.clear(); // Important to prevent multiple submissions
@@ -231,12 +231,21 @@ class OrderController extends GetxController {
       int grandTotal = orders.fold(0, (sum, order) => sum + order.totalAmount!);
 
       final paymentController = Get.find<PaymentController>();
-      paymentController.makePayment(
-        email: email!,
-        context: Get.context!,
-        amount: grandTotal,
-        paymentFor: PaymentFor.order,
-      );
+      if (isPaystack) {
+        paymentController.makePaystackPayment(
+          email: email.validate(),
+          context: Get.context!,
+          amount: grandTotal,
+          paymentFor: PaymentFor.order,
+        );
+      } else {
+        paymentController.makeFlutterwavePayment(
+          email: email.validate(),
+          context: Get.context!,
+          amount: grandTotal,
+          paymentFor: PaymentFor.order,
+        );
+      }
     } catch (e) {
       errorSnackBar(title: "Failed to make orders: $e");
       isLoading.value = false;
