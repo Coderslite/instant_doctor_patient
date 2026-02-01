@@ -6,7 +6,6 @@ import 'package:instant_doctor/services/HealthTipService.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
-import '../screens/healthtips/SingleTips.dart';
 
 Padding eachTips(BuildContext context, HealthTipModel healthTip) {
   var healthTipService = Get.find<HealthTipService>();

@@ -12,7 +12,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/controllers/FirebaseMessaging.dart';
 import 'package:instant_doctor/firebase_options.dart';
-import 'package:instant_doctor/screens/home/Root.dart';
 import 'package:instant_doctor/screens/splash_screen/splash_screen.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -20,7 +19,6 @@ import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 
 import 'AppTheme.dart';
-import 'constant/color.dart';
 import 'constant/constants.dart';
 import 'services_initializer.dart';
 import 'controllers/SettingController.dart';

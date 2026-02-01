@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -24,142 +22,435 @@ class _EmailScreenState extends State<EmailScreen> {
   var emailController = TextEditingController();
   AuthenticationController authenticationController =
       Get.put(AuthenticationController());
+
   @override
   Widget build(BuildContext context) {
     return KeyboardDismisser(
       child: Scaffold(
-        body: Container(
-          height: MediaQuery.of(context).size.height,
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage("assets/images/bg3.png"),
-              // colorFilter: ColorFilter.mode(kPrimary, BlendMode.color),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Obx(
-            () => SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    50.height,
-                    SizedBox(
-                      width: 100,
-                      height: 100,
-                      child: Image.asset(
-                        "assets/images/logo.png",
-                      ),
-                    ),
-                    30.height,
-                    Row(
-                      children: [
-                        Text(
-                          "Sign Up",
-                          style: boldTextStyle(
-                            size: 32,
-                            weight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    20.height,
-                    AppTextField(
-                      controller: emailController,
-                      textFieldType: TextFieldType.EMAIL,
-                      textStyle: primaryTextStyle(),
-                      decoration: InputDecoration(
-                        label: Text(
-                          "Email Address",
-                          style: primaryTextStyle(),
-                        ),
-                        contentPadding: const EdgeInsetsDirectional.symmetric(
-                            vertical: 10, horizontal: 10),
-                        focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
-                            borderSide: const BorderSide(color: kPrimary)),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(color: kPrimary),
-                        ),
-                      ),
-                    ),
-                    30.height,
-                    Loader()
-                        .center()
-                        .visible(authenticationController.isLoading.value),
-                    AppButton(
-                      width: double.infinity,
-                      textColor: kPrimary,
-                      onTap: () async {
-                        if (_formKey.currentState!.validate()) {
-                          if (await authenticationController
-                              .handleCheckEmail(emailController.text)) {
-                            SignUpScreen(
-                              email: emailController.text,
-                              referredBy: widget.userId,
-                            ).launch(context);
-                          } else {
-                            toast("email already exist");
-                          }
-                        }
-                      },
-                      text: "Continue",
-                    ).visible(!authenticationController.isLoading.value),
-                    10.height,
-                    Text(
-                      "or",
-                      style: secondaryTextStyle(
-                        size: 20,
-                      ),
-                    ),
-                    10.height,
-                  Loader()
-                        .center()
-                        .visible(authenticationController.googleSignin.value),
-                    AppButton(
-                      width: double.infinity,
-                      color: white,
-                      onTap: () async {
-                        authenticationController.handleGoogleSignin(context,
-                            referredBy: widget.userId.validate());
-                      },
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              height: 30,
-                              width: 30,
-                              child: Image.asset(
-                                "assets/images/google.png",
-                              ),
-                            ),
-                            10.width,
-                            const Text("Continue with Google"),
-                          ]).center(),
-                    ).visible(!authenticationController.googleSignin.value),
-                    10.height,
-                    RichText(
-                      text: TextSpan(
-                        style: primaryTextStyle(),
-                        text: "Already have an account ? ",
-                        children: [
-                          TextSpan(
-                              text: "Sign In",
-                              style: boldTextStyle(),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap =
-                                    () => const LoginScreen().launch(context)),
-                        ],
-                      ),
-                    )
-                  ],
+        body: SafeArea(
+          child: Stack(
+            children: [
+              // Decorative background elements
+              Positioned(
+                top: -50,
+                right: -50,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: kPrimary.withOpacity(0.1),
+                  ),
                 ),
               ),
-            ),
+              Positioned(
+                bottom: -100,
+                left: -50,
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: kPrimary.withOpacity(0.05),
+                  ),
+                ),
+              ),
+
+              Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Back button
+                            IconButton(
+                              onPressed: () => Navigator.pop(context),
+                              icon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.grey.shade100,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_back_ios_rounded,
+                                  size: 20,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ),
+
+                            // Logo and welcome section
+                            Center(
+                              child: Column(
+                                children: [
+                                  Container(
+                                    width: 120,
+                                    height: 120,
+                                    padding: const EdgeInsets.all(24),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: kPrimary.withOpacity(0.1),
+                                    ),
+                                    child: Image.asset(
+                                      "assets/images/logo.png",
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 32),
+                                  Text(
+                                    "Create Account",
+                                    style: boldTextStyle(
+                                      size: 32,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    "Enter your email to get started",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            const SizedBox(height: 40),
+
+                            // Email form
+                            Form(
+                              key: _formKey,
+                              child: Column(
+                                children: [
+                                  TextFormField(
+                                    controller: emailController,
+                                    keyboardType: TextInputType.emailAddress,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.black87,
+                                    ),
+                                    decoration: InputDecoration(
+                                      hintText: "Enter your email address",
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey.shade500,
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.grey.shade50,
+                                      prefixIcon: Icon(
+                                        Icons.email_outlined,
+                                        color: kPrimary,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                        borderSide: BorderSide(
+                                          color: kPrimary,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 18,
+                                      ),
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Please enter your email';
+                                      }
+                                      if (!value.contains('@')) {
+                                        return 'Please enter a valid email';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+
+                                  const SizedBox(height: 24),
+
+                                  // Continue button
+                                  Obx(() {
+                                    if (authenticationController
+                                        .isLoading.value) {
+                                      return Container(
+                                        width: double.infinity,
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          color: kPrimary,
+                                        ),
+                                        child: const Center(
+                                          child: SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+
+                                    return SizedBox(
+                                      width: double.infinity,
+                                      height: 56,
+                                      child: ElevatedButton(
+                                        onPressed: () async {
+                                          if (_formKey.currentState!
+                                              .validate()) {
+                                            if (await authenticationController
+                                                .handleCheckEmail(
+                                                    emailController.text)) {
+                                              SignUpScreen(
+                                                email: emailController.text,
+                                                referredBy: widget.userId,
+                                              ).launch(context);
+                                            } else {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    "Email already exists",
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                  backgroundColor: Colors.red,
+                                                  behavior:
+                                                      SnackBarBehavior.floating,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: kPrimary,
+                                          foregroundColor: Colors.white,
+                                          elevation: 0,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 16),
+                                        ),
+                                        child: Text(
+                                          "Continue",
+                                          style: boldTextStyle(
+                                              size: 18, color: white),
+                                        ),
+                                      ),
+                                    );
+                                  }),
+
+                                  const SizedBox(height: 32),
+
+                                  // Divider with "or"
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Divider(
+                                          color: Colors.grey.shade300,
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        child: Text(
+                                          "or continue with",
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Divider(
+                                          color: Colors.grey.shade300,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(height: 24),
+
+                                  // Google sign-in button
+                                  Obx(() {
+                                    if (authenticationController
+                                        .googleSignin.value) {
+                                      return Container(
+                                        width: double.infinity,
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          border: Border.all(
+                                            color: Colors.grey.shade300,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                        child: const Center(
+                                          child: SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+
+                                    return SizedBox(
+                                      width: double.infinity,
+                                      height: 56,
+                                      child: OutlinedButton(
+                                        onPressed: () async {
+                                          authenticationController
+                                              .handleGoogleSignin(
+                                            context,
+                                            referredBy:
+                                                widget.userId.validate(),
+                                          );
+                                        },
+                                        style: OutlinedButton.styleFrom(
+                                          side: BorderSide(
+                                            color: Colors.grey.shade300,
+                                            width: 1.5,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 16),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Image.asset(
+                                              "assets/images/google.png",
+                                              height: 24,
+                                              width: 24,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              "Continue with Google",
+                                              style: boldTextStyle(
+                                                size: 16,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }),
+
+                                  const SizedBox(height: 10),
+                                  // Apple button
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 56,
+                                    child: OutlinedButton(
+                                      onPressed: () async {
+                                        authenticationController
+                                            .handleAppleSignIn(
+                                          context,
+                                          referredBy: '',
+                                        );
+                                      },
+                                      style: OutlinedButton.styleFrom(
+                                        side: BorderSide(
+                                          color: Colors.grey.shade300,
+                                          width: 1.5,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 16),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Container(
+                                            decoration: BoxDecoration(
+                                                color: gray,
+                                                shape: BoxShape.circle),
+                                            child: Image.asset(
+                                              "assets/images/apple.png",
+                                              height: 24,
+                                              width: 24,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            "Continue with Apple",
+                                            style: boldTextStyle(
+                                              size: 16,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+
+                                  40.height,
+                                  // Sign in link
+                                  Center(
+                                    child: RichText(
+                                      text: TextSpan(
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                        text: "Already have an account? ",
+                                        children: [
+                                          TextSpan(
+                                            text: "Sign In",
+                                            style: TextStyle(
+                                              color: kPrimary,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                            recognizer: TapGestureRecognizer()
+                                              ..onTap = () =>
+                                                  const LoginScreen()
+                                                      .launch(context),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 20),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

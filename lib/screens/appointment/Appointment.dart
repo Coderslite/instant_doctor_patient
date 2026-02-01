@@ -19,11 +19,9 @@ import '../../component/EachAppointment.dart';
 import '../../component/check_country.dart';
 import '../../component/check_internet.dart';
 import '../../controllers/BookingController.dart';
-import '../../controllers/PaymentController.dart';
 import '../../controllers/SettingController.dart';
 import '../../controllers/showPayment.dart';
 import '../../services/AppointmentService.dart';
-import '../../services/GetUserId.dart';
 import '../chat/ChatInterface.dart';
 
 class AppointmentScreen extends StatefulWidget {
@@ -169,7 +167,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         appointment: appointment,
         isExpired: isExpired,
         isOngoing: isOngoing,
-      ).onTap(() {
+      ).onTap(() async {
         _handleAppointmentTap(appointment, isExpired);
       }),
     );

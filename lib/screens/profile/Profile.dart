@@ -10,6 +10,8 @@ import 'package:instant_doctor/screens/profile/help/Help.dart';
 import 'package:instant_doctor/screens/profile/medical/MedicalData.dart';
 import 'package:instant_doctor/screens/profile/personal/PersonalProfile.dart';
 import 'package:instant_doctor/screens/profile/policy/Policy.dart';
+import 'package:instant_doctor/screens/refer/ApplyRefer.dart';
+import 'package:instant_doctor/screens/refer/Refer.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -306,6 +308,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           subtitle: "Manage your health information",
           onTap: () => const MedicalDataScreen().launch(context),
         ),
+        _buildProfileOptionTile(
+            icon: Icons.monetization_on,
+            title: "Referral",
+            subtitle: "Refer and earn",
+            onTap: () {
+              if (userController.referralProgramApplied.value) {
+                ReferScreen().launch(context);
+              } else {
+                ApplyReferralProgramScreen().launch(context);
+              }
+            }).visible(userController.referralEnabled.value),
         _buildProfileOptionTile(
           icon: Icons.privacy_tip_outlined,
           title: "Privacy",

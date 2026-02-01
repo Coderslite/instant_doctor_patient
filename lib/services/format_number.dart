@@ -6,3 +6,9 @@ String formatAmount(int amount) {
   String formattedAmount = NumberFormat.decimalPattern().format(amount);
   return "${userController.currency.value} $formattedAmount";
 }
+
+String formatAmountWithoutCurrency(int amount) {
+  // Use NumberFormat to format the amount with thousand separators
+  String formattedAmount = NumberFormat.decimalPattern().format(amount);
+  return formattedAmount;
+}

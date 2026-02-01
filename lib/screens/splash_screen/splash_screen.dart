@@ -5,8 +5,7 @@ import 'package:instant_doctor/controllers/ZegocloudController.dart';
 import 'package:instant_doctor/controllers/AuthenticationController.dart';
 import 'package:instant_doctor/screens/authentication/auth_screen.dart';
 import 'package:instant_doctor/screens/authentication/create_pin.dart';
-import 'package:instant_doctor/screens/authentication/login_screen.dart';
-import 'package:instant_doctor/screens/authentication/otp_screen.dart';
+import 'package:instant_doctor/screens/onboarding/onboarding.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../../main.dart';
 import '../../services/GetUserId.dart';
@@ -56,11 +55,13 @@ class _SplashScreenState extends State<SplashScreen> {
           AuthScreen(fromApp: false).launch(context, isNewTask: true);
         }
       } else {
-        LoginScreen().launch(context, isNewTask: true);
+        // LoginScreen().launch(context, isNewTask: true);
+        OnboardingScreen().launch(context);
       }
     } catch (e) {
       debugPrint("Error during splash init: $e");
-      LoginScreen().launch(context, isNewTask: true);
+      // LoginScreen().launch(context, isNewTask: true);
+      OnboardingScreen().launch(context);
     }
   }
 

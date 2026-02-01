@@ -3,6 +3,9 @@
 <plist version="1.0">
 <dict>
 
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This app uses IDFA to improve ad personalization.</string>
+
 	<!-- 🔒 Privacy Usage Descriptions -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs access to your location to determine distance from pharmacies and doctors near you.</string>

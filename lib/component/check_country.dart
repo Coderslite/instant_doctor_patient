@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:instant_doctor/services/GetUserId.dart';
-import 'package:lottie/lottie.dart';
-import 'package:nb_utils/nb_utils.dart';
 
 Widget countryCheck() {
   return Container();

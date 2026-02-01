@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
@@ -18,6 +17,7 @@ import 'package:instant_doctor/services/AuthenticationService.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../constant/constants.dart';
+import '../screens/authentication/referral_screen.dart';
 import '../services/GetUserId.dart';
 import '../services/ReferralService.dart';
 import '../services/UserService.dart';
@@ -68,11 +68,15 @@ class AuthenticationController extends GetxController {
       GoogleSignInAccount? userCred = await _googleSignIn.signIn();
 
       if (userCred != null) {
+        Get.find<LocationController>()
+            .handleGetMyLocation(isLogin: true, email: userCred.email);
         if ((await handleCheckEmail(userCred.email)) == false) {
           var result = await handleAuthGoogleSignin(context, userCred);
           var prefs = await SharedPreferences.getInstance();
           prefs.setString("userId", result.user!.uid);
           userController.userId.value = result.user!.uid;
+          await zegoCloudController.handleInit();
+          CreatePinScreen().launch(context);
         } else {
           var result = await handleAuthGoogleSignin(context, userCred);
           var prefs = await SharedPreferences.getInstance();
@@ -88,15 +92,9 @@ class AuthenticationController extends GetxController {
             uid: result.user!.uid,
             password: '',
           );
-          if (referredBy.isNotEmpty) {
-            await referralService.newReferral(
-                userId: userController.userId.value, referredBy: referredBy);
-          }
+          await zegoCloudController.handleInit();
+          ReferralRegistrationScreen().launch(context);
         }
-        await zegoCloudController.handleInit();
-        Get.find<LocationController>()
-            .handleGetMyLocation(isLogin: true, email: userCred.email);
-        CreatePinScreen().launch(context, isNewTask: true);
       }
     } catch (error) {
       print(error);
@@ -336,6 +334,14 @@ class AuthenticationController extends GetxController {
       prefs.setString("userId", authResult.user!.uid);
       userController.userId.value = authResult.user!.uid;
 
+      // Initialize ZegoCloud and location services
+      await zegoCloudController.handleInit();
+      Get.find<LocationController>()
+          .handleGetMyLocation(isLogin: true, email: email);
+
+      // Navigate to CreatePinScreen
+      toast("Login Successful with Apple");
+
       // If user is new, add their details to Firestore
       if (isNewUser) {
         await AuthenticationService().addUser(
@@ -348,24 +354,10 @@ class AuthenticationController extends GetxController {
           uid: authResult.user!.uid,
           password: '',
         );
-
-        // Handle referral if provided
-        if (referredBy.isNotEmpty) {
-          await referralService.newReferral(
-            userId: userController.userId.value,
-            referredBy: referredBy,
-          );
-        }
+        ReferralRegistrationScreen().launch(context);
+      } else {
+        CreatePinScreen().launch(context);
       }
-
-      // Initialize ZegoCloud and location services
-      await zegoCloudController.handleInit();
-      Get.find<LocationController>()
-          .handleGetMyLocation(isLogin: true, email: email);
-
-      // Navigate to CreatePinScreen
-      CreatePinScreen().launch(context, isNewTask: true);
-      toast("Login Successful with Apple");
     } catch (error) {
       print("Error during Apple Sign-In: $error");
       if (error is FirebaseAuthException &&

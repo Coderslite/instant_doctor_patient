@@ -66,7 +66,7 @@ class PaymentController extends GetxController {
 
   // Platform earnings for doctors (in kobo)
   double calculatePlatformEarningForDoctors(double transactionAmount) {
-    const double platformFeeRate = 0.30; // 30% platform fee
+    const double platformFeeRate = 0.40; // 30% platform fee
     double flutterwaveCharge = getFlutterwaveCharge(transactionAmount);
     final double platformFee = transactionAmount * platformFeeRate;
     final double platformEarnings = platformFee;
@@ -130,7 +130,7 @@ class PaymentController extends GetxController {
         txRef: "$name${DateTime.now().millisecondsSinceEpoch}",
         amount: totalAmount.toString(),
         customer: customer,
-        paymentOptions: "ussd,card,banktransfer",
+        paymentOptions: "card",
         customization: Customization(title: "Instant Doctor"),
         redirectUrl: "https://instantdoctor.co",
         isTestMode: false,
@@ -145,7 +145,9 @@ class PaymentController extends GetxController {
           double doctorEarning =
               (amount + surcharge) - (platformEarning / 100.0);
           bookingController.updateAppointmentAfterPayment(
-              productId.validate(), isTrial.validate());
+            productId.validate(),
+            isTrial.validate(),
+          );
           AppointmentService().updateDoctorEarning(
             appointmentId: productId.validate(),
             doctorEarning: doctorEarning.toInt(),
@@ -225,6 +227,7 @@ class PaymentController extends GetxController {
 
       PayWithPayStack().now(
         context: context,
+        paymentChannel: ["bank_transfer", "card"],
         secretKey: "sk_live_c07e9ad43ea5365e467383dab49c9dcefc1975cf",
         customerEmail: email,
         reference: uniqueTransRef,

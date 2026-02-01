@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -16,11 +15,8 @@ import 'package:ionicons/ionicons.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:upgrader/upgrader.dart';
 
-import '../../component/show_forced_update.dart';
-import '../../component/show_location_required.dart';
 import '../../constant/constants.dart';
 import '../../controllers/OrderController.dart';
-import '../../services/GetAppVersion.dart';
 import '../../services/GetUserId.dart';
 import '../appointment/Appointment.dart';
 

@@ -35,5 +35,9 @@ getUserId() async {
     userController.fullName.value =
         "${userProf.firstName.validate()} ${userProf.lastName.validate()}";
     userController.phone.value = userProf.phoneNumber.validate();
+    userController.referralBalance.value = userProf.referralBalance.validate();
+    userController.referralProgramApplied.value =
+        userProf.referralProgramApplied.validate();
+    userController.referralEnabled.value = userProf.referralEnabled.validate();
   }
 }

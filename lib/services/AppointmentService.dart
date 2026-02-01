@@ -5,6 +5,7 @@ import 'package:instant_doctor/models/AppointmentPricingModel.dart';
 import 'package:instant_doctor/services/CustomMailService.dart';
 import 'package:instant_doctor/services/DoctorService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
+import 'package:instant_doctor/services/ReferralService.dart';
 import 'package:instant_doctor/services/formatDate.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
@@ -174,6 +175,18 @@ class AppointmentService {
     }
   }
 
+  Future<bool> isFirstTimeBooking() async {
+    final res = await appointmentCollection
+        .where('userId', isEqualTo: userController.userId.value)
+        .where('isPaid', isEqualTo: true)
+        .limit(1)
+        .get(const GetOptions(source: Source.server));
+    print("PAID APPOINTMENTS FOUND: ${res.docs.length}");
+    print(res.docs.map((e) => e.data()));
+
+    return res.docs.isEmpty;
+  }
+
   Future<bool> isDoctorAlreadyBooked({
     required String docId,
     required Timestamp startTime,
@@ -278,13 +291,23 @@ class AppointmentService {
     }
 
     try {
+      var appointment = await getAppointment(appointmentId: appointmentId);
+      await sendCustomMail(activityName: 'Appointment');
+
+      var referralService = Get.find<ReferralService>();
+      if (await isFirstTimeBooking()) {
+        print("its first time");
+        await referralService.awardAppointmentCommission(
+            userId: userController.userId.value,
+            appointmentAmount: appointment.price.validate());
+      } else {
+        print("its not first time");
+      }
+
       await appointmentCollection.doc(appointmentId).update({
         "isPaid": true,
         "updatedAt": Timestamp.now(),
       });
-
-      var appointment = await getAppointment(appointmentId: appointmentId);
-      await sendCustomMail(activityName: 'Appointment');
 
       // await notificationService.newNotification(
       //   userId: appointment.doctorId.validate(),

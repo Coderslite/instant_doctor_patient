@@ -33,6 +33,13 @@ class UserModel {
   GeoPoint? location;
   String? address;
   String? otherLanguage;
+  int? referralBalance;
+  bool? referralProgramApplied;
+  bool? referralEnabled;
+  int? referralProgramAppliedAt;
+  String? bankName;
+  String? accountNumber;
+  String? accountName;
   UserModel({
     this.id,
     this.firstName,
@@ -65,6 +72,13 @@ class UserModel {
     this.state,
     this.isTrialAvailable,
     this.otherLanguage,
+    this.referralBalance,
+    this.referralProgramApplied,
+    this.referralEnabled,
+    this.referralProgramAppliedAt,
+    this.bankName,
+    this.accountNumber,
+    this.accountName,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -104,6 +118,7 @@ class UserModel {
           ? json['isTrialAvailable']
           : false,
       otherLanguage: json['otherLanguage'],
+
     );
   }
 }

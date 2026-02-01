@@ -4,14 +4,19 @@ class ReferralModel {
   String? id;
   String? userId;
   String? referredBy;
-  String? title;
+  String? name;
+  int? amountEarned;
+  double? totalCommissionEarned;
+  String? status;
   Timestamp? createdAt;
 
   ReferralModel({
     this.id,
     this.userId,
     this.referredBy,
-    this.title,
+    this.amountEarned,
+    this.totalCommissionEarned,
+    this.status,
     this.createdAt,
   });
 
@@ -20,7 +25,9 @@ class ReferralModel {
       id: json['id'],
       userId: json['userId'],
       referredBy: json['referredBy'],
-      title: json['title'],
+      amountEarned: json['amountEarned'],
+      totalCommissionEarned: json['totalCommissionEarned'],
+      status: json['status'],
       createdAt: json['createdAt'],
     );
   }

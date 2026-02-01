@@ -8,7 +8,6 @@ import 'package:instant_doctor/controllers/PaymentController.dart';
 import 'package:instant_doctor/models/AppointmentModel.dart';
 import 'package:nb_utils/nb_utils.dart';
 
-import '../main.dart';
 import '../services/GetUserId.dart';
 
 handleShowPaymentOption(BuildContext context,

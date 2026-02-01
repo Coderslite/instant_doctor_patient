@@ -86,6 +86,7 @@ class AuthenticationService extends BaseService {
       "createdAt": Timestamp.now(),
       "lastSeen": Timestamp.now(),
       "isTrialAvailable": true,
+      "referralBalance": 0,
     };
     await userCol.doc(uid).set(data);
     await sendCustomMail(activityName: 'Registration');
