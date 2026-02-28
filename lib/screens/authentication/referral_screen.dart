@@ -97,7 +97,7 @@ class _ReferralRegistrationScreenState
                         SuccessSignUp().launch(context);
                       }
                     },
-                    text: "Continue",
+                    text: "Continue", 
                   ).visible(!referralController.isLoading.value),
                 ],
               ),

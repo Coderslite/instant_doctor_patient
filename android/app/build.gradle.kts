@@ -17,7 +17,7 @@ plugins {
 android {
     namespace = "com.instantdoctor.app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "29.0.13113456 rc1"
+    ndkVersion = "29.0.14206865"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
