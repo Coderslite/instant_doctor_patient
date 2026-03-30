@@ -42,7 +42,7 @@ class Ratescreen extends StatefulWidget {
 class _RatescreenState extends State<Ratescreen> {
   var reviewService = Get.find<ReviewService>();
   var reportService = Get.find<ReportService>();
-  int rating = 3;
+  int rating = 5;
   var commentController = TextEditingController();
   var sending = false;
   @override
@@ -162,6 +162,7 @@ class _RatescreenState extends State<Ratescreen> {
                                   Navigator.pop(context);
                                   widget.update();
                                   successSnackBar(
+                                    context: context,
                                       title: "Thank you for your feedback!");
                                 }
                               },

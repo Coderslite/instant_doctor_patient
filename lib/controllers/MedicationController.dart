@@ -58,7 +58,8 @@ class MedicationController extends GetxController {
     await _notificationsPlugin.initialize(initializationSettings);
   }
 
-  handleCreateMedication(MedicationModel medication) async {
+  handleCreateMedication(
+      BuildContext context, MedicationModel medication) async {
     final medicationService = Get.find<MedicationService>();
     isLoading.value = true;
 
@@ -74,6 +75,7 @@ class MedicationController extends GetxController {
           currentDate = currentDate.add(const Duration(days: 1))) {
         if (medication.morning != null) {
           await _scheduleNotification(
+            context: context,
             id: medId.hashCode + currentDate.day + 1, // Unique ID for morning
             title: 'Medication Reminder',
             body: 'Time to take (Morning dose)',
@@ -84,6 +86,7 @@ class MedicationController extends GetxController {
 
         if (medication.midDay != null) {
           await _scheduleNotification(
+            context: context,
             id: medId.hashCode + currentDate.day + 2, // Unique ID for midday
             title: 'Medication Reminder',
             body: 'Time to take (Afternoon dose)',
@@ -93,6 +96,7 @@ class MedicationController extends GetxController {
 
         if (medication.evening != null) {
           await _scheduleNotification(
+            context: context,
             id: medId.hashCode + currentDate.day + 3, // Unique ID for evening
             title: 'Medication Reminder',
             body: 'Time to take (Evening dose)',
@@ -111,6 +115,7 @@ class MedicationController extends GetxController {
   }
 
   Future<void> _scheduleNotification({
+    required BuildContext context,
     required int id,
     required String title,
     required String body,
@@ -167,7 +172,8 @@ class MedicationController extends GetxController {
       );
     } catch (e) {
       print('Error scheduling exact notification: $e');
-      errorSnackBar(title: 'Error scheduling exact notification: $e');
+      errorSnackBar(
+          context: context, title: 'Error scheduling exact notification: $e');
     }
   }
 

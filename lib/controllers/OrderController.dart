@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/main.dart';
@@ -175,7 +176,7 @@ class OrderController extends GetxController {
     }
   }
 
-  Future<void> makeOrder(bool isPaystack) async {
+  Future<void> makeOrder(BuildContext context, bool isPaystack) async {
     try {
       isLoading.value = true;
       orders.clear(); // Important to prevent multiple submissions
@@ -247,12 +248,12 @@ class OrderController extends GetxController {
         );
       }
     } catch (e) {
-      errorSnackBar(title: "Failed to make orders: $e");
+      errorSnackBar(context: context, title: "Failed to make orders: $e");
       isLoading.value = false;
     }
   }
 
-  Future<void> orderNow() async {
+  Future<void> orderNow(BuildContext context) async {
     try {
       final orderService = Get.find<OrderService>();
       final paymentController = Get.find<PaymentController>();
@@ -300,13 +301,13 @@ class OrderController extends GetxController {
       }
 
       await handleClearCart();
-      successSnackBar(title: "Orders placed successfully.");
+      successSnackBar(context: context, title: "Orders placed successfully.");
       settingsController.selectedIndex.value = 2;
       Root().launch(Get.context!);
       isLoading.value = false;
     } catch (err) {
       print(err);
-      errorSnackBar(title: "Failed to place orders: $err");
+      errorSnackBar(context: context, title: "Failed to place orders: $err");
     } finally {
       isLoading.value = false;
     }

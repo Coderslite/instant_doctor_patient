@@ -15,15 +15,29 @@ class DoctorService extends BaseService {
     return result;
   }
 
-
-  Stream<List<UserModel>> getAllDocs() {
-    var result = userCol
+  Future<List<UserModel>> getAllDocs() async {
+    var result = await userCol
         .where('role', isEqualTo: 'Doctor')
         .where('isAvailable', isEqualTo: true)
-        .snapshots()
-        .map((event) =>
-            event.docs.map((e) => UserModel.fromJson(e.data())).toList());
-    return result;
+        .limit(20) // fetch more since we'll sort manually
+        .get();
+
+    List<UserModel> doctors =
+        result.docs.map((doc) => UserModel.fromJson(doc.data())).toList();
+
+    // Sort locally by lastSeen (null-safe)
+    doctors.sort((a, b) {
+      Timestamp? aLastSeen = a.lastSeen;
+      Timestamp? bLastSeen = b.lastSeen;
+
+      if (aLastSeen == null && bLastSeen == null) return 0;
+      if (aLastSeen == null) return 1; // push nulls down
+      if (bLastSeen == null) return -1;
+
+      return bLastSeen.compareTo(aLastSeen); // descending
+    });
+
+    return doctors.take(5).toList(); // return top 5 after sorting
   }
 
   Future<List<String>> getDoctorsToken() async {

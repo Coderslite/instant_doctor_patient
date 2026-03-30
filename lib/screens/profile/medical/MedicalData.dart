@@ -7,7 +7,8 @@ import 'package:nb_utils/nb_utils.dart';
 import '../../../services/GetUserId.dart';
 
 class MedicalDataScreen extends StatefulWidget {
-  const MedicalDataScreen({super.key});
+  final bool isModal;
+  const MedicalDataScreen({super.key, required this.isModal});
 
   @override
   State<MedicalDataScreen> createState() => _MedicalDataScreenState();
@@ -41,7 +42,7 @@ class _MedicalDataScreenState extends State<MedicalDataScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      backButton(context),
+                      backButton(context).visible(!widget.isModal),
                       Text(
                         "Medical Data",
                         style: boldTextStyle(size: 20, color: kPrimary),
@@ -141,6 +142,16 @@ class _MedicalDataScreenState extends State<MedicalDataScreen> {
                       ),
                     ],
                   ),
+                  10.height,
+                  AppButton(
+                    onTap: () {
+                      finish(context);
+                    },
+                    text: "Continue",
+                    width: double.infinity,
+                    color: kPrimary,
+                    textColor: white,
+                  ).visible(widget.isModal),
                 ],
               ),
             );

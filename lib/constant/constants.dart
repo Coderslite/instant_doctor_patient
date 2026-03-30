@@ -1,6 +1,8 @@
 // ignore_for_file: constant_identifier_names
 import 'dart:math';
 
+import 'package:flutter/material.dart';
+
 const ThemeModeLight = 0;
 const ThemeModeDark = 1;
 const ThemeModeSystem = 2;
@@ -107,3 +109,69 @@ String maskEmail(String email) {
   // Return the masked email
   return "$maskedUsername@$domain";
 }
+
+// ─── Design tokens ─────────────────────────────────────────────────────────────
+const kBg = Color(0xFFF8FAFF);
+const kCard = Colors.white;
+const kText = Color(0xFF0B1120);
+const kSub = Color(0xFF64748B);
+const kBorder = Color(0xFFE8EDF5);
+const kGreen = Color(0xFF10B981);
+const kGreenBg = Color(0xFFECFDF5);
+
+// ─── Symptom model ─────────────────────────────────────────────────────────────
+class _Symptom {
+  final String name, icon;
+  const _Symptom(this.name, this.icon);
+}
+
+const symptoms = [
+  _Symptom('Fever', '🌡️'),
+  _Symptom('Headache', '🤕'),
+  _Symptom('Cough', '😮'),
+  _Symptom('Stomach pain', '🫁'),
+  _Symptom('Fatigue', '😴'),
+  _Symptom('Skin rash', '🔴'),
+  _Symptom('Joint pain', '🦴'),
+  _Symptom('Shortness of breath', '💨'),
+  _Symptom('Nausea', '🤢'),
+  _Symptom('Sore throat', '🗣️'),
+];
+
+const timeSlots = [
+  '08:00',
+  '08:30',
+  '09:00',
+  '09:30',
+  '10:00',
+  '10:30',
+  '11:00',
+  '11:30',
+  '13:00',
+  '13:30',
+  '14:00',
+  '14:30',
+  '15:00',
+  '15:30',
+  '16:00',
+  '16:30',
+  '17:00',
+];
+
+const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const monthNames = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec'
+];
+const stepLabels = ['Package', 'Schedule', 'Symptoms', 'Review'];
+

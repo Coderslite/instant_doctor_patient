@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:get/get.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/constant/constants.dart';
@@ -72,8 +72,8 @@ class _OTPScreenState extends State<OTPScreen> {
 
   Future<void> vibrate() async {
     print("vibrating");
-    var type = FeedbackType.error;
-    Vibrate.feedback(type);
+    await Haptics.vibrate(HapticsType.error);
+
     // Vibrate.vibrate();
   }
 
@@ -109,7 +109,7 @@ class _OTPScreenState extends State<OTPScreen> {
         otp = '';
       });
       vibrate(); // Vibration for incorrect OTP
-      errorSnackBar(title: "Incorrect OTP");
+      errorSnackBar(context: context, title: "Incorrect OTP");
     }
   }
 
@@ -122,9 +122,10 @@ class _OTPScreenState extends State<OTPScreen> {
         otp = '';
       });
       handleTime();
-      successSnackBar(title: "OTP sent successfully");
+      if (!mounted) return;
+      successSnackBar(context: context, title: "OTP sent successfully");
     } catch (err) {
-      errorSnackBar(title: "Something went wrong");
+      errorSnackBar(context: context, title: "Something went wrong");
     } finally {
       authenticationController.isLoading.value = false;
     }

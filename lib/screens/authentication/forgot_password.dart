@@ -238,7 +238,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                                                         emailController.text);
                                             if (user != null) {
                                               await AuthenticationService()
-                                                  .resetPassword(
+                                                  .resetPassword(context,
                                                       emailController.text);
 
                                               // Show success message

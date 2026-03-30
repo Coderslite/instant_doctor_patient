@@ -203,6 +203,7 @@ class _LabResultScreenState extends State<LabResultScreen> {
                                             if (labResult.status !=
                                                 'Completed') {
                                               errorSnackBar(
+                                                context: context,
                                                   title:
                                                       "Interpreted Lab Result is not available yet");
                                               return;

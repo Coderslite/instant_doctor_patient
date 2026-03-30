@@ -64,7 +64,7 @@ class LabResultController extends GetxController {
   ) async {
     try {
       if (files.isEmpty) {
-        errorSnackBar(title: "No file has been selected");
+        errorSnackBar(context: context, title: "No file has been selected");
         return;
       }
       isUpload.value = true;

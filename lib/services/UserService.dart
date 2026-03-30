@@ -5,6 +5,7 @@ import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/models/UserModel.dart';
 import 'package:instant_doctor/services/BaseService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
+import 'package:nb_utils/nb_utils.dart';
 
 import '../models/SavedLocationModel.dart';
 
@@ -46,7 +47,7 @@ class UserService extends BaseService {
   Future<String> getUserToken({required String userId}) async {
     var result = await userCol.doc(userId).get();
     var user = UserModel.fromJson(result.data()!);
-    return user.token!;
+    return user.token.validate();
   }
 
   Future<String> getUsername({required String userId}) async {

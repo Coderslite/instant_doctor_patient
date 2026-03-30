@@ -44,21 +44,30 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
-    # Start of the permission_handler configuration
+
     target.build_configurations.each do |config|
+      # 🔥 FORCE dSYM generation
+      config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
+      
+      # 🔥 Disable Bitcode (important for ZEGO)
+      config.build_settings['ENABLE_BITCODE'] = 'NO'
+
+      # Permission handler
       config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
         '$(inherited)',
         'PERMISSION_CAMERA=1',
         'PERMISSION_MICROPHONE=1',
       ]
     end
-    # End of the permission_handler configuration
 
+    # Geolocator fix
     if target.name == "geolocator_apple"
       target.build_configurations.each do |config|
-        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)', 'BYPASS_PERMISSION_LOCATION_ALWAYS=1']
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
+          '$(inherited)',
+          'BYPASS_PERMISSION_LOCATION_ALWAYS=1'
+        ]
       end
     end
-
   end
 end

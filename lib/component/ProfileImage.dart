@@ -18,6 +18,7 @@ ClipOval profileImage(UserModel? data, double width, double height,
           ? CachedNetworkImage(
               imageUrl: data.photoUrl!,
               fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
             ).onTap(() {
               ImagePreview(imageUrl: data.photoUrl.validate()).launch(context);
             })

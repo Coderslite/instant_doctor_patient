@@ -7,15 +7,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:instant_doctor/constant/color.dart';
-import 'package:instant_doctor/controllers/GetMyCountry.dart';
 import 'package:instant_doctor/screens/drug/ChangePickup.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:location/location.dart';
-import 'package:nb_utils/nb_utils.dart';
+import 'package:nb_utils/nb_utils.dart' hide log;
 import 'package:http/http.dart' as http;
 import 'package:device_info_plus/device_info_plus.dart';
 import '../constant/constants.dart';
+import '../services/IpService.dart';
 import '../services/LocationService.dart';
+import 'dart:developer';
 
 class LocationController extends GetxController {
   var latitude = 0.0.obs;
@@ -53,6 +54,9 @@ class LocationController extends GetxController {
   // Get and update location
   Future<void> handleGetMyLocation(
       {required bool isLogin, required String? email}) async {
+    log("getting location");
+    print("getting location");
+    await setCurrencyFromIP();
     try {
       myCountry.value = '';
       bool hasPermission = await _checkAndRequestPermission();
@@ -78,11 +82,37 @@ class LocationController extends GetxController {
     }
   }
 
+  Future<void> setCurrencyFromIP() async {
+    try {
+      // Don't override if already set
+      // if (userController.currency.value.isNotEmpty) return;
+
+      final ipService = IpLocationService();
+      final data = await ipService.getLocationData();
+      log(data.toString());
+      String country = (data['country_name'] ?? '').toLowerCase();
+      String currency = data['currency'] ?? 'USD';
+
+      // Optional: restrict supported currencies
+      if (currency != 'NGN') {
+        currency = 'USD';
+      }
+
+      userController.currency.value = currency;
+
+      await userService.updateProfile(
+        data: {
+          "country": country,
+          "currency": currency,
+        },
+        userId: userController.userId.value,
+      );
+    } catch (e) {
+      userController.currency.value = "USD";
+    }
+  }
+
   handleSaveAddress() async {
-    myCountry.value = await Getmycountry()
-        .handleGetCountry(LatLng(latitude.value, longitude.value));
-    userController.currency.value =
-        myCountry.value == 'nigeria' ? "NGN" : "USD";
     await updateAddress(
       LatLng(latitude.value, longitude.value),
     );

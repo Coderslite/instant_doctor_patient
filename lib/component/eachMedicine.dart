@@ -113,7 +113,7 @@ Padding eachMedicine(BuildContext context,
                 ),
               ).onTap(() {
                 if (drug.remaining.validate() < 1) {
-                  errorSnackBar(title: "Product is out of stock");
+                  errorSnackBar(context: context, title: "Product is out of stock");
                   return;
                 }
                 if (orderController.cart

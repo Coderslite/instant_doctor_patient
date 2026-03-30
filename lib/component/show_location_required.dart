@@ -185,6 +185,7 @@ handleShowRequestLocation(BuildContext context) async {
                               );
                             } else {
                               errorSnackBar(
+                                  context: context,
                                   title: "Location permission denied");
                             }
                           },

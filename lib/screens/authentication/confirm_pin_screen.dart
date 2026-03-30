@@ -28,13 +28,13 @@ class _ConfirmPinScreenState extends State<ConfirmPinScreen> {
         if (_confirmPin == widget.pin) {
           var prefs = await SharedPreferences.getInstance();
           prefs.setString('pin', _confirmPin);
-          successSnackBar(title: "PIN set successfully");
+          successSnackBar(context: context, title: "PIN set successfully");
           Root().launch(context, isNewTask: true);
         } else {
           setState(() {
             _confirmPin = '';
           });
-          errorSnackBar(title: 'PINs do not match');
+          errorSnackBar(context: context, title: 'PINs do not match');
         }
       }
     }

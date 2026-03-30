@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/controllers/PaymentController.dart';
+import 'package:instant_doctor/controllers/showPayment.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/services/AppointmentService.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -47,13 +48,13 @@ class BookingController extends GetxController {
 
       // Validate package selection
       if (package.value.isEmpty) {
-        errorSnackBar(title: "Please select a valid package");
+        errorSnackBar(context: context, title: "Please select a valid package");
         return false;
       }
 
       // Validate symptoms/complaint
       if (complain.value.isEmpty) {
-        errorSnackBar(title: "Please describe your symptoms");
+        errorSnackBar(context: context, title: "Please describe your symptoms");
         return false;
       }
 
@@ -61,6 +62,7 @@ class BookingController extends GetxController {
       final minAllowedTime = DateTime.now().add(Duration(minutes: 5));
       if (selectedDate.isBefore(minAllowedTime)) {
         errorSnackBar(
+            context: context,
             title:
                 "Selected date and time must be at least 5 minutes from now");
         return false;
@@ -85,36 +87,40 @@ class BookingController extends GetxController {
       if (isTrial) {
         // You might want to add specific trial handling here
         // For example, mark appointment as trial in database
-        successSnackBar(title: "Trial appointment booked successfully!");
+        successSnackBar(
+            context: context, title: "Trial appointment booked successfully!");
         isLoading.value = false;
         settingsController.trialAvailable.value = false;
         await userService.updateProfile(
             data: {"isTrialAvailable": false, "isPaid": true},
             userId: userController.userId.value);
-        await updateAppointmentAfterPayment(appointmentId, isTrial);
+        await updateAppointmentAfterPayment(context, appointmentId, isTrial);
       } else {
         // Proceed with payment for regular appointments
-        if (isPaystack) {
-          await paymentController.makePaystackPayment(
-            email: email,
-            context: Get.context!,
-            amount: price.value,
-            paymentFor: PaymentFor.appointment,
-            productId: appointmentId,
-          );
-        } else {
-          await paymentController.makeFlutterwavePayment(
-            email: email,
-            context: Get.context!,
-            amount: price.value,
-            paymentFor: PaymentFor.appointment,
-            productId: appointmentId,
-          );
-        }
+        // if (isPaystack) {
+        //   await paymentController.makePaystackPayment(
+        //     email: email,
+        //     context: Get.context!,
+        //     amount: price.value,
+        //     paymentFor: PaymentFor.appointment,
+        //     productId: appointmentId,
+        //   );
+        // } else {
+        //   await paymentController.makeFlutterwavePayment(
+        //     email: email,
+        //     context: Get.context!,
+        //     amount: price.value,
+        //     paymentFor: PaymentFor.appointment,
+        //     productId: appointmentId,
+        //   );
+        // }
+        var appt = await appointmentService.getAppointment(
+            appointmentId: appointmentId);
+        handleShowPaymentOption(context, appointment: appt);
       }
     } catch (err) {
       isLoading.value = false;
-      errorSnackBar(title: "Booking failed");
+      errorSnackBar(context: context, title: "Booking failed");
     }
   }
 
@@ -143,7 +149,7 @@ class BookingController extends GetxController {
   }
 
   Future<void> updateAppointmentAfterPayment(
-      String appointmentId, bool isTrial) async {
+      BuildContext context, String appointmentId, bool isTrial) async {
     var res = await appointmentService.updateAppointmentAfterPayment(
         appointmentId: appointmentId, isTrial: isTrial);
 
@@ -157,7 +163,7 @@ class BookingController extends GetxController {
       selectedSymptoms.value = [];
       SuccessScreen().launch(Get.context!);
     } else {
-      errorSnackBar(title: "Something went wrong");
+      errorSnackBar(context: context, title: "Something went wrong");
       isLoading.value = false;
     }
   }

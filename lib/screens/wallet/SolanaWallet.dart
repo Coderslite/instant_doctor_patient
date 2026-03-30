@@ -269,6 +269,7 @@ class _SolanaScreenState extends State<SolanaScreen> {
                       ),
                     ).onTap(() {
                       successSnackBar(
+                        context: context,
                         title: "Payment Successful",
                       );
                       settingsController.selectedIndex.value = 0;

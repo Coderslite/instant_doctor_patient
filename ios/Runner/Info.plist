@@ -1,118 +1,104 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-
-	<key>NSUserTrackingUsageDescription</key>
-	<string>This app uses IDFA to improve ad personalization.</string>
-
-	<!-- 🔒 Privacy Usage Descriptions -->
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs access to your location to determine distance from pharmacies and doctors near you.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>This app may access your location even when running in the background to help locate nearby pharmacies and doctors when needed.</string>
-	
-	<key>NSCameraUsageDescription</key>
-	<string>Instant Doctor requires access to your camera for video consultations and uploading identification.</string>
-	
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Instant Doctor needs access to your microphone so you can communicate clearly with your doctor during consultations.</string>
-	
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Instant Doctor may access your photo library if you wish to upload health documents or test results.</string>
-	
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Instant Doctor may save photos such as prescriptions or reports to your library upon request.</string>
-	
-	<key>NSFaceIDUsageDescription</key>
-	<string>Instant Doctor uses Face ID to help you log in securely and verify your identity.</string>
-
-	<key>com.apple.developer.associated-domains</key>
-	<array>
-	<string>applinks:instantdoctor.co</string>
-	</array>
-
-
-	<!-- ⚙️ App Configuration -->
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleDisplayName</key>
-	<string>Instant Doctor</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>instant_doctor_patient</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	
-	<!-- 🔔 Notifications & Background -->
-	<key>aps-environment</key>
-	<string>production</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
-		<string>remote-notification</string>
-	</array>
-
-	<!-- 📱 Interface -->
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-
-	<!-- 🗺 Google Services -->
-	<key>GIDClientID</key>
-	<string>127248616649-tbh8pb8t6nl2ughnth8u50vee0nqvt17.apps.googleusercontent.com</string>
-	<key>GoogleMapsApiKey</key>
-	<string>AIzaSyD8nW2BRd9ssOWqimiF-dOS4IeaXkKoBCI</string>
-
-	<!-- 🔐 Apple Sign-In -->
-	<key>com.apple.developer.applesignin</key>
-	<array>
-		<string>Default</string>
-	</array>
-
-	<!-- 🌐 URL Schemes (Google Sign-In) -->
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.127248616649-tbh8pb8t6nl2ughnth8u50vee0nqvt17</string>
-			</array>
-		</dict>
-	</array>
-
-</dict>
+	<dict>
+		<!-- 🔒 Privacy Usage Descriptions -->
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>This app needs access to your location to determine distance from pharmacies and doctors near you.</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>This app may access your location even when running in the background to help locate nearby pharmacies and doctors when needed.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>Instant Doctor requires access to your camera for video consultations and uploading identification.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Instant Doctor needs access to your microphone so you can communicate clearly with your doctor during consultations.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Instant Doctor may access your photo library if you wish to upload health documents or test results.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Instant Doctor may save photos such as prescriptions or reports to your library upon request.</string>
+		<key>NSFaceIDUsageDescription</key>
+		<string>Instant Doctor uses Face ID to help you log in securely and verify your identity.</string>
+		<key>com.apple.developer.associated-domains</key>
+		<array>
+			<string>applinks:instantdoctor.co</string>
+		</array>
+		<!-- ⚙️ App Configuration -->
+		<key>CADisableMinimumFrameDurationOnPhone</key>
+		<true/>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>CFBundleDisplayName</key>
+		<string>Instant Doctor</string>
+		<key>CFBundleExecutable</key>
+		<string>$(EXECUTABLE_NAME)</string>
+		<key>CFBundleIdentifier</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundleName</key>
+		<string>instant_doctor_patient</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleShortVersionString</key>
+		<string>$(FLUTTER_BUILD_NAME)</string>
+		<key>CFBundleSignature</key>
+		<string>????</string>
+		<key>CFBundleVersion</key>
+		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<key>LSRequiresIPhoneOS</key>
+		<true/>
+		<key>UIApplicationSupportsIndirectInputEvents</key>
+		<true/>
+		<!-- 🔔 Notifications & Background -->
+		<key>aps-environment</key>
+		<string>production</string>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>fetch</string>
+			<string>remote-notification</string>
+		</array>
+		<!-- 📱 Interface -->
+		<key>UILaunchStoryboardName</key>
+		<string>LaunchScreen</string>
+		<key>UIMainStoryboardFile</key>
+		<string>Main</string>
+		<key>UISupportedInterfaceOrientations</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>UISupportedInterfaceOrientations~ipad</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationPortraitUpsideDown</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<!-- 🗺 Google Services -->
+		<key>GIDClientID</key>
+		<string>127248616649-tbh8pb8t6nl2ughnth8u50vee0nqvt17.apps.googleusercontent.com</string>
+		<key>GoogleMapsApiKey</key>
+		<string>AIzaSyD8nW2BRd9ssOWqimiF-dOS4IeaXkKoBCI</string>
+		<!-- 🔐 Apple Sign-In -->
+		<key>com.apple.developer.applesignin</key>
+		<array>
+			<string>Default</string>
+		</array>
+		<!-- 🌐 URL Schemes (Google Sign-In) -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>com.googleusercontent.apps.127248616649-tbh8pb8t6nl2ughnth8u50vee0nqvt17</string>
+				</array>
+			</dict>
+		</array>
+		<key>UIStatusBarHidden</key>
+		<true/>
+		<key>UIViewControllerBasedStatusBarAppearance</key>
+		<false/>
+	</dict>
 </plist>

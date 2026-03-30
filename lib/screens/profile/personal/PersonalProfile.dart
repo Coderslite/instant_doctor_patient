@@ -17,7 +17,8 @@ import '../../../controllers/UploadFileController.dart';
 import '../../../main.dart';
 
 class PersonalProfileScreen extends StatefulWidget {
-  const PersonalProfileScreen({super.key});
+  final bool isModal;
+  const PersonalProfileScreen({super.key, required this.isModal});
 
   @override
   State<PersonalProfileScreen> createState() => _PersonalProfileScreenState();
@@ -83,7 +84,7 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        backButton(context),
+                        backButton(context).visible(!widget.isModal),
                         Text(
                           "Personal Information",
                           style: boldTextStyle(size: 20, color: kPrimary),
@@ -225,6 +226,16 @@ class _PersonalProfileScreenState extends State<PersonalProfileScreen> {
                         ),
                       ],
                     ),
+                    10.height,
+                    AppButton(
+                      onTap: () {
+                        finish(context);
+                      },
+                      text: "Continue",
+                      width: double.infinity,
+                      color: kPrimary,
+                      textColor: white,
+                    ).visible(widget.isModal),
                   ],
                 ),
               );

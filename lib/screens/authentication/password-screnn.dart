@@ -474,6 +474,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
                                             .launch(context);
                                       } else {
                                         authenticationController.handleSendOTP(
+                                          context: context,
                                           email: widget.email.validate(),
                                           firstname:
                                               widget.firstname.validate(),

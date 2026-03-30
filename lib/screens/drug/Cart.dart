@@ -58,7 +58,9 @@ class _CartScreenState extends State<CartScreen> {
               onPressed: () {
                 Navigator.pop(context);
                 // Navigate to profile screen
-                PersonalProfileScreen().launch(context);
+                PersonalProfileScreen(
+                  isModal: false,
+                ).launch(context);
               },
               child:
                   Text("Update Profile", style: boldTextStyle(color: kPrimary)),
@@ -86,7 +88,7 @@ class _CartScreenState extends State<CartScreen> {
                 children: [
                   AppButton(
                     onTap: () async {
-                      await orderController.makeOrder(true);
+                      await orderController.makeOrder(context, true);
                     },
                     width: double.infinity,
                     child: Row(
@@ -100,7 +102,7 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                   AppButton(
                     onTap: () async {
-                      await orderController.makeOrder(false);
+                      await orderController.makeOrder(context, false);
                     },
                     width: double.infinity,
                     child: Row(

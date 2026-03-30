@@ -290,7 +290,7 @@ class _MedicineDetailsState extends State<MedicineDetails> {
                         : kPrimary,
                 onTap: () {
                   if (widget.drug.remaining.validate() < 1) {
-                    errorSnackBar(title: "Product is out of stock");
+                    errorSnackBar(context:context,title: "Product is out of stock");
                     return;
                   }
                   if (!isContained) {

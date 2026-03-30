@@ -38,7 +38,7 @@ class ConnectivityController extends GetxController {
     connectionStatus.value = result;
     if (connectionStatus.isEmpty ||
         (result.length == 1 && result[0] == ConnectivityResult.none)) {
-      errorSnackBar(title: "No Internet Connection");
+      errorSnackBar(context: Get.context!, title: "No Internet Connection");
       internetConnected.value = false;
     } else {
       internetConnected.value = true;

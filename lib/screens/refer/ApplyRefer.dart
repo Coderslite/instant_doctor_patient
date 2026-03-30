@@ -6,9 +6,7 @@ import 'package:instant_doctor/screens/refer/Refer.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:instant_doctor/constant/color.dart';
-import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/services/UserService.dart';
-import 'package:instant_doctor/services/BaseService.dart';
 
 class ApplyReferralProgramScreen extends StatefulWidget {
   const ApplyReferralProgramScreen({super.key});

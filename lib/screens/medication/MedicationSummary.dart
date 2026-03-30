@@ -211,7 +211,7 @@ class _MedicationSummaryScreenState extends State<MedicationSummaryScreen> {
   Future<void> _submitMedication() async {
     setState(() => _isSubmitting = true);
     try {
-      await medicationController.handleCreateMedication(widget.medication);
+      await medicationController.handleCreateMedication(context,widget.medication);
       Get.off(() => const MedicationTracker());
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

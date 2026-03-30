@@ -1,5 +1,8 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_paystack_plus/flutter_paystack_plus.dart';
 import 'package:flutterwave_standard/flutterwave.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/snackBar.dart';
@@ -10,7 +13,6 @@ import 'package:instant_doctor/services/AppointmentService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:instant_doctor/services/WalletService.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:pay_with_paystack/pay_with_paystack.dart';
 
 import '../services/UserService.dart';
 import 'OrderController.dart';
@@ -20,57 +22,67 @@ class PaymentController extends GetxController {
   var isLoading = false.obs;
   final walletService = Get.find<WalletService>();
   final userService = Get.find<UserService>();
+  bool get _isUsd => userController.currency.value == 'USD';
 
-  // Surcharge for orders (2% user surcharge + Flutterwave fee)
-  double surChargeOrder(double amount, double deliveryFee) {
-    const double surchargeRate = 0.02; // 2% user surcharge
-    double flutterwaveCharge = getFlutterwaveCharge(amount);
-    final double userSurcharge = (amount - deliveryFee) * surchargeRate;
-    return userSurcharge + flutterwaveCharge;
+  // double getGatewayCharge(double amount) {
+  //   double fee = amount * 0.014;
+  //   double cap = _isUsd ? 2.0 : 2000.0;
+  //   return fee > cap ? cap : fee;
+  // }
+  double getGatewayCharge(double amount) {
+    double fee = amount * 0.014;
+    double cap = _isUsd ? 2.0 : 2000.0;
+    return 0;
   }
 
-  // Surcharge for appointments (Flutterwave fee only)
-  double surChargeAppointment(double amount) {
-    return getFlutterwaveCharge(amount);
-  }
+  // int getTransferFee(double amount) {
+  //   if (_isUsd) {
+  //     if (amount <= 5) return 1;
+  //     if (amount <= 50) return 2;
+  //     return 3;
+  //   } else {
+  //     if (amount <= 5000) return 10;
+  //     if (amount <= 50000) return 25;
+  //     return 50;
+  //   }
+  // }
 
-  // Surcharge for lab results (Flutterwave fee only)
-  double surChargeLabresult(double amount) {
-    return getFlutterwaveCharge(amount);
-  }
-
-  // Transfer fee (same as Paystack for consistency)
   int getTransferFee(double amount) {
-    if (amount <= 5000) {
-      return 10;
-    } else if (amount <= 50000) {
-      return 25;
-    } else {
-      return 50;
-    }
+    return 0;
   }
 
-  // Platform earnings for pharmacy (in kobo)
+// ── Order surcharge (2% user surcharge + gateway fee) ────────────────────────
+  double surChargeOrder(double amount, double deliveryFee) {
+    const double surchargeRate = 0.02;
+    double gatewayFee = getGatewayCharge(amount);
+    double userSurcharge = (amount - deliveryFee) * surchargeRate;
+    return userSurcharge + gatewayFee;
+  }
+
+// ── Appointment surcharge (gateway fee only) ─────────────────────────────────
+  double surChargeAppointment(double amount) => getGatewayCharge(amount);
+
+// ── Lab result surcharge (gateway fee only) ──────────────────────────────────
+  double surChargeLabresult(double amount) => getGatewayCharge(amount);
+
+// ── Platform earnings for pharmacy (kobo / cents) ────────────────────────────
   double calculatePlatformEarningForPharmacy(
       double transactionAmount, double deliveryFee) {
-    const double platformFeeRate = 0.05; // 5% platform fee
-    const double surchargeRate = 0.02; // 2% user surcharge
-    double flutterwaveCharge = getFlutterwaveCharge(transactionAmount);
-    final double platformFee =
-        (transactionAmount - deliveryFee) * platformFeeRate;
-    final double userSurcharge =
-        (transactionAmount - deliveryFee) * surchargeRate;
-    final double platformEarnings = platformFee + userSurcharge;
-    return (platformEarnings + flutterwaveCharge) * 100; // Convert to kobo
+    const double platformFeeRate = 0.05;
+    const double surchargeRate = 0.02;
+    double gatewayFee = getGatewayCharge(transactionAmount);
+    double platformFee = (transactionAmount - deliveryFee) * platformFeeRate;
+    double userSurcharge = (transactionAmount - deliveryFee) * surchargeRate;
+    // Multiply by 100 → kobo for NGN, cents for USD (both handled the same way downstream)
+    return (platformFee + userSurcharge + gatewayFee) * 100;
   }
 
-  // Platform earnings for doctors (in kobo)
+// ── Platform earnings for doctors (kobo / cents) ─────────────────────────────
   double calculatePlatformEarningForDoctors(double transactionAmount) {
-    const double platformFeeRate = 0.40; // 30% platform fee
-    double flutterwaveCharge = getFlutterwaveCharge(transactionAmount);
-    final double platformFee = transactionAmount * platformFeeRate;
-    final double platformEarnings = platformFee;
-    return (platformEarnings + flutterwaveCharge) * 100; // Convert to kobo
+    const double platformFeeRate = 0.40;
+    double gatewayFee = getGatewayCharge(transactionAmount);
+    double platformFee = transactionAmount * platformFeeRate;
+    return (platformFee + gatewayFee) * 100;
   }
 
   // Flutterwave transaction fee (1.4% capped at ₦2000)
@@ -145,6 +157,7 @@ class PaymentController extends GetxController {
           double doctorEarning =
               (amount + surcharge) - (platformEarning / 100.0);
           bookingController.updateAppointmentAfterPayment(
+            context,
             productId.validate(),
             isTrial.validate(),
           );
@@ -154,27 +167,27 @@ class PaymentController extends GetxController {
           );
         }
         if (paymentFor == PaymentFor.order) {
-          orderController.orderNow();
+          orderController.orderNow(context);
         }
         if (paymentFor == PaymentFor.labResult) {
           labResultController.handleUploadFiles(context);
         }
-        successSnackBar(title: "Payment Successful");
+        successSnackBar(context: context, title: "Payment Successful");
       } else {
         if (paymentFor == PaymentFor.appointment) {
-          errorSnackBar(title: "Payment not successful");
+          errorSnackBar(context: context, title: "Payment not successful");
         }
         if (paymentFor == PaymentFor.order) {
-          errorSnackBar(title: "Payment not successful");
+          errorSnackBar(context: context, title: "Payment not successful");
         }
-        errorSnackBar(title: "Payment Cancelled");
+        errorSnackBar(context: context, title: "Payment Cancelled");
         bookingController.isLoading.value = false;
       }
     } catch (err) {
       orderController.isLoading.value = false;
       bookingController.isLoading.value = false;
       log(err.toString());
-      errorSnackBar(title: "Payment Error");
+      errorSnackBar(context: context, title: "Payment Error");
     } finally {
       isLoading.value = false;
       // bookingController.isLoading.value = false;
@@ -223,48 +236,88 @@ class PaymentController extends GetxController {
 
       print("Total Paystack Amount (in kobo): $paystackAmount");
 
-      final uniqueTransRef = PayWithPayStack().generateUuidV4();
-
-      PayWithPayStack().now(
+      await FlutterPaystackPlus.openPaystackPopup(
         context: context,
-        paymentChannel: ["bank_transfer", "card"],
-        secretKey: "sk_live_c07e9ad43ea5365e467383dab49c9dcefc1975cf",
+
         customerEmail: email,
-        reference: uniqueTransRef,
-        currency: userController.currency.value,
-        amount: paystackAmount / 100, // <-- must be in kobo
-        callbackUrl: "https://instantdoctor.co",
-        transactionCompleted: (paymentData) {
+        amount: (amount * 100).toString(), // e.g. 500 * 100 = 50000
+        reference: DateTime.now().millisecondsSinceEpoch.toString(),
+        secretKey: 'sk_live_c07e9ad43ea5365e467383dab49c9dcefc1975cf',
+        callBackUrl: 'https://instantdoctor.co', // from your Paystack dashboard
+        currency: 'NGN',
+        onSuccess: () {
           if (paymentFor == PaymentFor.appointment) {
             double doctorEarning =
                 (amount + surcharge) - (platformEarning / 100.0);
             bookingController.updateAppointmentAfterPayment(
-                productId.validate(), isTrial.validate());
+                context, productId.validate(), isTrial.validate());
             AppointmentService().updateDoctorEarning(
               appointmentId: productId.validate(),
               doctorEarning: doctorEarning.toInt(),
             );
           }
           if (paymentFor == PaymentFor.order) {
-            orderController.orderNow();
+            orderController.orderNow(context);
           }
           if (paymentFor == PaymentFor.labResult) {
             labResultController.handleUploadFiles(context);
           }
-          successSnackBar(title: "Payment Successful");
+          successSnackBar(context: context, title: "Payment Successful");
         },
-        transactionNotCompleted: (reason) {
+        onClosed: () {
           if (paymentFor == PaymentFor.appointment) {
             bookingController.isLoading.value = false;
-            errorSnackBar(title: "Payment not successful");
+            errorSnackBar(context: context, title: "Payment not successful");
           }
           if (paymentFor == PaymentFor.order) {
             orderController.isLoading.value = false;
-            errorSnackBar(title: "Payment not successful");
+            errorSnackBar(context: context, title: "Payment not successful");
           }
-          errorSnackBar(title: "Payment Cancelled");
+          errorSnackBar(context: context, title: "Payment Cancelled");
         },
       );
+      // final uniqueTransRef = PayWithPayStack().generateUuidV4();
+
+      // PayWithPayStack().now(
+      //   context: context,
+      //   paymentChannel: ["bank_transfer,card"],
+      //   secretKey: "sk_live_c07e9ad43ea5365e467383dab49c9dcefc1975cf",
+      //   customerEmail: email,
+      //   reference: uniqueTransRef,
+      //   currency: 'NGN',
+      //   amount: paystackAmount / 100, // <-- must be in kobo
+      //   callbackUrl: "https://instantdoctor.co",
+      //   transactionCompleted: (paymentData) {
+      //     if (paymentFor == PaymentFor.appointment) {
+      //       double doctorEarning =
+      //           (amount + surcharge) - (platformEarning / 100.0);
+      //       bookingController.updateAppointmentAfterPayment(
+      //           context, productId.validate(), isTrial.validate());
+      //       AppointmentService().updateDoctorEarning(
+      //         appointmentId: productId.validate(),
+      //         doctorEarning: doctorEarning.toInt(),
+      //       );
+      //     }
+      //     if (paymentFor == PaymentFor.order) {
+      //       orderController.orderNow(context);
+      //     }
+      //     if (paymentFor == PaymentFor.labResult) {
+      //       labResultController.handleUploadFiles(context);
+      //     }
+      //     successSnackBar(context: context, title: "Payment Successful");
+      //   },
+      //   transactionNotCompleted: (reason) {
+      //     if (paymentFor == PaymentFor.appointment) {
+      //       bookingController.isLoading.value = false;
+      //       errorSnackBar(context: context, title: "Payment not successful");
+      //     }
+      //     if (paymentFor == PaymentFor.order) {
+      //       orderController.isLoading.value = false;
+      //       errorSnackBar(context: context, title: "Payment not successful");
+      //     }
+      //     errorSnackBar(context: context, title: "Payment Cancelled");
+      //   },
+      // );
     } on PlatformException catch (e) {
       log(e.message!);
     } finally {

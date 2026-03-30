@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
-import 'package:instant_doctor/screens/doctors/AllDoctors.dart';
 import 'package:instant_doctor/services/format_number.dart';
 import 'package:nb_utils/nb_utils.dart';
 
@@ -57,7 +56,7 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                backButton(context),
+                  backButton(context),
                   Text(
                     "Pricing",
                     style: boldTextStyle(size: 20, color: kPrimary),
@@ -93,9 +92,10 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
               20.height,
               AppButton(
                 onTap: () {
-                  widget.fromDocScreen
-                      ? finish(context, selectedPrice)
-                      : const AllDoctorsScreen().launch(context);
+                  // widget.fromDocScreen
+                  //     ? finish(context, selectedPrice)
+                  //     : const AllDoctorsScreen().launch(context);
+                  finish(context, selectedPrice);
                 },
                 width: double.infinity,
                 color: kPrimary,

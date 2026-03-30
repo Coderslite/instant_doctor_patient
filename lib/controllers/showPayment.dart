@@ -17,6 +17,7 @@ handleShowPaymentOption(BuildContext context,
   showModalBottomSheet(
       context: context,
       backgroundColor: context.scaffoldBackgroundColor,
+      isDismissible: false,
       builder: (context) {
         return Padding(
           padding: const EdgeInsets.all(20.0),
@@ -45,7 +46,7 @@ handleShowPaymentOption(BuildContext context,
                   "assets/images/paystack.png",
                   height: 40,
                 ),
-              ),
+              ).visible(userController.currency.value == 'NGN'),
               10.height,
               AppButton(
                 onTap: () async {
@@ -106,7 +107,7 @@ handleShowPaymentOptionBook(BuildContext context) async {
                   "assets/images/paystack.png",
                   height: 40,
                 ),
-              ),
+              ).visible(userController.currency.value == 'NGN'),
               10.height,
               AppButton(
                 onTap: () async {
@@ -115,7 +116,7 @@ handleShowPaymentOptionBook(BuildContext context) async {
                     await bookingController.handleBookAppointment(
                         isTrial: false,
                         doctorId: '',
-                        isPaystack: true,
+                        isPaystack: false,
                         context: context);
                   } finally {
                     bookingController.isLoading.value = false;
@@ -207,7 +208,7 @@ handleShowPaymentOptionOrder(BuildContext context,
               AppButton(
                 onTap: () async {
                   try {
-                    await orderController.makeOrder(isPaystack);
+                    await orderController.makeOrder(context, isPaystack);
                   } finally {
                     orderController.isLoading.value = false;
                   }
@@ -222,7 +223,7 @@ handleShowPaymentOptionOrder(BuildContext context,
               AppButton(
                 onTap: () async {
                   try {
-                    await orderController.makeOrder(isPaystack);
+                    await orderController.makeOrder(context, isPaystack);
                   } finally {
                     orderController.isLoading.value = false;
                   }

@@ -1377,13 +1377,13 @@ PODS:
   - flutter_logs (0.0.1):
     - Flutter
     - ZIPFoundation
+  - flutter_native_splash (2.4.3):
+    - Flutter
   - flutter_pdfview (1.0.2):
     - Flutter
   - flutter_ringtone_player (0.0.1):
     - Flutter
   - flutter_timezone (0.0.1):
-    - Flutter
-  - flutter_vibrate (0.0.1):
     - Flutter
   - flutter_volume_controller (0.0.1):
     - Flutter
@@ -1538,6 +1538,8 @@ PODS:
   - GTMSessionFetcher/Core (3.5.0)
   - GTMSessionFetcher/Full (3.5.0):
     - GTMSessionFetcher/Core
+  - haptic_feedback (0.5.1):
+    - Flutter
   - image_picker_ios (0.0.1):
     - Flutter
   - in_app_review (2.0.0):
@@ -1573,9 +1575,9 @@ PODS:
     - Flutter
   - PromisesObjC (2.4.0)
   - RecaptchaInterop (101.0.0)
-  - SDWebImage (5.21.3):
-    - SDWebImage/Core (= 5.21.3)
-  - SDWebImage/Core (5.21.3)
+  - SDWebImage (5.21.7):
+    - SDWebImage/Core (= 5.21.7)
+  - SDWebImage/Core (5.21.7)
   - share_plus (0.0.1):
     - Flutter
   - shared_preferences_foundation (0.0.1):
@@ -1619,7 +1621,7 @@ PODS:
     - ZPNs (= 2.6.0)
   - ZegoUIKitReport (0.2.10)
   - ZIM-Private (2.20.6.3312)
-  - ZIPFoundation (0.9.19)
+  - ZIPFoundation (0.9.20)
   - ZPNs (2.6.0)
 
 DEPENDENCIES:
@@ -1642,15 +1644,16 @@ DEPENDENCIES:
   - flutter_keyboard_visibility (from `.symlinks/plugins/flutter_keyboard_visibility/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_logs (from `.symlinks/plugins/flutter_logs/ios`)
+  - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
   - flutter_pdfview (from `.symlinks/plugins/flutter_pdfview/ios`)
   - flutter_ringtone_player (from `.symlinks/plugins/flutter_ringtone_player/ios`)
   - flutter_timezone (from `.symlinks/plugins/flutter_timezone/ios`)
-  - flutter_vibrate (from `.symlinks/plugins/flutter_vibrate/ios`)
   - flutter_volume_controller (from `.symlinks/plugins/flutter_volume_controller/ios`)
   - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
   - geocoding_ios (from `.symlinks/plugins/geocoding_ios/ios`)
   - google_maps_flutter_ios (from `.symlinks/plugins/google_maps_flutter_ios/ios`)
   - google_sign_in_ios (from `.symlinks/plugins/google_sign_in_ios/darwin`)
+  - haptic_feedback (from `.symlinks/plugins/haptic_feedback/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - in_app_review (from `.symlinks/plugins/in_app_review/ios`)
   - just_audio (from `.symlinks/plugins/just_audio/darwin`)
@@ -1763,14 +1766,14 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_local_notifications/ios"
   flutter_logs:
     :path: ".symlinks/plugins/flutter_logs/ios"
+  flutter_native_splash:
+    :path: ".symlinks/plugins/flutter_native_splash/ios"
   flutter_pdfview:
     :path: ".symlinks/plugins/flutter_pdfview/ios"
   flutter_ringtone_player:
     :path: ".symlinks/plugins/flutter_ringtone_player/ios"
   flutter_timezone:
     :path: ".symlinks/plugins/flutter_timezone/ios"
-  flutter_vibrate:
-    :path: ".symlinks/plugins/flutter_vibrate/ios"
   flutter_volume_controller:
     :path: ".symlinks/plugins/flutter_volume_controller/ios"
   fluttertoast:
@@ -1781,6 +1784,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/google_maps_flutter_ios/ios"
   google_sign_in_ios:
     :path: ".symlinks/plugins/google_sign_in_ios/darwin"
+  haptic_feedback:
+    :path: ".symlinks/plugins/haptic_feedback/ios"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
   in_app_review:
@@ -1877,10 +1882,10 @@ SPEC CHECKSUMS:
   flutter_keyboard_visibility: 4625131e43015dbbe759d9b20daaf77e0e3f6619
   flutter_local_notifications: ad39620c743ea4c15127860f4b5641649a988100
   flutter_logs: 30a36079651dcdfb260dbff875bf882bbbcaa22e
+  flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
   flutter_pdfview: 32bf27bda6fd85b9dd2c09628a824df5081246cf
   flutter_ringtone_player: a77c42464250845611eaa44c27e8714acc800138
   flutter_timezone: 7c838e17ffd4645d261e87037e5bebf6d38fe544
-  flutter_vibrate: 207bbbeb62dd5638b479846c8e46168d7229f14a
   flutter_volume_controller: c2be490cb0487e8b88d0d9fc2b7e1c139a4ebccb
   fluttertoast: 2c67e14dce98bbdb200df9e1acf610d7a6264ea1
   geocoding_ios: 33776c9ebb98d037b5e025bb0e7537f6dd19646e
@@ -1895,6 +1900,7 @@ SPEC CHECKSUMS:
   gRPC-Core: 860978b7db482de8b4f5e10677216309b5ff6330
   GTMAppAuth: f69bd07d68cd3b766125f7e072c45d7340dea0de
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
+  haptic_feedback: 1f22d7ad3abb43bb814aa42fdf548dc6d9e8245a
   image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
   in_app_review: 5596fe56fab799e8edb3561c03d053363ab13457
   just_audio: 4e391f57b79cad2b0674030a00453ca5ce817eed
@@ -1912,7 +1918,7 @@ SPEC CHECKSUMS:
   pointer_interceptor_ios: ec847ef8b0915778bed2b2cef636f4d177fa8eed
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
-  SDWebImage: 16309af6d214ba3f77a7c6f6fdda888cb313a50a
+  SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
   sign_in_apple: 8dc723ca4030d519d6b41dd5e35b5eec8075fde7
@@ -1932,9 +1938,9 @@ SPEC CHECKSUMS:
   zego_zpns: e2ef9b972e9b6be00b78b32b71c550c426584752
   ZegoUIKitReport: a993f7ccc5d243998a7e601a60e16fcd6c084417
   ZIM-Private: 70c76400eb99981920e6e1edc7c7ebe09aba7bfe
-  ZIPFoundation: b8c29ea7ae353b309bc810586181fd073cb3312c
+  ZIPFoundation: dfd3d681c4053ff7e2f7350bc4e53b5dba3f5351
   ZPNs: 73bad0046a74e37315201053f9a0e7ac625d9436
 
-PODFILE CHECKSUM: c83b21314f23df709b24078011811f7a6e4eb4ff
+PODFILE CHECKSUM: d47385162d5dde11d02df532fffc49aa4caee5e0
 
 COCOAPODS: 1.16.2

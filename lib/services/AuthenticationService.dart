@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/constant/constants.dart';
@@ -136,15 +137,15 @@ class AuthenticationService extends BaseService {
     }
   }
 
-  Future<void> resetPassword(String email) async {
+  Future<void> resetPassword(BuildContext context,String email) async {
     try {
       await FirebaseAuth.instance
           .sendPasswordResetEmail(email: email.toLowerCase());
-      successSnackBar(title: "A reset password link as been sent to your mail");
+      successSnackBar(context: context, title: "A reset password link as been sent to your mail");
       // Password reset email sent successfully
     } catch (error) {
       // Handle errors, such as invalid email or user not found
-      errorSnackBar(title: 'Error sending password reset email');
+      errorSnackBar(context: context, title: 'Error sending password reset email');
       print('Error sending password reset email: $error');
     }
   }

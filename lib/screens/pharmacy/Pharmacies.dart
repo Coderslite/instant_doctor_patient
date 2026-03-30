@@ -480,7 +480,7 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
                   return Obx(
                     () => ElevatedButton(
                       onPressed: () async {
-                        await waitlistController.newWaitlist();
+                        await waitlistController.newWaitlist(context);
                         setState(() {});
                       },
                       style: ElevatedButton.styleFrom(
