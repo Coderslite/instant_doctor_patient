@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/models/ReferralModel.dart';
-import 'package:instant_doctor/models/UserModel.dart';
 import 'package:instant_doctor/services/BaseService.dart';
+import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:instant_doctor/services/TransactionService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
@@ -20,14 +20,20 @@ class ReferralService extends BaseService {
 
   var refCol = db.collection("Referrals");
 
-  // Future<List<ReferralModel>> getReferrals({required String tag}) async {
-  //   var result = await refCol
-  //       .where('referredBy', isEqualTo: tag)
-  //       .orderBy('createdAt')
-  //       .get();
-  //   var res = result.docs.map((e) => ReferralModel.fromJson(e.data())).toList();
-  //   return res;
-  // }
+  Future<List<ReferralModel>> getReferrals() async {
+    DateTime now = DateTime.now();
+    DateTime startOfMonth = DateTime(now.year, now.month, 1);
+    DateTime startOfNextMonth = (now.month == 12)
+        ? DateTime(now.year + 1, 1, 1)
+        : DateTime(now.year, now.month + 1, 1);
+    var result = await refCol
+        .where('referredBy', isEqualTo: userController.tag.value)
+        .where('createdAt', isGreaterThanOrEqualTo: startOfMonth)
+        .where('createdAt', isLessThan: startOfNextMonth)
+        .orderBy('createdAt')
+        .get();
+    return result.docs.map((e) => ReferralModel.fromJson(e.data())).toList();
+  }
 
   // When user signs up with referral code
   Future<void> newReferral({
@@ -38,16 +44,13 @@ class ReferralService extends BaseService {
     var referrer = await userService.getUserByTag(tag: referredBy);
     if (referrer == null) return;
 
-    // Get the new user's profile
-    var referredUser = await userService.getProfileById(userId: userId);
-
     // Create referral record
     var data = {
       "userId": userId,
       "referredBy": referredBy,
       "status": "active",
       "signupBonusPaid": false,
-      "totalCommissionEarned": 0.0,
+      "totalCommissionEarned": 0,
       "createdAt": Timestamp.now(),
       "updatedAt": Timestamp.now(),
     };
@@ -58,29 +61,29 @@ class ReferralService extends BaseService {
     });
 
     // Award ₦50 sign-up bonus
-    await _awardSignupBonus(referrer.id.validate(), referredUser);
+    // await _awardSignupBonus(referrer.id.validate(), referredUser);
   }
 
   // Award ₦50 for sign-up
-  Future<void> _awardSignupBonus(
-      String referrerId, UserModel? referredUser) async {
-    try {
-      // Update referrer's balance
-      await userService.userCol.doc(referrerId).update({
-        "referralBalance": FieldValue.increment(50.0),
-      });
+  // Future<void> _awardSignupBonus(
+  //     String referrerId, UserModel? referredUser) async {
+  //   try {
+  //     // Update referrer's balance
+  //     await userService.userCol.doc(referrerId).update({
+  //       "referralBalance": FieldValue.increment(0),
+  //     });
 
-      // Send notification
-      await notificationService.newNotification(
-        userId: referrerId,
-        type: NotificationType.transaction,
-        title:
-            "You earned ₦50 for referring ${referredUser?.firstName ?? 'a new user'}",
-      );
-    } catch (e) {
-      log("Error awarding signup bonus: $e");
-    }
-  }
+  //     // Send notification
+  //     await notificationService.newNotification(
+  //       userId: referrerId,
+  //       type: NotificationType.transaction,
+  //       title:
+  //           "You earned ₦50 for referring ${referredUser?.firstName ?? 'a new user'}",
+  //     );
+  //   } catch (e) {
+  //     log("Error awarding signup bonus: $e");
+  //   }
+  // }
 
   // When referred user books an appointment and pays
   Future<void> awardAppointmentCommission({
@@ -88,8 +91,6 @@ class ReferralService extends BaseService {
     required int appointmentAmount,
   }) async {
     try {
-      print("amount referral clicked");
-      // Find the referral record for this user
       var referralQuery = await refCol
           .where('userId', isEqualTo: userId)
           .where('status', isEqualTo: 'active')

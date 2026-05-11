@@ -12,6 +12,7 @@ import '../../constant/color.dart';
 import '../../controllers/LocationController.dart';
 import '../../controllers/OrderController.dart';
 import '../../controllers/UserController.dart';
+import '../../component/PremiumButton.dart';
 import '../../main.dart';
 import '../../models/SavedLocationModel.dart';
 import '../../services/UserService.dart';
@@ -385,7 +386,7 @@ class _ChangePickupState extends State<ChangePickup> {
             right: 16,
             child: Column(
               children: [
-                AppButton(
+                PremiumButton(
                   color: kPrimary,
                   textColor: white,
                   onTap: _address.isNotEmpty
@@ -395,8 +396,8 @@ class _ChangePickupState extends State<ChangePickup> {
                       : null,
                   text: 'SAVE THIS LOCATION',
                 ),
-                SizedBox(height: 8),
-                AppButton(
+                12.height,
+                PremiumButton(
                   onTap: _address.isNotEmpty ? _saveLocation : null,
                   text: 'USE THIS LOCATION',
                   color: context.cardColor,
@@ -435,31 +436,22 @@ class _ChangePickupState extends State<ChangePickup> {
                         Row(
                           children: [
                             Expanded(
-                              child: OutlinedButton(
-                                onPressed: () {
+                              child: PremiumButton(
+                                onTap: () {
                                   setState(
                                       () => _showSaveLocationDialog = false);
                                 },
-                                child: Text("Cancel"),
+                                text: "Cancel",
+                                color: Colors.white,
+                                textColor: kPrimary,
                               ),
                             ),
                             SizedBox(width: 16),
                             Expanded(
-                              child: ElevatedButton(
-                                onPressed: _saveAsNewLocation,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: kPrimary,
-                                ),
-                                child: _isLoading
-                                    ? SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          color: white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : Text("Save"),
+                              child: PremiumButton(
+                                onTap: _saveAsNewLocation,
+                                isLoading: _isLoading,
+                                text: "Save",
                               ),
                             ),
                           ],

@@ -1,12 +1,12 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:instant_doctor/component/ProfileImage.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/constant/color.dart';
-import 'package:instant_doctor/controllers/BookingController.dart';
+import 'package:instant_doctor/constant/constants.dart';
+import 'package:instant_doctor/screens/appointment/AppointmentPricing.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:sliding_up_panel/sliding_up_panel.dart';
-
+import '../../component/PremiumButton.dart';
 import '../../models/UserModel.dart';
 import '../../services/ReviewService.dart';
 
@@ -20,10 +20,6 @@ class SingleDoctorScreen extends StatefulWidget {
 
 class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
   final reviewService = Get.find<ReviewService>();
-  bool isOpened = false;
-  var controller = PanelController();
-  BookingController bookingController = Get.put(BookingController());
-  bool isLoading = true;
   int totalReview = 0;
 
   @override
@@ -41,325 +37,266 @@ class _SingleDoctorScreenState extends State<SingleDoctorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: WillPopScope(
-        onWillPop: () async {
-          if (isOpened) {
-            setState(() {
-              isOpened = false;
-              controller.close();
-            });
-            return false;
-          }
-          return true;
-        },
-        child: Stack(
+      backgroundColor: kBg,
+      body: Stack(
+        children: [
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              _buildAppBar(),
+              SliverToBoxAdapter(
+                child: _buildContent(),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppBar() {
+    return SliverAppBar(
+      expandedHeight: 450,
+      pinned: true,
+      elevation: 0,
+      backgroundColor: kPrimary,
+      leadingWidth: 70,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 16),
+        child: backButton(context).center(),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        background: Stack(
+          fit: StackFit.expand,
           children: [
-            // Background with doctor image
+            widget.doctor.photoUrl.validate().isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: widget.doctor.photoUrl!,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                  )
+                : Image.asset(
+                    "assets/images/avatar2.png",
+                    fit: BoxFit.cover,
+                    alignment: Alignment.topCenter,
+                  ),
             Container(
-              height: MediaQuery.of(context).size.height * 0.4,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
+                  stops: const [0.5, 1.0],
                   colors: [
-                    kPrimary.withOpacity(0.9),
-                    kPrimary.withOpacity(0.7),
+                    Colors.transparent,
+                    kText.withOpacity(0.8),
                   ],
                 ),
               ),
             ),
-
-            // Content
-            SlidingUpPanel(
-              controller: controller,
-              minHeight: MediaQuery.of(context).size.height * 0.35,
-              maxHeight: MediaQuery.of(context).size.height * 0.9,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(30),
-                topRight: Radius.circular(30),
-              ),
-              color: context.cardColor,
-              backdropEnabled: true,
-              parallaxEnabled: true,
-              onPanelClosed: () => setState(() => isOpened = false),
-              onPanelOpened: () => setState(() => isOpened = true),
-              panelBuilder: (scrollController) =>
-                  _buildPanelContent(scrollController),
-              body: _buildHeaderContent(),
-            ),
-
-            // Floating action button
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeaderContent() {
-    return SafeArea(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildContent() {
+    return Transform.translate(
+      offset: const Offset(0, -30),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+        decoration: const BoxDecoration(
+          color: kBg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Doctor Name and Speciality
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                backButton(
-                  context,
-                ),
-                Text(
-                  "Doctor Profile",
-                  style: boldTextStyle(size: 20, color: Colors.white),
-                ),
-                const SizedBox(width: 40), // For balance
-              ],
-            ),
-          ),
-
-          // Doctor profile card
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: context.cardColor,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Stack(
-                    alignment: Alignment.bottomCenter,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      profileImage(widget.doctor, 120, 120, context: context),
-                      Positioned(
-                        right: 10,
-                        bottom: 0,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: context.cardColor,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 5,
-                              ),
-                            ],
-                          ),
-                          child:
-                              Icon(Icons.verified, color: kPrimary, size: 20),
+                      Text(
+                        "Dr. ${widget.doctor.firstName} ${widget.doctor.lastName}",
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          color: kText,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      4.height,
+                      Text(
+                        widget.doctor.speciality.validate(),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: kSub,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "${widget.doctor.firstName} ${widget.doctor.lastName}",
-                    style: boldTextStyle(size: 22),
-                    textAlign: TextAlign.center,
+                ),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: kGreenBg,
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.doctor.speciality.validate(),
-                    style: secondaryTextStyle(size: 16, color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.star, color: Colors.amber, size: 18),
-                      const SizedBox(width: 4),
-                      Text("4.5", style: boldTextStyle()),
-                      const SizedBox(width: 8),
-                      Text(
-                          "($totalReview ${totalReview == 1 ? 'Review' : 'Reviews'})",
-                          style: secondaryTextStyle()),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Languages and other info
-// In your _buildHeaderContent() or _buildPanelContent() method:
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _buildLanguageChip("English", Icons.language),
-                if (widget.doctor.otherLanguage.validate().isNotEmpty)
-                  ...widget.doctor.otherLanguage
-                      .validate()
-                      .split(',') // Split by comma
-                      .map((lang) => lang.trim()) // Trim whitespace
-                      .where((lang) => lang.isNotEmpty) // Remove empty strings
-                      .map((lang) => _buildLanguageChip(
-                            lang[0].toUpperCase() +
-                                lang.substring(1).toLowerCase(),
-                            Icons.language,
-                          ))
-                      ,
+                  child: const Icon(Icons.verified_rounded,
+                      color: kGreen, size: 24),
+                ),
               ],
             ),
-          ),
+            24.height,
 
-          // Open panel indicator
-          Center(
-            child: Column(
-              children: [
-                Icon(
-                  Icons.keyboard_arrow_up,
-                  size: 30,
-                ),
-                Text("Swipe up for details", style: secondaryTextStyle()),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPanelContent(ScrollController scrollController) {
-    return SingleChildScrollView(
-      controller: scrollController,
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 60,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: context.cardColor,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Doctor stats
+            // Stats Row
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildStatItem(Icons.location_on, "Location",
-                    widget.doctor.state.validate()),
-                _buildStatItem(Icons.work, "Experience",
-                    "${widget.doctor.experience} Years"),
-                _buildStatItem(Icons.star, "Rating", "4.5"),
+                _buildStatItem(
+                    "Patients", "1.2K+", Icons.people_alt_rounded, kPrimary),
+                _buildStatItem(
+                    "Experience",
+                    "${widget.doctor.experience.validate()} Yrs",
+                    Icons.work_history_rounded,
+                    Colors.orange),
+                _buildStatItem(
+                    "Rating", "4.8", Icons.star_rounded, Colors.amber),
               ],
             ),
-            const SizedBox(height: 30),
+            32.height,
 
-            // About section
-            Text("About Doctor", style: boldTextStyle(size: 18)),
-            const SizedBox(height: 10),
-            Divider(color: Colors.grey[300]),
-            const SizedBox(height: 10),
-            Text(
-              widget.doctor.bio.validate(),
-              style: primaryTextStyle(size: 16, height: 1.5),
+            // About Section
+            const Text(
+              "About Doctor",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: kText,
+              ),
             ),
-            // const SizedBox(height: 30),
+            12.height,
+            Text(
+              widget.doctor.bio.validate().isEmpty
+                  ? "Dr. ${widget.doctor.lastName} is a highly experienced professional dedicated to providing the best medical care to patients."
+                  : widget.doctor.bio.validate(),
+              style: const TextStyle(
+                fontSize: 15,
+                color: kSub,
+                height: 1.6,
+              ),
+            ),
+            32.height,
 
-            // // Specializations
-            // Text("Specializations", style: boldTextStyle(size: 18)),
-            // const SizedBox(height: 10),
-            // Divider(color: Colors.grey[300]),
-            // const SizedBox(height: 10),
-            // Wrap(
-            //   spacing: 8,
-            //   runSpacing: 8,
-            //   children: [
-            //     _buildSpecializationChip("General Practice"),
-            //     _buildSpecializationChip(widget.doctor.speciality.validate()),
-            //     // Add more specializations as needed
-            //   ],
-            // ),
-            // const SizedBox(height: 30),
+            // Specializations
+            const Text(
+              "Specialization",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: kText,
+              ),
+            ),
+            16.height,
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _buildChip(widget.doctor.speciality.validate()),
+              ],
+            ),
 
-            // // Availability
-            // Text("Availability", style: boldTextStyle(size: 18)),
-            // const SizedBox(height: 10),
-            // Divider(color: Colors.grey[300]),
-            // const SizedBox(height: 10),
-            // _buildAvailabilityItem("Monday - Friday", "9:00 AM - 5:00 PM"),
-            // _buildAvailabilityItem("Saturday", "10:00 AM - 2:00 PM"),
-            // const SizedBox(height: 80), // Space for FAB
+            if (widget.doctor.otherLanguage.validate().isNotEmpty) ...[
+              32.height,
+              const Text(
+                "Languages",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: kText,
+                ),
+              ),
+              16.height,
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: widget.doctor.otherLanguage
+                    .validate()
+                    .split(',')
+                    .map((lang) =>
+                        _buildChip(lang.trim().capitalizeFirstLetter()))
+                    .toList(),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLanguageChip(String text, IconData icon) {
-    return Chip(
-      avatar: Icon(icon, size: 16, color: kPrimary),
-      label: Text(text, style: primaryTextStyle(size: 12)),
-      backgroundColor: context.cardColor.withOpacity(0.9),
-      shape: StadiumBorder(side: BorderSide(color: kPrimary.withOpacity(0.2))),
-    );
-  }
-
-  Widget _buildStatItem(IconData icon, String title, String value) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: kPrimary.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: kPrimary, size: 20),
-        ),
-        const SizedBox(height: 8),
-        Text(title, style: secondaryTextStyle(size: 12)),
-        const SizedBox(height: 4),
-        Text(value, style: boldTextStyle(size: 16)),
-      ],
-    );
-  }
-
-  Widget _buildSpecializationChip(String text) {
-    return Chip(
-      label: Text(text, style: secondaryTextStyle()),
-      backgroundColor: kPrimary.withOpacity(0.1),
-      shape: StadiumBorder(side: BorderSide(color: kPrimary.withOpacity(0.2))),
-    );
-  }
-
-  Widget _buildAvailabilityItem(String day, String time) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(day, style: primaryTextStyle(size: 16)),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(time, style: boldTextStyle(size: 14, color: kPrimary)),
+  Widget _buildStatItem(
+      String label, String value, IconData icon, Color color) {
+    return Container(
+      width: (MediaQuery.of(context).size.width - 80) / 3,
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: kCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: kBorder),
+        boxShadow: [
+          BoxShadow(
+            color: kText.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 24),
+          8.height,
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: kText,
+            ),
+          ),
+          4.height,
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: kSub,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: kCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: kBorder),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 13,
+          color: kText,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

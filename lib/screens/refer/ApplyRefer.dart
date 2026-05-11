@@ -7,6 +7,7 @@ import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/services/UserService.dart';
+import '../../component/PremiumButton.dart';
 
 class ApplyReferralProgramScreen extends StatefulWidget {
   const ApplyReferralProgramScreen({super.key});
@@ -66,12 +67,12 @@ class _ApplyReferralProgramScreenState
       if (user == null) {
         setState(() {
           _isUsernameAvailable = true;
-          _checkingMessage = '✅ Username is available!';
+          _checkingMessage = 'Username is available!';
         });
       } else {
         setState(() {
           _isUsernameAvailable = false;
-          _checkingMessage = '❌ Username already taken';
+          _checkingMessage = 'Username already taken';
         });
       }
     } catch (e) {
@@ -209,10 +210,6 @@ class _ApplyReferralProgramScreenState
                     ),
                     16.height,
                     _buildBenefitItem(
-                      "Instant Sign-up Bonus",
-                      "Earn ₦50 for each new user who signs up with your code",
-                    ),
-                    _buildBenefitItem(
                       "Appointment Commission",
                       "Earn 10% of every payment made by users you referred",
                     ),
@@ -345,44 +342,13 @@ class _ApplyReferralProgramScreenState
               16.height,
 
               // Check Availability Button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: _isChecking ? null : _checkUsernameAvailability,
-                  style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: kPrimary, width: 2),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: _isChecking
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: kPrimary,
-                              ),
-                            ),
-                            8.width,
-                            Text("Checking...",
-                                style: boldTextStyle(color: kPrimary)),
-                          ],
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Iconsax.search_normal, color: kPrimary),
-                            8.width,
-                            Text("Check Availability",
-                                style: boldTextStyle(color: kPrimary)),
-                          ],
-                        ),
-                ),
+              PremiumButton(
+                onTap: _checkUsernameAvailability,
+                isLoading: _isChecking,
+                text: "Check Availability",
+                icon: Iconsax.search_normal,
+                color: Colors.white,
+                textColor: kPrimary,
               ),
 
               32.height,
@@ -416,48 +382,12 @@ class _ApplyReferralProgramScreenState
               24.height,
 
               // Apply Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting || !_isUsernameAvailable
-                      ? null
-                      : _applyForReferralProgram,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kPrimary,
-                    padding: EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: _isSubmitting
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            ),
-                            12.width,
-                            Text("Applying...",
-                                style: boldTextStyle(color: Colors.white)),
-                          ],
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Iconsax.medal, color: Colors.white),
-                            12.width,
-                            Text("Apply Now",
-                                style: boldTextStyle(
-                                    color: Colors.white, size: 16)),
-                          ],
-                        ),
-                ),
+              PremiumButton(
+                onTap: _applyForReferralProgram,
+                isLoading: _isSubmitting,
+                enabled: _isUsernameAvailable,
+                text: "Apply Now",
+                icon: Iconsax.medal,
               ),
 
               20.height,

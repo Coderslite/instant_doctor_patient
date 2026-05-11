@@ -4,16 +4,18 @@ import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ZegoCloudController extends GetxController {
   handleInit() async {
     await getUserId();
     print("Zego Cloud initialized");
     ZegoUIKitPrebuiltCallInvitationService().init(
-      appID: settingsController.appId ?? 1629680479 /*input your AppID*/,
+      appID: settingsController.appId ??
+          int.parse(dotenv.env['ZEGO_APP_ID'] ?? "0"),
       appSign: settingsController.appSign.isEmpty
-          ? '32f49c8bef297a57bc73cb0a2d952c0f4704a060e9c888a41b998da21dc5520d'
-          : settingsController.appSign /*input your AppSign*/,
+          ? (dotenv.env['ZEGO_APP_SIGN'] ?? "")
+          : settingsController.appSign,
       userID: userController.userId.value,
       userName: userController.fullName.value,
       plugins: [
@@ -40,7 +42,6 @@ class ZegoCloudController extends GetxController {
             sound: "assets/audio/ringtone1.mp3",
             icon: "assets/images/logo.png",
             fullScreenBackground: 'assets/images/logo.png',
-            showFullScreen: true,
             messageVibrate: true,
             messageSound: "assets/audio/ringtone1.mp3"),
         iOSNotificationConfig: ZegoCallIOSNotificationConfig(

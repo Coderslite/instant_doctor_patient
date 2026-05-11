@@ -12,6 +12,7 @@ import 'package:instant_doctor/controllers/ReportController.dart';
 import 'package:instant_doctor/controllers/WaitlistController.dart';
 import 'package:instant_doctor/controllers/ZegocloudController.dart';
 import 'package:instant_doctor/controllers/LocationController.dart';
+import 'package:instant_doctor/services/CurrencyService.dart';
 import 'package:instant_doctor/services/DoctorService.dart';
 import 'package:instant_doctor/services/DrugService.dart';
 import 'package:instant_doctor/services/HealthTipService.dart';
@@ -30,11 +31,13 @@ import 'package:instant_doctor/services/AppointmentService.dart';
 import 'package:instant_doctor/services/AuthenticationService.dart';
 import 'package:instant_doctor/services/MedicationService.dart';
 import 'package:instant_doctor/services/PresciptionService.dart';
+import 'package:instant_doctor/services/IAPService.dart';
 import 'package:instant_doctor/services/UserService.dart';
 import 'package:instant_doctor/controllers/ChatController.dart';
 import 'package:instant_doctor/controllers/LabResultController.dart';
 import 'package:instant_doctor/controllers/UploadFileController.dart';
 import 'package:instant_doctor/controllers/UserController.dart';
+import 'package:instant_doctor/services/PricingService.dart';
 
 class InitialBindings extends Bindings {
   @override
@@ -57,6 +60,7 @@ class InitialBindings extends Bindings {
     Get.lazyPut(() => WaitlistController());
 
     // Services
+    Get.put(IAPService());
     Get.lazyPut(() => WalletService());
     Get.lazyPut(() => UserService());
     Get.lazyPut(() => NotificationService());
@@ -76,5 +80,7 @@ class InitialBindings extends Bindings {
     Get.lazyPut(() => OrderService());
     Get.lazyPut(() => AuthenticationService());
     Get.lazyPut(() => WaitlistService());
+    Get.lazyPut(() => CurrencyService());
+    Get.put(PricingService());
   }
 }

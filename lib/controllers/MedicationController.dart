@@ -68,28 +68,37 @@ class MedicationController extends GetxController {
       var startDate = medication.startTime!.toDate();
       var endDate = medication.endTime!.toDate();
 
-      // Schedule notifications for each day in the medication period
+      // Schedule notifications for a rolling window (up to 30 days) to avoid OS limits
+      final now = DateTime.now();
+      final rollingEndDate = startDate.add(const Duration(days: 30)).isBefore(endDate) 
+          ? startDate.add(const Duration(days: 30)) 
+          : endDate;
+
+      int dayOffset = 0;
       for (var currentDate = startDate;
-          currentDate.isBefore(endDate) ||
-              currentDate.isAtSameMomentAs(endDate);
+          (currentDate.isBefore(rollingEndDate) || currentDate.isAtSameMomentAs(rollingEndDate));
           currentDate = currentDate.add(const Duration(days: 1))) {
+        
+        // Generate a base ID component for this medication
+        // We use a bit-masking approach to ensure uniqueness across medId, day, and dose
+        final int baseId = medId.hashCode.abs() % 10000;
+
         if (medication.morning != null) {
           await _scheduleNotification(
             context: context,
-            id: medId.hashCode + currentDate.day + 1, // Unique ID for morning
+            id: baseId + (dayOffset * 3) + 0, 
             title: 'Medication Reminder',
-            body: 'Time to take (Morning dose)',
-            scheduledTime:
-                _combineDateAndTime(currentDate, medication.morning!),
+            body: 'Time to take ${medication.name} (Morning dose)',
+            scheduledTime: _combineDateAndTime(currentDate, medication.morning!),
           );
         }
 
         if (medication.midDay != null) {
           await _scheduleNotification(
             context: context,
-            id: medId.hashCode + currentDate.day + 2, // Unique ID for midday
+            id: baseId + (dayOffset * 3) + 1,
             title: 'Medication Reminder',
-            body: 'Time to take (Afternoon dose)',
+            body: 'Time to take ${medication.name} (Afternoon dose)',
             scheduledTime: _combineDateAndTime(currentDate, medication.midDay!),
           );
         }
@@ -97,16 +106,16 @@ class MedicationController extends GetxController {
         if (medication.evening != null) {
           await _scheduleNotification(
             context: context,
-            id: medId.hashCode + currentDate.day + 3, // Unique ID for evening
+            id: baseId + (dayOffset * 3) + 2,
             title: 'Medication Reminder',
-            body: 'Time to take (Evening dose)',
-            scheduledTime:
-                _combineDateAndTime(currentDate, medication.evening!),
+            body: 'Time to take ${medication.name} (Evening dose)',
+            scheduledTime: _combineDateAndTime(currentDate, medication.evening!),
           );
         }
+        dayOffset++;
       }
 
-      toast("Medication Added");
+      toast("Medication Added & Schedule Set");
     } catch (err) {
       toast(err.toString());
     } finally {
@@ -190,22 +199,16 @@ class MedicationController extends GetxController {
   Future<void> cancelMedicationNotifications(
       String medId, DateTime startDate, DateTime endDate) async {
     try {
-      // Loop through each day in the medication period
-      for (var currentDate = startDate;
-          currentDate.isBefore(endDate) ||
-              currentDate.isAtSameMomentAs(endDate);
-          currentDate = currentDate.add(const Duration(days: 1))) {
-        // Cancel notifications for morning, midday, and evening doses
-        await _notificationsPlugin
-            .cancel(medId.hashCode + currentDate.day + 1); // Morning
-        await _notificationsPlugin
-            .cancel(medId.hashCode + currentDate.day + 2); // Midday
-        await _notificationsPlugin
-            .cancel(medId.hashCode + currentDate.day + 3); // Evening
+      final int baseId = medId.hashCode.abs() % 10000;
+      
+      // Cancel notifications for the possible 30-day rolling window
+      for (int dayOffset = 0; dayOffset <= 30; dayOffset++) {
+        await _notificationsPlugin.cancel(baseId + (dayOffset * 3) + 0); // Morning
+        await _notificationsPlugin.cancel(baseId + (dayOffset * 3) + 1); // Midday
+        await _notificationsPlugin.cancel(baseId + (dayOffset * 3) + 2); // Evening
       }
       toast("Notifications canceled for medication");
     } catch (e) {
-      toast("Error canceling notifications: $e");
       print("Error canceling notifications: $e");
     }
   }

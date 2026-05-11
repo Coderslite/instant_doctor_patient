@@ -8,6 +8,7 @@ import 'package:instant_doctor/services/AnonymousService.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:ui' as ui;
+import '../../../component/PremiumButton.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -98,27 +99,9 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
                       return Loader();
                     }),
               ),
-              AppButton(
-                width: double.infinity,
+              PremiumButton(
                 onTap: _showQuestionDialog,
                 text: "New Question",
-                color: kPrimary,
-                textColor: white,
-                shapeBorder: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 2,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add, color: white),
-                    SizedBox(width: 8),
-                    Text(
-                      "New Question",
-                      style: boldTextStyle(color: white),
-                    ),
-                  ],
-                ),
               ),
               // _buildQuestionInput(),
             ],
@@ -513,7 +496,7 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
                     SizedBox(height: 32),
 
                     // Submit Button
-                    AppButton(
+                    PremiumButton(
                       onTap: () {
                         if (_questionController.text.trim().isNotEmpty) {
                           _submitQuestion();
@@ -521,24 +504,6 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
                         }
                       },
                       text: 'Submit Question',
-                      color: kPrimary,
-                      textColor: white,
-                      width: double.infinity,
-                      shapeBorder: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.send, color: white, size: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            'Submit Question',
-                            style: boldTextStyle(color: white),
-                          ),
-                        ],
-                      ),
                     ),
                   ],
                 ),

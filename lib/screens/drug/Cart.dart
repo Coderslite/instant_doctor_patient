@@ -11,6 +11,8 @@ import '../../component/eachCart.dart';
 import '../../controllers/LocationController.dart';
 import '../../controllers/OrderController.dart';
 import '../../controllers/UserController.dart';
+import '../../component/PremiumButton.dart';
+import '../../controllers/showPayment.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -81,42 +83,8 @@ class _CartScreenState extends State<CartScreen> {
       context,
       title: "Do you want to proceed with checkout?",
       onAccept: (v) async {
-        showModalBottomSheet(
-            context: context,
-            builder: (context) {
-              return Column(
-                children: [
-                  AppButton(
-                    onTap: () async {
-                      await orderController.makeOrder(context, true);
-                    },
-                    width: double.infinity,
-                    child: Row(
-                      children: [
-                        Text(
-                          "Paystack",
-                          style: boldTextStyle(color: white),
-                        )
-                      ],
-                    ),
-                  ),
-                  AppButton(
-                    onTap: () async {
-                      await orderController.makeOrder(context, false);
-                    },
-                    width: double.infinity,
-                    child: Row(
-                      children: [
-                        Text(
-                          "Flutterwave",
-                          style: boldTextStyle(color: white),
-                        )
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            });
+        final total = (orderController.subtotal + orderController.deliveryFee.value).toInt();
+        handleShowPaymentOptionOrder(context, amount: total);
       },
     );
   }
@@ -191,9 +159,30 @@ class _CartScreenState extends State<CartScreen> {
                 children: [
                   backButton(context),
                   Text("My Cart", style: boldTextStyle(size: 20)),
-                  Obx(() => Badge(
-                        label: Text("${orderController.cart.length}"),
-                        child: Icon(Icons.shopping_cart_outlined, size: 28),
+                  Obx(() => Stack(
+                        alignment: Alignment.topRight,
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: obsidian,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.shopping_cart_outlined,
+                                color: Colors.white, size: 24),
+                          ),
+                          if (orderController.cart.isNotEmpty)
+                            Positioned(
+                              top: -2,
+                              right: -2,
+                              child: Badge(
+                                label: Text("${orderController.cart.length}",
+                                    style: TextStyle(fontSize: 10)),
+                              ),
+                            ),
+                        ],
                       )),
                 ],
               ),
@@ -312,24 +301,11 @@ class _CartScreenState extends State<CartScreen> {
                         locationController.latitude.value == 0 ||
                         locationController.longitude.value == 0;
 
-                    return SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kPrimary,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: isDisabled ? null : _validateAndProceed,
-                        child: orderController.isLoading.value
-                            ? Loader()
-                            : Text(
-                                "Checkout - ${formatAmount((orderController.subtotal + orderController.deliveryFee.value).toInt())}",
-                                style: boldTextStyle(color: white, size: 16),
-                              ),
-                      ),
+                    return PremiumButton(
+                      onTap: _validateAndProceed,
+                      isLoading: orderController.isLoading.value,
+                      enabled: !isDisabled,
+                      text: "Checkout - ${formatAmount((orderController.subtotal + orderController.deliveryFee.value).toInt())}",
                     );
                   }),
                 ],

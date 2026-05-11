@@ -12,6 +12,7 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../component/backButton.dart';
 import '../../constant/constants.dart';
 import '../../controllers/OrderController.dart';
+import '../../component/PremiumButton.dart';
 import '../../main.dart';
 
 class MedicineDetails extends StatefulWidget {
@@ -281,43 +282,28 @@ class _MedicineDetailsState extends State<MedicineDetails> {
               var isContained = orderController.cart
                   .where((dru) => dru.id == widget.drug.id)
                   .isNotEmpty;
-              return AppButton(
-                width: double.infinity,
-                color: widget.drug.remaining.validate() < 1
-                    ? grey
-                    : isContained
-                        ? orangeRed
-                        : kPrimary,
+              final isOutOfStock = widget.drug.remaining.validate() < 1;
+              
+              return PremiumButton(
                 onTap: () {
-                  if (widget.drug.remaining.validate() < 1) {
-                    errorSnackBar(context:context,title: "Product is out of stock");
+                  if (isOutOfStock) {
+                    errorSnackBar(context: context, title: "Product is out of stock");
                     return;
                   }
                   if (!isContained) {
                     orderController.handleAddToCart(drug: widget.drug);
                     return;
                   }
-                  CartScreen().launch(context);
+                  const CartScreen().launch(context);
                 },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      widget.drug.remaining.validate() < 1
-                          ? "Out of stock"
-                          : isContained
-                              ? "Proceed to checkout"
-                              : "Add to Cart",
-                      style: boldTextStyle(color: white),
-                    ),
-                    5.width,
-                    Icon(
-                      Icons.add_shopping_cart,
-                      color: white,
-                    )
-                  ],
-                ),
-              ).paddingAll(10);
+                enabled: !isOutOfStock,
+                color: isOutOfStock ? slate.withOpacity(0.3) : (isContained ? kPrimary : obsidian),
+                text: isOutOfStock
+                    ? "Out of Stock"
+                    : isContained
+                        ? "Proceed to Checkout"
+                        : "Add to Cart",
+              ).paddingAll(16);
             })
           ],
         ),

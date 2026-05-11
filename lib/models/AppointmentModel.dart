@@ -12,6 +12,7 @@ class AppointmentModel {
   Timestamp? updatedAt;
   int? duration;
   int? price;
+  String? currency;
   String? package;
   String? videocallToken;
   bool? isPaid;
@@ -27,6 +28,7 @@ class AppointmentModel {
     this.endTime,
     this.duration,
     this.price,
+    this.currency,
     this.package,
     this.createdAt,
     this.updatedAt,
@@ -48,6 +50,7 @@ class AppointmentModel {
       package: json['package'],
       duration: json['duration'],
       price: json['price'],
+      currency: json['currency'],
       videocallToken: json['videocallToken'],
       isPaid: json['isPaid'],
       isTrial: json['isTrial'],

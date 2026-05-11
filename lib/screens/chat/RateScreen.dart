@@ -12,6 +12,7 @@ import '../../constant/color.dart';
 import '../../models/AppointmentModel.dart';
 import '../../models/ReviewsModel.dart';
 import '../../services/GetUserId.dart';
+import '../../../component/PremiumButton.dart';
 import '../../services/ReportService.dart';
 import '../../services/ReviewService.dart';
 
@@ -136,72 +137,60 @@ class _RatescreenState extends State<Ratescreen> {
                       ),
                     ),
                     20.height,
-                    SizedBox(
-                      width: double.infinity,
-                      child: sending
-                          ? Loader()
-                          : AppButton(
-                              color: kPrimary,
-                              text: "Submit Review",
-                              textStyle: boldTextStyle(color: white),
-                              onTap: () async {
-                                if (commentController.text.isEmptyOrNull) {
-                                  toast("Please add your comments");
-                                } else {
-                                  sending = true;
-                                  setState(() {});
-                                  await reviewService.addReview(
-                                      review: ReviewsModel(
-                                    rating: rating,
-                                    review: commentController.text,
-                                    doctorId: widget.docId,
-                                    appointmentId: widget.appointmentId,
-                                    createdAt: Timestamp.now(),
-                                    userId: userController.userId.value,
-                                  ));
-                                  Navigator.pop(context);
-                                  widget.update();
-                                  successSnackBar(
-                                    context: context,
-                                      title: "Thank you for your feedback!");
-                                }
-                              },
-                            ),
+                    PremiumButton(
+                      text: "Submit Review",
+                      isLoading: sending,
+                      onTap: () async {
+                        if (commentController.text.isEmptyOrNull) {
+                          toast("Please add your comments");
+                        } else {
+                          sending = true;
+                          setState(() {});
+                          await reviewService.addReview(
+                              review: ReviewsModel(
+                            rating: rating,
+                            review: commentController.text,
+                            doctorId: widget.docId,
+                            appointmentId: widget.appointmentId,
+                            createdAt: Timestamp.now(),
+                            userId: userController.userId.value,
+                          ));
+                          Navigator.pop(context);
+                          widget.update();
+                          successSnackBar(
+                            context: context,
+                              title: "Thank you for your feedback!");
+                        }
+                      },
                     ),
                     20.height,
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        AppButton(
-                          color: Colors.white,
-                          text: "Report an issue",
-                          textStyle: boldTextStyle(color: Colors.red),
-                          onTap: () async {
-                            var res = await reportService.getReport(
-                                appointmentId: widget.appointmentId);
-                            Navigator.pop(context);
-                            if (res != null) {
-                              // ReportChatInterface(
-                              //   appointmentReport: res,
-                              // ).launch(context);
-                              LiveChatScreen().launch(context);
-                            } else {
-                              // CreateReportScreen(
-                              //   userId: widget.appointment.userId.validate(),
-                              //   doctorId: widget.appointment.doctorId.validate(),
-                              //   appointmentId: widget.appointment.id.validate(),
-                              // ).launch(context);
-                              LiveChatScreen().launch(context);
-                            }
-                          },
+                        Expanded(
+                          child: PremiumButton(
+                            color: Colors.white,
+                            text: "Report Issue",
+                            textColor: Colors.red,
+                            onTap: () async {
+                              var res = await reportService.getReport(
+                                  appointmentId: widget.appointmentId);
+                              Navigator.pop(context);
+                              if (res != null) {
+                                LiveChatScreen().launch(context);
+                              } else {
+                                LiveChatScreen().launch(context);
+                              }
+                            },
+                          ),
                         ),
                         10.width,
-                        AppButton(
-                          color: Colors.transparent,
-                          elevation: 0,
-                          text: "Close",
-                          textStyle: boldTextStyle(),
-                          onTap: () => Navigator.pop(context),
+                        Expanded(
+                          child: PremiumButton(
+                            color: Colors.white,
+                            text: "Close",
+                            textColor: slate,
+                            onTap: () => Navigator.pop(context),
+                          ),
                         ),
                       ],
                     ),

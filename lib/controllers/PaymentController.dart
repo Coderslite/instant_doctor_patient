@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:convert';
+import 'package:http/http.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_paystack_plus/flutter_paystack_plus.dart';
@@ -12,7 +14,9 @@ import 'package:instant_doctor/controllers/LabResultController.dart';
 import 'package:instant_doctor/services/AppointmentService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:instant_doctor/services/WalletService.dart';
+import 'package:instant_doctor/services/IAPService.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../services/UserService.dart';
 import 'OrderController.dart';
@@ -22,7 +26,8 @@ class PaymentController extends GetxController {
   var isLoading = false.obs;
   final walletService = Get.find<WalletService>();
   final userService = Get.find<UserService>();
-  bool get _isUsd => userController.currency.value == 'USD';
+  final iapService = Get.find<IAPService>();
+  bool get _isUsd => iapService.currentCurrency == 'USD';
 
   // double getGatewayCharge(double amount) {
   //   double fee = amount * 0.014;
@@ -95,17 +100,56 @@ class PaymentController extends GetxController {
     return totalFee;
   }
 
+  Future<void> handlePaymentSuccess({
+    required BuildContext context,
+    required String paymentFor,
+    required int amount,
+    String? productId,
+    String? currency,
+    bool? isTrial,
+    double surcharge = 0,
+  }) async {
+    final orderController = Get.find<OrderController>();
+    final bookingController = Get.find<BookingController>();
+    final labResultController = Get.find<LabResultController>();
+
+    if (paymentFor == PaymentFor.appointment) {
+      int platformEarning =
+          calculatePlatformEarningForDoctors(amount.toDouble()).toInt();
+      double doctorEarning = (amount + surcharge) - (platformEarning / 100.0);
+
+      await bookingController.updateAppointmentAfterPayment(
+        context,
+        productId.validate(),
+        isTrial.validate(),
+        currency: currency,
+      );
+
+      await AppointmentService().updateDoctorEarning(
+        appointmentId: productId.validate(),
+        doctorEarning: doctorEarning.toInt(),
+      );
+    } else if (paymentFor == PaymentFor.order) {
+      await orderController.orderNow(context);
+    } else if (paymentFor == PaymentFor.labResult) {
+      await labResultController.handleUploadFiles(context);
+    }
+
+    successSnackBar(context: context, title: "Payment Successful");
+  }
+
   Future makeFlutterwavePayment({
     required String email,
     required BuildContext context,
     required int amount,
     required String paymentFor,
     String? productId,
+    String? currency,
     bool? isTrial,
   }) async {
     final orderController = Get.find<OrderController>();
     final bookingController = Get.find<BookingController>();
-    var labResultController = Get.find<LabResultController>();
+    final labResultController = Get.find<LabResultController>();
     isLoading.value = true;
 
     try {
@@ -114,16 +158,6 @@ class PaymentController extends GetxController {
       var name = "${user.firstName.validate()} ${user.lastName.validate()}";
       var phone = user.phoneNumber.validate();
 
-      // Calculate platform earnings (in kobo)
-      int platformEarning = paymentFor == PaymentFor.order
-          ? calculatePlatformEarningForPharmacy(amount.toDouble(),
-                  orderController.deliveryFee.value.toDouble())
-              .toInt()
-          : paymentFor == PaymentFor.appointment
-              ? calculatePlatformEarningForDoctors(amount.toDouble()).toInt()
-              : 0; // No platform earning for lab results
-
-      // Calculate surcharge (in Naira)
       var surcharge = paymentFor == PaymentFor.order
           ? surChargeOrder(
               amount.toDouble(), orderController.deliveryFee.value.toDouble())
@@ -132,66 +166,56 @@ class PaymentController extends GetxController {
               : surChargeLabresult(amount.toDouble());
       var transferFee = getTransferFee(amount.toDouble());
 
-      // Total amount to charge (in Naira)
       double totalAmount = amount + surcharge + transferFee;
 
       final Customer customer =
           Customer(name: name, phoneNumber: phone, email: email);
       final Flutterwave flutterwave = Flutterwave(
-        publicKey: "FLWPUBK-90c2abbe1e7a5b975e45d9cb006bbeea-X",
+        publicKey: dotenv.env['FLUTTERWAVE_PUBLIC_KEY'] ?? "",
         txRef: "$name${DateTime.now().millisecondsSinceEpoch}",
         amount: totalAmount.toString(),
         customer: customer,
-        paymentOptions: "card",
+        paymentOptions: "ussd, card, bank transfer",
         customization: Customization(title: "Instant Doctor"),
         redirectUrl: "https://instantdoctor.co",
         isTestMode: false,
-        currency: userController.currency.value,
+        currency: currency ?? iapService.currentCurrency,
       );
 
       final ChargeResponse response = await flutterwave.charge(context);
 
       if (response.success == true) {
-        if (paymentFor == PaymentFor.appointment) {
-          // Convert platformEarning from kobo to Naira for calculation
-          double doctorEarning =
-              (amount + surcharge) - (platformEarning / 100.0);
-          bookingController.updateAppointmentAfterPayment(
-            context,
-            productId.validate(),
-            isTrial.validate(),
-          );
-          AppointmentService().updateDoctorEarning(
-            appointmentId: productId.validate(),
-            doctorEarning: doctorEarning.toInt(),
-          );
-        }
-        if (paymentFor == PaymentFor.order) {
-          orderController.orderNow(context);
-        }
-        if (paymentFor == PaymentFor.labResult) {
-          labResultController.handleUploadFiles(context);
-        }
-        successSnackBar(context: context, title: "Payment Successful");
+        await handlePaymentSuccess(
+          context: context,
+          paymentFor: paymentFor,
+          amount: amount,
+          productId: productId,
+          currency: currency ?? iapService.currentCurrency,
+          isTrial: isTrial,
+          surcharge: surcharge,
+        );
       } else {
-        if (paymentFor == PaymentFor.appointment) {
-          errorSnackBar(context: context, title: "Payment not successful");
-        }
-        if (paymentFor == PaymentFor.order) {
-          errorSnackBar(context: context, title: "Payment not successful");
-        }
         errorSnackBar(context: context, title: "Payment Cancelled");
-        bookingController.isLoading.value = false;
+        if (paymentFor == PaymentFor.appointment) {
+          bookingController.isLoading.value = false;
+        } else if (paymentFor == PaymentFor.order) {
+          orderController.isLoading.value = false;
+        } else if (paymentFor == PaymentFor.labResult) {
+          labResultController.isUpload.value = false;
+        }
       }
     } catch (err) {
-      orderController.isLoading.value = false;
-      bookingController.isLoading.value = false;
       log(err.toString());
       errorSnackBar(context: context, title: "Payment Error");
+      if (paymentFor == PaymentFor.appointment) {
+        bookingController.isLoading.value = false;
+      } else if (paymentFor == PaymentFor.order) {
+        orderController.isLoading.value = false;
+      } else if (paymentFor == PaymentFor.labResult) {
+        labResultController.isUpload.value = false;
+      }
     } finally {
       isLoading.value = false;
-      // bookingController.isLoading.value = false;
-      orderController.isLoading.value = false;
     }
   }
 
@@ -201,127 +225,211 @@ class PaymentController extends GetxController {
     required int amount,
     required String paymentFor,
     String? productId,
+    String? currency,
     bool? isTrial,
   }) async {
+    final bookingController = Get.find<BookingController>();
+    final orderController = Get.find<OrderController>();
+    final labResultController = Get.find<LabResultController>();
     try {
-      final orderController = Get.find<OrderController>();
-      final bookingController = Get.find<BookingController>();
-      var labResultController = Get.find<LabResultController>();
       isLoading.value = true;
       await initialize();
 
-      // Calculate platform earnings (in kobo)
-      int platformEarning = paymentFor == PaymentFor.order
-          ? calculatePlatformEarningForPharmacy(amount.toDouble(),
-                  orderController.deliveryFee.value.toDouble())
-              .toInt()
-          : paymentFor == PaymentFor.appointment
-              ? calculatePlatformEarningForDoctors(amount.toDouble()).toInt()
-              : 0;
-
-      // Calculate surcharge (in Naira)
       var surcharge = paymentFor == PaymentFor.order
           ? surChargeOrder(
-              amount.toDouble(), orderController.deliveryFee.value.toDouble())
+              amount.toDouble(), 0) // Placeholder for order surcharge
           : paymentFor == PaymentFor.appointment
               ? surChargeAppointment(amount.toDouble())
               : surChargeLabresult(amount.toDouble());
-      var transferFee = getTransferFee(amount.toDouble());
-
-      // Total amount in Naira
-      double totalAmount = amount + surcharge + transferFee;
-
-      // Convert to kobo for Paystack
-      int paystackAmount = (totalAmount * 100).toInt();
-
-      print("Total Paystack Amount (in kobo): $paystackAmount");
 
       await FlutterPaystackPlus.openPaystackPopup(
         context: context,
-
         customerEmail: email,
-        amount: (amount * 100).toString(), // e.g. 500 * 100 = 50000
+        amount: (amount * 100).toString(),
         reference: DateTime.now().millisecondsSinceEpoch.toString(),
         secretKey: 'sk_live_c07e9ad43ea5365e467383dab49c9dcefc1975cf',
-        callBackUrl: 'https://instantdoctor.co', // from your Paystack dashboard
-        currency: 'NGN',
-        onSuccess: () {
-          if (paymentFor == PaymentFor.appointment) {
-            double doctorEarning =
-                (amount + surcharge) - (platformEarning / 100.0);
-            bookingController.updateAppointmentAfterPayment(
-                context, productId.validate(), isTrial.validate());
-            AppointmentService().updateDoctorEarning(
-              appointmentId: productId.validate(),
-              doctorEarning: doctorEarning.toInt(),
-            );
-          }
-          if (paymentFor == PaymentFor.order) {
-            orderController.orderNow(context);
-          }
-          if (paymentFor == PaymentFor.labResult) {
-            labResultController.handleUploadFiles(context);
-          }
-          successSnackBar(context: context, title: "Payment Successful");
+        callBackUrl: 'https://instantdoctor.co',
+        currency: currency ?? iapService.currentCurrency,
+        onSuccess: () async {
+          await handlePaymentSuccess(
+            context: context,
+            paymentFor: paymentFor,
+            amount: amount,
+            productId: productId,
+            currency: currency ?? iapService.currentCurrency,
+            isTrial: isTrial,
+            surcharge: surcharge,
+          );
         },
         onClosed: () {
           if (paymentFor == PaymentFor.appointment) {
             bookingController.isLoading.value = false;
-            errorSnackBar(context: context, title: "Payment not successful");
-          }
-          if (paymentFor == PaymentFor.order) {
+          } else if (paymentFor == PaymentFor.order) {
             orderController.isLoading.value = false;
-            errorSnackBar(context: context, title: "Payment not successful");
+          } else if (paymentFor == PaymentFor.labResult) {
+            labResultController.isUpload.value = false;
           }
           errorSnackBar(context: context, title: "Payment Cancelled");
         },
       );
-      // final uniqueTransRef = PayWithPayStack().generateUuidV4();
-
-      // PayWithPayStack().now(
-      //   context: context,
-      //   paymentChannel: ["bank_transfer,card"],
-      //   secretKey: "sk_live_c07e9ad43ea5365e467383dab49c9dcefc1975cf",
-      //   customerEmail: email,
-      //   reference: uniqueTransRef,
-      //   currency: 'NGN',
-      //   amount: paystackAmount / 100, // <-- must be in kobo
-      //   callbackUrl: "https://instantdoctor.co",
-      //   transactionCompleted: (paymentData) {
-      //     if (paymentFor == PaymentFor.appointment) {
-      //       double doctorEarning =
-      //           (amount + surcharge) - (platformEarning / 100.0);
-      //       bookingController.updateAppointmentAfterPayment(
-      //           context, productId.validate(), isTrial.validate());
-      //       AppointmentService().updateDoctorEarning(
-      //         appointmentId: productId.validate(),
-      //         doctorEarning: doctorEarning.toInt(),
-      //       );
-      //     }
-      //     if (paymentFor == PaymentFor.order) {
-      //       orderController.orderNow(context);
-      //     }
-      //     if (paymentFor == PaymentFor.labResult) {
-      //       labResultController.handleUploadFiles(context);
-      //     }
-      //     successSnackBar(context: context, title: "Payment Successful");
-      //   },
-      //   transactionNotCompleted: (reason) {
-      //     if (paymentFor == PaymentFor.appointment) {
-      //       bookingController.isLoading.value = false;
-      //       errorSnackBar(context: context, title: "Payment not successful");
-      //     }
-      //     if (paymentFor == PaymentFor.order) {
-      //       orderController.isLoading.value = false;
-      //       errorSnackBar(context: context, title: "Payment not successful");
-      //     }
-      //     errorSnackBar(context: context, title: "Payment Cancelled");
-      //   },
-      // );
-    } on PlatformException catch (e) {
-      log(e.message!);
+    } catch (e) {
+      log(e.toString());
+      if (paymentFor == PaymentFor.appointment) {
+        bookingController.isLoading.value = false;
+      } else if (paymentFor == PaymentFor.order) {
+        orderController.isLoading.value = false;
+      } else if (paymentFor == PaymentFor.labResult) {
+        labResultController.isUpload.value = false;
+      }
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> makeInAppPurchase({
+    required BuildContext context,
+    required String productId,
+    required String paymentFor,
+    required int amount,
+    String? currency,
+    bool? isTrial,
+  }) async {
+    if (isLoading.value) return;
+    isLoading.value = true;
+
+    try {
+      // Set success callback
+      iapService.onPurchaseSuccess = (purchaseDetails) async {
+        await handlePaymentSuccess(
+          context: context,
+          paymentFor: paymentFor,
+          amount: amount,
+          productId: productId,
+          currency: currency ?? iapService.currentCurrency,
+          isTrial: isTrial,
+        );
+        isLoading.value = false;
+      };
+
+      iapService.onPurchaseError = () {
+        isLoading.value = false;
+        errorSnackBar(context: context, title: "Payment Cancelled");
+      };
+
+      // Trigger native store flow
+      await iapService.buyProduct(productId);
+    } catch (e) {
+      log("🍎 IAP Error: $e");
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> chargeNativePayment({
+    required BuildContext context,
+    required int amount,
+    required String paymentFor,
+    String? productId,
+    String? currency,
+    bool? isTrial,
+    required dynamic paymentToken,
+  }) async {
+    final bookingController = Get.find<BookingController>();
+    final orderController = Get.find<OrderController>();
+    final labResultController = Get.find<LabResultController>();
+
+    if (isLoading.value) return;
+    try {
+      isLoading.value = true;
+
+      // 1. Prepare data for our backend
+      final user =
+          await userService.getProfileById(userId: userController.userId.value);
+      final txRef =
+          "ID-${user.lastName.validate()}-${DateTime.now().millisecondsSinceEpoch}";
+
+      // Extract the actual token string from the Apple Pay result
+      // Flutterwave expects the token content
+      log("🍎 Raw Apple Pay Result: $paymentToken");
+
+      String? actualToken;
+      if (paymentToken is Map) {
+        actualToken = paymentToken['token']?.toString();
+      } else {
+        actualToken = paymentToken.toString();
+      }
+
+      if (actualToken == null || actualToken.isEmpty) {
+        // Fallback: try to find it in nested data if using a different pay version
+        actualToken = jsonEncode(paymentToken);
+      }
+
+      final body = {
+        "amount": amount,
+        "currency": currency ?? iapService.currentCurrency,
+        "email": user.email.validate(),
+        "tx_ref": txRef,
+        "applepay_token": actualToken,
+      };
+
+      // 2. Call your Production Backend (Firebase)
+      final response = await post(
+        Uri.parse("$FIREBASE_URL/payment/charge-applepay"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
+
+      final result = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && result['status'] == 'success') {
+        // 3. Handle success locally
+        await handlePaymentSuccess(
+          context: context,
+          paymentFor: paymentFor,
+          amount: amount,
+          productId: productId,
+          currency: currency ?? iapService.currentCurrency,
+          isTrial: isTrial,
+        );
+      } else {
+        log("❌ Payment Failed: ${response.body}");
+        errorSnackBar(
+            context: context, title: result['message'] ?? "Payment Failed");
+        _resetLoadingStates(paymentFor, bookingController, orderController,
+            labResultController);
+      }
+    } catch (e) {
+      log("❌ Payment Error: $e");
+      errorSnackBar(context: context, title: "An error occurred");
+      _resetLoadingStates(
+          paymentFor, bookingController, orderController, labResultController);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void _resetLoadingStates(String paymentFor, BookingController b,
+      OrderController o, LabResultController l) {
+    if (paymentFor == PaymentFor.appointment) b.isLoading.value = false;
+    if (paymentFor == PaymentFor.order) o.isLoading.value = false;
+    if (paymentFor == PaymentFor.labResult) l.isUpload.value = false;
+  }
+
+  // Restored for Google Pay (Android)
+  Future<void> makeNativePayPayment({
+    required BuildContext context,
+    required int amount,
+    required String paymentFor,
+    String? productId,
+    String? currency,
+    bool? isTrial,
+  }) async {
+    await handlePaymentSuccess(
+      context: context,
+      paymentFor: paymentFor,
+      amount: amount,
+      productId: productId,
+      currency: currency,
+      isTrial: isTrial,
+    );
   }
 }

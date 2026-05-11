@@ -10,6 +10,7 @@ import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:path/path.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../component/PremiumButton.dart';
 
 import '../../controllers/LabResultController.dart';
 
@@ -41,12 +42,14 @@ class _UploadLabResultState extends State<UploadLabResult> {
       appBar: AppBar(
         leading: backButton(context),
         title: Text(
-          "Upload Lab Result",
-          style: boldTextStyle(color: kPrimary, size: 20),
+          "Upload Results",
+          style: boldTextStyle(color: ink, size: 20, letterSpacing: -0.5),
         ),
         centerTitle: true,
         elevation: 0,
+        backgroundColor: Colors.transparent,
       ),
+      backgroundColor: pageGray,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -84,47 +87,42 @@ class _UploadLabResultState extends State<UploadLabResult> {
       onTap: () => _showFileTypeBottomSheet(context),
       child: DottedBorder(
         borderType: BorderType.RRect,
-        dashPattern: const [10, 5],
-        color: kPrimary.withOpacity(0.5),
-        radius: const Radius.circular(12),
-        padding: const EdgeInsets.all(16),
+        dashPattern: const [8, 4],
+        color: border,
+        strokeWidth: 2,
+        radius: const Radius.circular(24),
+        padding: const EdgeInsets.all(2),
         child: Container(
-          height: 180,
+          height: 200,
           width: double.infinity,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            color: kPrimary.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(22),
+            color: white,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.cloud_upload,
-                size: 50,
-                color: kPrimary,
-              ),
-              10.height,
-              Text(
-                "Upload your lab results",
-                style: boldTextStyle(size: 18, color: kPrimary),
-              ),
-              5.height,
-              Text(
-                "Supported formats: PNG, JPG, PDF",
-                style: secondaryTextStyle(size: 14),
-              ),
-              10.height,
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: kPrimary,
-                  borderRadius: BorderRadius.circular(20),
+                  color: obsidian.withOpacity(0.05),
+                  shape: BoxShape.circle,
                 ),
-                child: Text(
-                  "Select Files",
-                  style: primaryTextStyle(color: Colors.white),
+                child: const Icon(
+                  Icons.cloud_upload_outlined,
+                  size: 32,
+                  color: obsidian,
                 ),
+              ),
+              16.height,
+              Text(
+                "Tap to upload reports",
+                style: boldTextStyle(size: 18, color: ink),
+              ),
+              6.height,
+              Text(
+                "Supported: PNG, JPG, PDF (Max 10MB)",
+                style: secondaryTextStyle(size: 13, color: slate),
               ),
             ],
           ),
@@ -177,49 +175,60 @@ class _UploadLabResultState extends State<UploadLabResult> {
       );
     }
 
-    return ListView.separated(
+    return ListView.builder(
       itemCount: labResultController.files.length,
-      separatorBuilder: (context, index) =>
-          Divider(height: 1, color: Colors.grey[200]),
+      padding: const EdgeInsets.only(bottom: 100),
       itemBuilder: (context, index) {
         final file = labResultController.files[index];
         final fileName = basename(file['file'].path);
         final isImage = file['fileType'] == 'Image';
 
         return Container(
-          margin: const EdgeInsets.symmetric(vertical: 4),
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: context.cardColor,
-            borderRadius: BorderRadius.circular(8),
+            color: white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: border),
           ),
-          child: ListTile(
-            leading: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: kPrimary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: obsidian.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Icon(
-                  isImage ? Icons.image : Icons.picture_as_pdf,
-                  color: kPrimary,
+                  isImage ? Icons.image_outlined : Icons.picture_as_pdf_outlined,
+                  color: obsidian,
+                  size: 24,
                 ),
               ),
-            ),
-            title: Text(
-              fileName,
-              style: primaryTextStyle(),
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(
-              file['fileType'],
-              style: secondaryTextStyle(size: 12),
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.close, color: Colors.red),
-              onPressed: () => labResultController.handleRemoveFile(index),
-            ),
+              16.width,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      fileName,
+                      style: boldTextStyle(size: 14, color: ink),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    4.height,
+                    Text(
+                      file['fileType'],
+                      style: secondaryTextStyle(size: 11, color: slate),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline_rounded, color: fireBrick, size: 20),
+                onPressed: () => labResultController.handleRemoveFile(index),
+              ),
+            ],
           ),
         );
       },
@@ -227,47 +236,40 @@ class _UploadLabResultState extends State<UploadLabResult> {
   }
 
   Widget _buildProceedButton(BuildContext context) {
-    return Obx(() {
-      if (labResultController.isUpload.value) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: const CircularProgressIndicator(
-            color: kPrimary,
-          ).center(),
-        );
-      }
-
-      return Column(
+    return Column(
         children: [
           if (labResultController.files.isNotEmpty)
-            Row(
-              children: [
-                Checkbox(
-                  value: labResultController.emailCopy.value,
-                  onChanged: (val) =>
-                      labResultController.emailCopy.value = val!,
-                  activeColor: kPrimary,
-                ),
-                Text(
-                  "Send a copy to my email",
-                  style: primaryTextStyle(),
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: Checkbox(
+                      value: labResultController.emailCopy.value,
+                      onChanged: (val) => labResultController.emailCopy.value = val!,
+                      activeColor: obsidian,
+                      side: const BorderSide(color: border, width: 2),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    ),
+                  ),
+                  12.width,
+                  Text(
+                    "Send a copy to my email",
+                    style: secondaryTextStyle(color: ink, size: 14),
+                  ),
+                ],
+              ),
             ),
-          AppButton(
+          PremiumButton(
             onTap: () => _handleProceed(context),
-            width: double.infinity,
-            text: "PROCEED TO PAYMENT",
-            textColor: Colors.white,
-            color: kPrimary,
-            shapeBorder: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            elevation: 2,
+            text: "Proceed to Payment",
+            isLoading: labResultController.isUpload.value,
           ),
+          20.height,
         ],
       );
-    });
   }
 
   void _showFileTypeBottomSheet(BuildContext context) {
@@ -304,17 +306,10 @@ class __FileTypeSelectionSheetState extends State<_FileTypeSelectionSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.cardColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            spreadRadius: 5,
-          ),
-        ],
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+      decoration: const BoxDecoration(
+        color: white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -325,7 +320,7 @@ class __FileTypeSelectionSheetState extends State<_FileTypeSelectionSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -333,27 +328,31 @@ class __FileTypeSelectionSheetState extends State<_FileTypeSelectionSheet> {
           20.height,
           Text(
             "Select File Type",
-            style: boldTextStyle(size: 18),
+            style: boldTextStyle(size: 20, color: ink),
           ),
-          20.height,
+          8.height,
+          Text(
+            "What kind of document are you uploading?",
+            style: secondaryTextStyle(color: slate),
+          ),
+          24.height,
           _buildFileTypeOption(
             icon: FontAwesomeIcons.image,
-            title: "Image",
-            subtitle: "PNG, JPG formats",
+            title: "Images",
+            subtitle: "PNG, JPG, HEIC formats",
             value: "Image",
             context: context,
           ),
-          15.height,
+          12.height,
           _buildFileTypeOption(
             icon: FontAwesomeIcons.filePdf,
-            title: "Document",
-            subtitle: "PDF format",
+            title: "Documents",
+            subtitle: "PDF, DOCX formats",
             value: "Document",
             context: context,
           ),
-          30.height,
-          AppButton(
-            width: double.infinity,
+          32.height,
+          PremiumButton(
             onTap: () {
               if (selectedFileType == null) {
                 toast("Please select file type");
@@ -362,14 +361,8 @@ class __FileTypeSelectionSheetState extends State<_FileTypeSelectionSheet> {
               labResultController.handlePickFile(selectedFileType!);
               Navigator.pop(context);
             },
-            color: kPrimary,
-            textColor: Colors.white,
-            text: "SELECT FILES",
-            shapeBorder: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            text: "Open File Picker",
           ),
-          10.height,
         ],
       ),
     );
@@ -382,34 +375,41 @@ class __FileTypeSelectionSheetState extends State<_FileTypeSelectionSheet> {
     required String value,
     required BuildContext context,
   }) {
+    bool isSelected = selectedFileType == value;
     return GestureDetector(
       onTap: () => setState(() => selectedFileType = value),
       child: Container(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: selectedFileType == value
-              ? kPrimary.withOpacity(0.1)
-              : context.cardColor,
-          borderRadius: BorderRadius.circular(10),
+          color: isSelected ? obsidian.withOpacity(0.05) : white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selectedFileType == value ? kPrimary : Colors.grey[200]!,
+            color: isSelected ? obsidian : border,
+            width: isSelected ? 2 : 1,
           ),
         ),
         child: Row(
           children: [
-            Icon(icon, color: kPrimary, size: 24),
-            15.width,
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isSelected ? obsidian : border.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: FaIcon(icon, color: isSelected ? white : slate, size: 18),
+            ),
+            16.width,
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: boldTextStyle()),
-                4.height,
-                Text(subtitle, style: secondaryTextStyle(size: 12)),
+                Text(title, style: boldTextStyle(color: isSelected ? obsidian : ink, size: 16)),
+                2.height,
+                Text(subtitle, style: secondaryTextStyle(size: 12, color: slate)),
               ],
             ),
             const Spacer(),
-            if (selectedFileType == value)
-              Icon(Icons.check_circle, color: kPrimary),
+            if (isSelected)
+              const Icon(Icons.check_circle, color: obsidian, size: 24),
           ],
         ),
       ),

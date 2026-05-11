@@ -3,7 +3,6 @@ class Appointmentpricingmodel {
   String? name;
   int? amount;
   String? desc;
-  int? dollarAmount;
   int? duration;
 
   Appointmentpricingmodel({
@@ -11,7 +10,6 @@ class Appointmentpricingmodel {
     this.name,
     this.amount,
     this.desc,
-    this.dollarAmount,
     this.duration,
   });
 
@@ -21,7 +19,6 @@ class Appointmentpricingmodel {
       name: json['name'],
       amount: json['amount'],
       desc: json['description'],
-      dollarAmount: json['dollarAmount'],
       duration: json['duration'],
     );
   }

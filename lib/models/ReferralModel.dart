@@ -5,8 +5,8 @@ class ReferralModel {
   String? userId;
   String? referredBy;
   String? name;
-  int? amountEarned;
-  double? totalCommissionEarned;
+  num? amountEarned;
+  num? totalCommissionEarned;
   String? status;
   Timestamp? createdAt;
 

@@ -1,13 +1,15 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/models/UserModel.dart';
 import 'package:instant_doctor/services/UserService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 class UserController extends GetxController {
   UserService userService = UserService();
+  var isLoading = false.obs;
   UserModel? userModel;
   RxString userId = ''.obs;
-  RxString currency = ''.obs;
   RxString token = ''.obs;
   RxString videocallToken = ''.obs;
   RxString tag = ''.obs;

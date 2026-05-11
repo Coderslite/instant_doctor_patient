@@ -3,14 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/constant/color.dart';
+import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/controllers/ReferController.dart';
 import 'package:instant_doctor/main.dart';
+import 'package:instant_doctor/models/ReferralModel.dart';
 import 'package:instant_doctor/models/UserModel.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
+import 'package:instant_doctor/services/ReferralService.dart';
 import 'package:instant_doctor/services/format_number.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../component/PremiumButton.dart';
 
 class ReferScreen extends StatefulWidget {
   const ReferScreen({super.key});
@@ -28,16 +32,20 @@ class _ReferScreenState extends State<ReferScreen> {
   bool _hasAccountDetails = false;
   bool _isEditing = false;
   bool _isSaving = false;
-
+  List<ReferralModel> referrees = [];
   @override
   void initState() {
     super.initState();
     _loadAccountDetails();
+    getReferrals();
+  }
+
+  getReferrals() async {
+    referrees = await ReferralService().getReferrals();
+    setState(() {});
   }
 
   void _loadAccountDetails() {
-    // Load account details from user data
-
     if (user != null &&
         userController.bankName.value.isNotEmpty &&
         userController.accountNumber.isNotEmpty) {
@@ -74,7 +82,6 @@ class _ReferScreenState extends State<ReferScreen> {
         'accountName': _accountNameController.text.trim(),
       };
 
-      // Call your service to update user in database
       await userService.updateProfile(
         userId: userController.userId.value,
         data: updatedData,
@@ -150,9 +157,7 @@ class _ReferScreenState extends State<ReferScreen> {
                   ),
                   Spacer(),
                   IconButton(
-                    onPressed: () {
-                      _showWithdrawDialog();
-                    },
+                    onPressed: () {},
                     icon: Icon(Iconsax.wallet_3, size: 24, color: kPrimary),
                   ),
                 ],
@@ -231,20 +236,9 @@ class _ReferScreenState extends State<ReferScreen> {
                                     Expanded(
                                       child: Column(
                                         children: [
-                                          Icon(Iconsax.gift,
-                                              color: Colors.white, size: 24),
-                                          8.height,
-                                          Text(
-                                            "Instant Bonus",
-                                            style: TextStyle(
-                                              color:
-                                                  Colors.white.withOpacity(0.8),
-                                              fontSize: 12,
-                                            ),
-                                          ),
                                           4.height,
                                           Text(
-                                            "₦50",
+                                            "${referrees.length}",
                                             style: GoogleFonts.roboto(
                                               color: Colors.white,
                                               fontSize: 18,
@@ -252,7 +246,7 @@ class _ReferScreenState extends State<ReferScreen> {
                                             ),
                                           ),
                                           Text(
-                                            "On Sign-up",
+                                            "Total Referrals",
                                             style: TextStyle(
                                               color:
                                                   Colors.white.withOpacity(0.8),
@@ -395,70 +389,28 @@ class _ReferScreenState extends State<ReferScreen> {
                                       Row(
                                         children: [
                                           Expanded(
-                                            child: OutlinedButton(
-                                              onPressed: () {
+                                            child: PremiumButton(
+                                              onTap: () {
                                                 Clipboard.setData(ClipboardData(
                                                     text: referralCode));
                                                 toast("Referral code copied");
                                               },
-                                              style: OutlinedButton.styleFrom(
-                                                padding: EdgeInsets.symmetric(
-                                                    vertical: 16),
-                                                side: BorderSide(
-                                                    color: kPrimary, width: 2),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(Iconsax.copy,
-                                                      color: kPrimary),
-                                                  8.width,
-                                                  Text(
-                                                    "Copy Code",
-                                                    style: boldTextStyle(
-                                                        color: kPrimary),
-                                                  ),
-                                                ],
-                                              ),
+                                              text: "Copy Code",
+                                              icon: Iconsax.copy,
+                                              color: Colors.white,
+                                              textColor: kPrimary,
                                             ),
                                           ),
                                           16.width,
                                           Expanded(
-                                            child: ElevatedButton(
-                                              onPressed: () async {
+                                            child: PremiumButton(
+                                              onTap: () async {
                                                 await referralController
                                                     .handleShare(
                                                         code: referralCode);
                                               },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: kPrimary,
-                                                padding: EdgeInsets.symmetric(
-                                                    vertical: 16),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                                elevation: 0,
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(Iconsax.share,
-                                                      color: Colors.white),
-                                                  8.width,
-                                                  Text(
-                                                    "Share",
-                                                    style: boldTextStyle(
-                                                        color: Colors.white),
-                                                  ),
-                                                ],
-                                              ),
+                                              text: "Share",
+                                              icon: Iconsax.share,
                                             ),
                                           ),
                                         ],
@@ -590,53 +542,6 @@ class _ReferScreenState extends State<ReferScreen> {
                       ),
                     ),
 
-                    24.height,
-
-                    // Rewards & Payout Info
-                    Container(
-                      padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.green[100]!),
-                          color: context.cardColor),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Iconsax.info_circle, color: Colors.green),
-                              12.width,
-                              Text(
-                                "Reward Structure & Payout",
-                                style: boldTextStyle(
-                                    size: 18, color: Colors.green),
-                              ),
-                            ],
-                          ),
-                          16.height,
-                          _buildRewardItem(
-                            "Instant Sign-up Bonus",
-                            "₦50",
-                          ),
-                          _buildRewardItem(
-                            "Appointment Commission",
-                            "10% of payment",
-                          ),
-                          _buildRewardItem(
-                            "Payment Schedule",
-                            "28th of every month",
-                          ),
-                          _buildRewardItem(
-                            "Minimum Withdrawal",
-                            "₦1,000",
-                          ),
-                          _buildRewardItem(
-                            "Admin View",
-                            "Can see your bank details for payment",
-                          ),
-                        ],
-                      ),
-                    ),
-
                     40.height,
                   ],
                 ),
@@ -667,55 +572,24 @@ class _ReferScreenState extends State<ReferScreen> {
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
-                onPressed: _deleteAccountDetails,
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(color: Colors.red, width: 1.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Iconsax.trash, color: Colors.red, size: 20),
-                    8.width,
-                    Text(
-                      "Remove",
-                      style: boldTextStyle(color: Colors.red),
-                    ),
-                  ],
-                ),
+              child: PremiumButton(
+                onTap: _deleteAccountDetails,
+                text: "Remove",
+                icon: Iconsax.trash,
+                color: Colors.white,
+                textColor: Colors.red,
               ),
             ),
             12.width,
             Expanded(
-              child: ElevatedButton(
-                onPressed: () {
+              child: PremiumButton(
+                onTap: () {
                   setState(() {
                     _isEditing = true;
                   });
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimary,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Iconsax.edit_2, color: Colors.white, size: 20),
-                    8.width,
-                    Text(
-                      "Edit",
-                      style: boldTextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
+                text: "Edit",
+                icon: Iconsax.edit_2,
               ),
             ),
           ],
@@ -815,60 +689,24 @@ class _ReferScreenState extends State<ReferScreen> {
           children: [
             if (_hasAccountDetails)
               Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
+                child: PremiumButton(
+                  onTap: () {
                     setState(() {
                       _isEditing = false;
                     });
                   },
-                  style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: Colors.grey[400]!, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    "Cancel",
-                    style: boldTextStyle(),
-                  ),
+                  text: "Cancel",
+                  color: Colors.white,
+                  textColor: kSub,
                 ),
               ),
             if (_hasAccountDetails) 12.width,
             Expanded(
-              child: _isSaving
-                  ? Container(
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        ),
-                      ),
-                    )
-                  : ElevatedButton(
-                      onPressed: _saveAccountDetails,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kPrimary,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        _hasAccountDetails ? "Update Details" : "Save Details",
-                        style: boldTextStyle(color: Colors.white),
-                      ),
-                    ),
+              child: PremiumButton(
+                onTap: _saveAccountDetails,
+                isLoading: _isSaving,
+                text: _hasAccountDetails ? "Update Details" : "Save Details",
+              ),
             ),
           ],
         ),
@@ -938,84 +776,6 @@ class _ReferScreenState extends State<ReferScreen> {
     );
   }
 
-  void _showWithdrawDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Iconsax.wallet_3, color: kPrimary),
-            12.width,
-            Text("Withdraw Earnings", style: boldTextStyle(size: 20)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Payment Information",
-              style: boldTextStyle(size: 16),
-            ),
-            12.height,
-            Text(
-              "• Automatic payouts on the 28th of every month\n"
-              "• Minimum balance required: ₦1,000\n"
-              "• Payments sent to your saved bank account\n"
-              "• Admin processes all payments manually\n"
-              "• Contact support for payment inquiries",
-              style: primaryTextStyle(),
-            ),
-            20.height,
-            if (!_hasAccountDetails)
-              Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Iconsax.warning_2, color: Colors.orange),
-                    8.width,
-                    Expanded(
-                      child: Text(
-                        "Add bank account details to receive payments",
-                        style: primaryTextStyle(color: Colors.orange[800]),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Close", style: primaryTextStyle()),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              if (!_hasAccountDetails) {
-                setState(() {
-                  _isEditing = true;
-                });
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kPrimary,
-            ),
-            child: Text(
-              _hasAccountDetails ? "Check Balance" : "Add Account",
-              style: boldTextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildStep({
     required int number,
     required String title,
@@ -1072,30 +832,6 @@ class _ReferScreenState extends State<ReferScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildRewardItem(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Text(
-              title,
-              style: primaryTextStyle(size: 14),
-            ),
-          ),
-          10.width,
-          Expanded(
-            child: Text(
-              value,
-              style: GoogleFonts.inter(fontSize: 14, color: kPrimary),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

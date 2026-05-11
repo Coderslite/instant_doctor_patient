@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/component/PremiumButton.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/UserController.dart';
@@ -25,21 +26,6 @@ import '../../controllers/showPayment.dart';
 import '../../services/AppointmentService.dart';
 import '../../services/UserService.dart';
 import '../chat/ChatInterface.dart';
-
-// ─── Palette ───────────────────────────────────────────────────────────────────
-const _obsidian = Color(0xFF0A1628);
-const _charcoal = Color(0xFF142035);
-const _pageGray = Color(0xFFF0F4FA);
-const _white = Colors.white;
-const _ink = Color(0xFF0F2744);
-const _slate = Color(0xFF5E7A99);
-const _border = Color(0xFFE5EAF4);
-const _green = Color(0xFF10B981);
-const _greenSoft = Color(0xFFD1FAE5);
-const _amber = Color(0xFFF59E0B);
-const _amberSoft = Color(0xFFFEF3C7);
-const _redSoft = Color(0xFFFFEDED);
-const _redText = Color(0xFFDC2626);
 
 // ─────────────────────────────────────────────────────────────────────────────
 class AppointmentScreen extends StatefulWidget {
@@ -92,7 +78,7 @@ class _AppointmentScreenState extends State<AppointmentScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _pageGray,
+      backgroundColor: pageGray,
       body: Column(children: [
         // ── Premium header ─────────────────────────────────────────────────
         _AppointmentHeader(userController: userController),
@@ -121,7 +107,7 @@ class _AppointmentScreenState extends State<AppointmentScreen>
               }
               return AnimationLimiter(
                 child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 160),
                   physics: const BouncingScrollPhysics(),
                   itemCount: data.length,
                   itemBuilder: (_, i) {
@@ -170,13 +156,14 @@ class _AppointmentScreenState extends State<AppointmentScreen>
               ),
             ),
             FloatingActionButton(
+              heroTag: 'appt_fab',
               onPressed: () {
                 HapticFeedback.mediumImpact();
                 NewAppointment().launch(context);
               },
               backgroundColor: kPrimary,
               elevation: 0,
-              child: const Icon(Icons.add_rounded, color: _white, size: 28),
+              child: const Icon(Icons.add_rounded, color: white, size: 28),
             ),
           ],
         ),
@@ -223,9 +210,12 @@ class _AppointmentScreenState extends State<AppointmentScreen>
   }
 
   Future<void> _showPaymentDialog(AppointmentModel appt) async {
-    await showDialog(
+    await showModalBottomSheet(
       context: context,
-      builder: (_) => _PaymentDialog(
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _PaymentSummarySheet(
+        appt: appt,
         onPay: () {
           Navigator.pop(context);
           _handleMakePayment(appt);
@@ -245,9 +235,6 @@ class _AppointmentScreenState extends State<AppointmentScreen>
   }
 }
 
-// =============================================================================
-// HEADER
-// =============================================================================
 class _AppointmentHeader extends StatelessWidget {
   final UserController userController;
   const _AppointmentHeader({required this.userController});
@@ -255,52 +242,57 @@ class _AppointmentHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: _obsidian,
-        boxShadow: [
-          BoxShadow(
-              color: Color(0x28000000), blurRadius: 16, offset: Offset(0, 4))
-        ],
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 16, 22, 20),
-          child: Row(children: [
-            Expanded(
-                child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('My Appointments',
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: _white,
-                      letterSpacing: -0.5,
-                    )),
-                const SizedBox(height: 4),
-                Text('Tap any card to open your consultation',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _white.withOpacity(0.4),
-                      fontWeight: FontWeight.w400,
-                    )),
-              ],
-            )),
-            // Calendar icon button
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: _white.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _white.withOpacity(0.12), width: 1),
-              ),
-              child: Icon(Icons.calendar_month_rounded,
-                  color: _white.withOpacity(0.8), size: 20),
+      color: obsidian,
+      child: Column(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 20),
+              child: Row(children: [
+                Expanded(
+                    child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('My Appointments',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: white,
+                          letterSpacing: -0.5,
+                        )),
+                    const SizedBox(height: 4),
+                    Text('Track and manage your consultations',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: white.withOpacity(0.4),
+                          fontWeight: FontWeight.w400,
+                        )),
+                  ],
+                )),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: white.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: white.withOpacity(0.12), width: 1),
+                  ),
+                  child: Icon(Icons.calendar_month_rounded,
+                      color: white.withOpacity(0.8), size: 20),
+                ),
+              ]),
             ),
-          ]),
-        ),
+          ),
+          // Bridge curve
+          Container(
+            height: 28,
+            decoration: const BoxDecoration(
+              color: pageGray,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -325,15 +317,15 @@ class _AppointmentCard extends StatelessWidget {
   });
 
   Color get _statusColor {
-    if (isOngoing) return _green;
-    if (isExpired) return _slate;
-    return _amber;
+    if (isOngoing) return green;
+    if (isExpired) return slate;
+    return amber;
   }
 
   Color get _statusBg {
-    if (isOngoing) return _greenSoft;
+    if (isOngoing) return greenSoft;
     if (isExpired) return const Color(0xFFF1F5F9);
-    return _amberSoft;
+    return amberSoft;
   }
 
   String get _statusLabel {
@@ -363,8 +355,8 @@ class _AppointmentCard extends StatelessWidget {
           children: [
             SlidableAction(
               onPressed: (_) => onDelete(),
-              backgroundColor: _redText,
-              foregroundColor: _white,
+              backgroundColor: redText,
+              foregroundColor: white,
               icon: Icons.delete_outline_rounded,
               label: 'Delete',
               borderRadius: BorderRadius.circular(20),
@@ -375,9 +367,9 @@ class _AppointmentCard extends StatelessWidget {
           onTap: onTap,
           child: Container(
             decoration: BoxDecoration(
-              color: _white,
+              color: white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: _border, width: 1),
+              border: Border.all(color: border, width: 1),
               boxShadow: const [
                 BoxShadow(
                     color: Color(0x07000000),
@@ -449,7 +441,7 @@ class _AppointmentCard extends StatelessWidget {
                                                   style: const TextStyle(
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.w700,
-                                                    color: _ink,
+                                                    color: ink,
                                                     letterSpacing: -0.2,
                                                   ),
                                                 ),
@@ -459,7 +451,7 @@ class _AppointmentCard extends StatelessWidget {
                                                       appointment.startTime),
                                                   style: TextStyle(
                                                     fontSize: 11.5,
-                                                    color: _slate,
+                                                    color: slate,
                                                     fontWeight: FontWeight.w400,
                                                   ),
                                                 ),
@@ -514,7 +506,7 @@ class _AppointmentCard extends StatelessWidget {
                               ),
 
                         const SizedBox(height: 12),
-                        Container(height: 1, color: _border),
+                        Container(height: 1, color: border),
                         const SizedBox(height: 10),
 
                         // Bottom row — paid status + action chip
@@ -525,8 +517,8 @@ class _AppointmentCard extends StatelessWidget {
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: appointment.isPaid.validate()
-                                  ? _greenSoft
-                                  : _redSoft,
+                                  ? greenSoft
+                                  : redSoft,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -538,8 +530,8 @@ class _AppointmentCard extends StatelessWidget {
                                       : Icons.lock_outline_rounded,
                                   size: 11,
                                   color: appointment.isPaid.validate()
-                                      ? _green
-                                      : _redText,
+                                      ? green
+                                      : redText,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
@@ -550,8 +542,8 @@ class _AppointmentCard extends StatelessWidget {
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
                                     color: appointment.isPaid.validate()
-                                        ? _green
-                                        : _redText,
+                                        ? green
+                                        : redText,
                                   ),
                                 ),
                               ],
@@ -565,29 +557,45 @@ class _AppointmentCard extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: isExpired
-                                  ? const Color(0xFFF1F5F9)
-                                  : kPrimary,
+                              color: (!appointment.isPaid.validate() && !appointment.isTrial.validate())
+                                  ? redSoft
+                                  : isExpired
+                                      ? const Color(0xFFF1F5F9)
+                                      : kPrimary,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  isExpired ? 'View' : 'Open Chat',
+                                  (!appointment.isPaid.validate() && !appointment.isTrial.validate())
+                                      ? 'Pay Now'
+                                      : isExpired
+                                          ? 'View'
+                                          : 'Open Chat',
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: isExpired ? _slate : _white,
+                                    color: (!appointment.isPaid.validate() && !appointment.isTrial.validate())
+                                        ? redText
+                                        : isExpired
+                                            ? slate
+                                            : white,
                                   ),
                                 ),
                                 const SizedBox(width: 4),
                                 Icon(
-                                  isExpired
-                                      ? Icons.arrow_forward_ios_rounded
-                                      : Icons.chat_bubble_outline_rounded,
+                                  (!appointment.isPaid.validate() && !appointment.isTrial.validate())
+                                      ? Icons.payment_rounded
+                                      : isExpired
+                                          ? Icons.arrow_forward_ios_rounded
+                                          : Icons.chat_bubble_outline_rounded,
                                   size: 10,
-                                  color: isExpired ? _slate : _white,
+                                  color: (!appointment.isPaid.validate() && !appointment.isTrial.validate())
+                                      ? redText
+                                      : isExpired
+                                          ? slate
+                                          : white,
                                 ),
                               ],
                             ),
@@ -709,14 +717,14 @@ class _EmptyState extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: _ink,
+                  color: ink,
                   letterSpacing: -0.4,
                 )),
             const SizedBox(height: 10),
             Text(
               'Book a consultation with a specialist\nand get care in under 5 minutes.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13.5, color: _slate, height: 1.55),
+              style: TextStyle(fontSize: 13.5, color: slate, height: 1.55),
             ),
             const SizedBox(height: 28),
             GestureDetector(
@@ -740,13 +748,13 @@ class _EmptyState extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: const [
-                    Icon(Icons.add_rounded, color: _white, size: 18),
+                    Icon(Icons.add_rounded, color: white, size: 18),
                     SizedBox(width: 8),
                     Text('Book Appointment',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: _white,
+                          color: white,
                           letterSpacing: 0.1,
                         )),
                   ],
@@ -780,23 +788,23 @@ class _ErrorState extends StatelessWidget {
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _redSoft,
+                color: redSoft,
               ),
               child:
-                  const Icon(Icons.wifi_off_rounded, color: _redText, size: 36),
+                  const Icon(Icons.wifi_off_rounded, color: redText, size: 36),
             ),
             const SizedBox(height: 20),
             const Text('Something went wrong',
                 style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
-                    color: _ink,
+                    color: ink,
                     letterSpacing: -0.3)),
             const SizedBox(height: 8),
             Text(
                 'We couldn\'t load your appointments.\nPlease check your connection.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: _slate, height: 1.5)),
+                style: TextStyle(fontSize: 13, color: slate, height: 1.5)),
             const SizedBox(height: 24),
             GestureDetector(
               onTap: onRetry,
@@ -804,18 +812,18 @@ class _ErrorState extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 decoration: BoxDecoration(
-                  color: _redSoft,
+                  color: redSoft,
                   borderRadius: BorderRadius.circular(20),
                   border:
-                      Border.all(color: _redText.withOpacity(0.25), width: 1),
+                      Border.all(color: redText.withOpacity(0.25), width: 1),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: const [
-                  Icon(Icons.refresh_rounded, color: _redText, size: 16),
+                  Icon(Icons.refresh_rounded, color: redText, size: 16),
                   SizedBox(width: 8),
                   Text('Try Again',
                       style: TextStyle(
                           fontSize: 13,
-                          color: _redText,
+                          color: redText,
                           fontWeight: FontWeight.w600)),
                 ]),
               ),
@@ -836,7 +844,7 @@ class _DeleteDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: _white,
+      backgroundColor: white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -845,19 +853,19 @@ class _DeleteDialog extends StatelessWidget {
             width: 56,
             height: 56,
             decoration:
-                const BoxDecoration(shape: BoxShape.circle, color: _redSoft),
+                const BoxDecoration(shape: BoxShape.circle, color: redSoft),
             child: const Icon(Icons.delete_outline_rounded,
-                color: _redText, size: 26),
+                color: redText, size: 26),
           ),
           const SizedBox(height: 16),
           const Text('Delete Appointment',
               style: TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
+                  fontSize: 16, fontWeight: FontWeight.w800, color: ink)),
           const SizedBox(height: 8),
           Text(
               'This action cannot be undone. The appointment record will be permanently removed.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: _slate, height: 1.5)),
+              style: TextStyle(fontSize: 13, color: slate, height: 1.5)),
           const SizedBox(height: 24),
           Row(children: [
             Expanded(
@@ -874,7 +882,7 @@ class _DeleteDialog extends StatelessWidget {
                           style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: _slate))),
+                              color: slate))),
                 ),
               ),
             ),
@@ -885,16 +893,16 @@ class _DeleteDialog extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   decoration: BoxDecoration(
-                    color: _redSoft,
+                    color: redSoft,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: _redText.withOpacity(0.25)),
+                    border: Border.all(color: redText.withOpacity(0.25)),
                   ),
                   child: const Center(
                       child: Text('Delete',
                           style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: _redText))),
+                              color: redText))),
                 ),
               ),
             ),
@@ -904,84 +912,137 @@ class _DeleteDialog extends StatelessWidget {
     );
   }
 }
-
-class _PaymentDialog extends StatelessWidget {
+class _PaymentSummarySheet extends StatelessWidget {
+  final AppointmentModel appt;
   final VoidCallback onPay;
-  const _PaymentDialog({required this.onPay});
+
+  const _PaymentSummarySheet({required this.appt, required this.onPay});
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: _white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
+    return Container(
+      decoration: const BoxDecoration(
+        color: pageGray,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drag handle / Header
           Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: kPrimary.withOpacity(0.08),
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+            decoration: const BoxDecoration(
+              color: obsidian,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
             ),
-            child: Icon(Icons.lock_open_rounded, color: kPrimary, size: 26),
-          ),
-          const SizedBox(height: 16),
-          const Text('Payment Required',
-              style: TextStyle(
-                  fontSize: 16, fontWeight: FontWeight.w800, color: _ink)),
-          const SizedBox(height: 8),
-          Text(
-              'Complete your payment to access this consultation and chat with your doctor.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: _slate, height: 1.5)),
-          const SizedBox(height: 24),
-          Row(children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 13),
+            child: Column(
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(14),
+                    color: white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  child: const Center(
-                      child: Text('Later',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _slate))),
                 ),
-              ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Complete Payment',
+                              style: boldTextStyle(size: 20, color: white)),
+                          const SizedBox(height: 4),
+                          Text('Unlock your consultation with the specialist',
+                              style: secondaryTextStyle(
+                                  color: white.withOpacity(0.5), size: 12)),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: white.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close, color: white, size: 20),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: GestureDetector(
-                onTap: onPay,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 13),
+          ),
+
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [kPrimary, kPrimaryDark]),
-                    borderRadius: BorderRadius.circular(14),
+                    color: white,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: border),
                     boxShadow: [
                       BoxShadow(
-                          color: kPrimary.withOpacity(0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4))
+                        color: obsidian.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
                     ],
                   ),
-                  child: const Center(
-                      child: Text('Pay Now',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: _white))),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: kPrimary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(Icons.medical_services_rounded, color: kPrimary),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(appt.package.validate().isEmpty ? 'Consultation' : appt.package.validate(),
+                                style: boldTextStyle(size: 15, color: ink)),
+                            const SizedBox(height: 2),
+                            Text('Specialist Appointment',
+                                style: secondaryTextStyle(size: 11, color: slate)),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        '${appt.price.validate()}',
+                        style: boldTextStyle(size: 18, color: green),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 32),
+                PremiumButton(
+                  onTap: onPay,
+                  text: 'Pay Now',
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Pay Later', style: secondaryTextStyle(color: slate)),
+                ),
+                const SizedBox(height: 24),
+              ],
             ),
-          ]),
-        ]),
+          ),
+        ],
       ),
     );
   }

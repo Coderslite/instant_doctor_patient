@@ -5,7 +5,7 @@ import 'package:instant_doctor/services/GetUserId.dart';
 
 class LocationService {
   static const String apiKey =
-      'AIzaSyD8nW2BRd9ssOWqimiF-dOS4IeaXkKoBCI'; // Replace with your key
+      'AIzaSyD8nW2BRd9ssOWqimiF-dOS4IeaXkKoBCI';
   static const String _baseUrl = 'https://maps.googleapis.com/maps/api';
 
   Future<LocationResult> getLocationFromPlaceId(String placeId) async {

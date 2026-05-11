@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/main.dart';
@@ -11,6 +12,7 @@ import 'package:instant_doctor/screens/home/Home2.dart';
 import 'package:instant_doctor/screens/drug/OrderHistory.dart';
 import 'package:instant_doctor/screens/profile/Profile.dart';
 import 'package:instant_doctor/services/UserService.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:upgrader/upgrader.dart';
@@ -128,10 +130,10 @@ class RootState extends State<Root> with WidgetsBindingObserver {
   }
 
   final iconList = <IconData>[
-    Ionicons.home,
-    CupertinoIcons.calendar_today,
-    Icons.shopping_cart,
-    Ionicons.person,
+    Iconsax.home,
+    Iconsax.calendar,
+    Iconsax.bag_2,
+    Iconsax.user,
   ];
 
   @override
@@ -153,104 +155,86 @@ class RootState extends State<Root> with WidgetsBindingObserver {
           }
         },
         child: Scaffold(
-          // bottomNavigationBar: AnimatedBottomNavigationBar(
-          //   elevation: 0.1,
-          //   icons: iconList,
-          //   iconSize: 30,
-          //   blurEffect: false,
-          //   safeAreaValues: SafeAreaValues(),
-          //   scaleFactor: 2,
-          //   activeIndex: settingsController.selectedIndex.value,
-          //   gapLocation: GapLocation.none,
-          //   activeColor: kPrimary,
-          //   inactiveColor: grey,
-          //   backgroundColor: context.cardColor,
-          //   notchSmoothness: NotchSmoothness.defaultEdge,
-          //   leftCornerRadius: 30,
-          //   rightCornerRadius: 30,
-          //   onTap: (index) =>
-          //       setState(() => settingsController.selectedIndex.value = index),
-          // ),
-          // resizeToAvoidBottomInset: true,
-          body: Column(
-            children: [
-              Expanded(
-                child: IndexedStack(
-                  index: settingsController.selectedIndex.value,
-                  children: const [
-                    Home2(),
-                    AppointmentScreen(),
-                    OrderHistory(),
-                    ProfileScreen(),
+          extendBody: true, // Allows content to be behind the floating bar
+          body: IndexedStack(
+            index: settingsController.selectedIndex.value,
+            children: const [
+              Home2(),
+              AppointmentScreen(),
+              OrderHistory(),
+              ProfileScreen(),
+            ],
+          ),
+          bottomNavigationBar: _buildFloatingBottomBar(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingBottomBar() {
+    const labels = ["Home", "Appt", "Orders", "Profile"];
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(24, 0, 24, 34),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: obsidian,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        bottom: false, // Ensure symmetrical padding inside the bar
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: List.generate(iconList.length, (index) {
+            final isSelected = settingsController.selectedIndex.value == index;
+            return GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                setState(() => settingsController.selectedIndex.value = index);
+              },
+              behavior: HitTestBehavior.opaque,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? kPrimary.withOpacity(0.1)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      iconList[index],
+                      color: isSelected ? kPrimary : white.withOpacity(0.4),
+                      size: 24,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      labels[index],
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected ? kPrimary : white.withOpacity(0.4),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              BottomNavigationBar(
-                unselectedItemColor: grey,
-                backgroundColor: context.scaffoldBackgroundColor,
-                showSelectedLabels: true,
-                showUnselectedLabels: true,
-                currentIndex: settingsController.selectedIndex.value,
-                fixedColor: kPrimary,
-                type: BottomNavigationBarType.fixed,
-                onTap: (value) {
-                  setState(() {
-                    settingsController.selectedIndex.value = value;
-                  });
-                },
-                items: [
-                  BottomNavigationBarItem(
-                    label: "Home",
-                    icon: SizedBox(
-                        width: 30, height: 30, child: Icon(iconList[0])),
-                    activeIcon: SizedBox(
-                        width: 30,
-                        height: 30,
-                        child: Icon(
-                          iconList[0],
-                          color: kPrimary,
-                        )),
-                  ),
-                  BottomNavigationBarItem(
-                    label: "Appointments",
-                    icon: SizedBox(
-                        width: 30, height: 30, child: Icon(iconList[1])),
-                    activeIcon: SizedBox(
-                        width: 30,
-                        height: 30,
-                        child: Icon(
-                          iconList[1],
-                          color: kPrimary,
-                        )),
-                  ),
-                  BottomNavigationBarItem(
-                    label: "Orders",
-                    icon: SizedBox(
-                        width: 30, height: 30, child: Icon(iconList[2])),
-                    activeIcon: SizedBox(
-                        width: 30,
-                        height: 30,
-                        child: Icon(
-                          iconList[2],
-                          color: kPrimary,
-                        )),
-                  ),
-                  BottomNavigationBarItem(
-                    label: "Profile",
-                    icon: SizedBox(
-                        width: 30, height: 30, child: Icon(iconList[3])),
-                    activeIcon: SizedBox(
-                        width: 30,
-                        height: 30,
-                        child: Icon(
-                          iconList[3],
-                          color: kPrimary,
-                        )),
-                  ),
-                ],
-              ),
-            ],
-          ),
+            );
+          }),
         ),
       ),
     );

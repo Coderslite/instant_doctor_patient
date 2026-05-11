@@ -1,78 +1,78 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:nb_utils/nb_utils.dart';
+import '../constant/color.dart';
 
 void errorSnackBarWithClose({
   required BuildContext context,
   required String title,
 }) {
-  final snackBar = SnackBar(
-    content: Text(
-      title,
-      style: const TextStyle(color: Colors.white),
+  Get.snackbar(
+    'Error',
+    title,
+    snackPosition: SnackPosition.TOP,
+    backgroundColor: errorColor.withOpacity(0.9),
+    colorText: white,
+    margin: const EdgeInsets.all(16),
+    borderRadius: 16,
+    duration: const Duration(seconds: 5),
+    isDismissible: true,
+    mainButton: TextButton(
+      onPressed: () => Get.back(),
+      child: const Text('Close', style: TextStyle(color: white)),
     ),
-    backgroundColor: errorColor,
-    behavior: SnackBarBehavior.floating,
-    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-    ),
-    duration: const Duration(minutes: 1),
-    action: SnackBarAction(
-      label: 'Close',
-      textColor: Colors.white,
-      onPressed: () {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      },
-    ),
+    icon: const Icon(Icons.error_outline_rounded, color: white),
+    shouldIconPulse: true,
+    leftBarIndicatorColor: white,
   );
-
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(snackBar);
 }
 
 void errorSnackBar({
   required BuildContext context,
   required String title,
 }) {
-  final snackBar = SnackBar(
-    content: Text(
-      title,
-      style: const TextStyle(color: Colors.white),
-    ),
-    backgroundColor: errorColor,
-    behavior: SnackBarBehavior.floating,
-    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-    ),
+  Get.snackbar(
+    'Error',
+    title,
+    snackPosition: SnackPosition.TOP,
+    backgroundColor: redText.withOpacity(0.9),
+    colorText: white,
+    margin: const EdgeInsets.all(16),
+    borderRadius: 16,
     duration: const Duration(seconds: 3),
+    icon: const Icon(Icons.info_outline_rounded, color: white),
+    leftBarIndicatorColor: white,
+    boxShadows: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.2),
+        blurRadius: 10,
+        offset: const Offset(0, 4),
+      )
+    ],
   );
-
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(snackBar);
 }
 
 void successSnackBar({
   required BuildContext context,
   required String title,
 }) {
-  final snackBar = SnackBar(
-    content: Text(
-      title,
-      style: const TextStyle(color: Colors.white),
-    ),
-    backgroundColor: mediumSeaGreen,
-    behavior: SnackBarBehavior.floating,
-    margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-    ),
+  Get.snackbar(
+    'Success',
+    title,
+    snackPosition: SnackPosition.TOP,
+    backgroundColor: green.withOpacity(0.9),
+    colorText: white,
+    margin: const EdgeInsets.all(16),
+    borderRadius: 16,
     duration: const Duration(seconds: 3),
+    icon: const Icon(Icons.check_circle_outline_rounded, color: white),
+    leftBarIndicatorColor: white,
+    boxShadows: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.2),
+        blurRadius: 10,
+        offset: const Offset(0, 4),
+      )
+    ],
   );
-
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(snackBar);
 }

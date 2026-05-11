@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:instant_doctor/component/PremiumButton.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/models/PharmacyModel.dart';
@@ -136,21 +137,22 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
                       alignment: Alignment.topRight,
                       clipBehavior: Clip.none,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: kPrimary,
-                          ),
-                          child: Icon(
-                            Icons.shopping_cart_checkout,
-                            color: white,
-                          ),
+                        PremiumButton(
+                          onTap: () {
+                            CartScreen().launch(context);
+                          },
+                          text: "",
+                          icon: Icons.shopping_cart_checkout,
+                          color: obsidian,
+                          textColor: Colors.white,
+                          borderRadius: 100,
+                          width: 44,
+                          height: 44,
                         ),
                         if (orderController.cart.isNotEmpty)
                           Positioned(
-                            top: -5,
-                            right: -5,
+                            top: -2,
+                            right: -2,
                             child: Container(
                               padding: EdgeInsets.all(4),
                               decoration: BoxDecoration(
@@ -165,9 +167,7 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
                             ),
                           ),
                       ],
-                    ).onTap(() {
-                      CartScreen().launch(context);
-                    }),
+                    ),
                   ),
                 ],
               ),
@@ -352,6 +352,7 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'pharmacy_fab',
         onPressed: () =>
             ChangePickup().launch(context).then((_) => _loadSavedLocations()),
         backgroundColor: kPrimary,
@@ -414,19 +415,9 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
           ),
         ),
         SizedBox(height: 30),
-        ElevatedButton(
-          onPressed: () => ChangePickup().launch(context),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kPrimary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-          ),
-          child: Text(
-            "Enable Location",
-            style: boldTextStyle(color: white),
-          ),
+        PremiumButton(
+          onTap: () => ChangePickup().launch(context),
+          text: "Enable Location",
         ),
       ],
     );
@@ -454,19 +445,9 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
           ),
         ),
         SizedBox(height: 30),
-        ElevatedButton(
-          onPressed: () => ChangePickup().launch(context),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kPrimary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-          ),
-          child: Text(
-            "Change Location",
-            style: boldTextStyle(color: white),
-          ),
+        PremiumButton(
+          onTap: () => ChangePickup().launch(context),
+          text: "Change Location",
         ),
         SizedBox(height: 20),
         FutureBuilder<bool>(
@@ -478,36 +459,16 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
                   return Container();
                 } else {
                   return Obx(
-                    () => ElevatedButton(
-                      onPressed: () async {
+                    () => PremiumButton(
+                      onTap: () async {
                         await waitlistController.newWaitlist(context);
                         setState(() {});
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.cardColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                      ),
-                      child: waitlistController.isLoading.value
-                          ? Loader()
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.notifications_active,
-                                  color: kPrimary,
-                                ),
-                                10.width,
-                                Text(
-                                  "Get Notified",
-                                  style: boldTextStyle(color: kPrimary),
-                                ),
-                              ],
-                            ),
+                      isLoading: waitlistController.isLoading.value,
+                      color: context.cardColor,
+                      text: "Get Notified",
+                      icon: Icons.notifications_active,
+                      textColor: kPrimary,
                     ),
                   );
                 }
@@ -546,15 +507,9 @@ class _PharmaciesScreenState extends State<PharmaciesScreen> {
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () => setState(() {}),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-            child: Text("Try Again", style: boldTextStyle(color: white)),
+          PremiumButton(
+            onTap: () => setState(() {}),
+            text: "Try Again",
           ),
         ],
       ),

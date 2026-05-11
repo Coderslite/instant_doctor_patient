@@ -1,6 +1,5 @@
 import 'dart:convert';
-import 'dart:developer';
-import 'dart:math' show Random;
+import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,9 +12,8 @@ import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/screens/authentication/create_pin.dart';
 import 'package:instant_doctor/screens/authentication/login_screen.dart';
 import 'package:instant_doctor/screens/authentication/otp_screen.dart';
-import 'package:instant_doctor/screens/authentication/success_signup.dart';
 import 'package:instant_doctor/services/AuthenticationService.dart';
-import 'package:nb_utils/nb_utils.dart' hide log;
+import 'package:nb_utils/nb_utils.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../constant/constants.dart';
 import '../screens/authentication/referral_screen.dart';
@@ -64,19 +62,20 @@ class AuthenticationController extends GetxController {
   handleGoogleSignin(BuildContext context, {required String referredBy}) async {
     try {
       googleSignin.value = true;
+      final zegoCloudController = Get.find<ZegoCloudController>();
+
       GoogleSignInAccount? userCred = await _googleSignIn.signIn();
 
       if (userCred != null) {
+        Get.find<LocationController>()
+            .handleGetMyLocation(isLogin: true, email: userCred.email);
         if ((await handleCheckEmail(userCred.email)) == false) {
-          if (!context.mounted) return;
           var result = await handleAuthGoogleSignin(context, userCred);
-          if (!context.mounted) return;
-          await handlePostAuth(
-            userId: result.user!.uid,
-            email: userCred.email,
-            context: context,
-            nextScreen: CreatePinScreen(),
-          );
+          var prefs = await SharedPreferences.getInstance();
+          prefs.setString("userId", result.user!.uid);
+          userController.userId.value = result.user!.uid;
+          await zegoCloudController.handleInit();
+          CreatePinScreen().launch(context);
         } else {
           var result = await handleAuthGoogleSignin(context, userCred);
           var prefs = await SharedPreferences.getInstance();
@@ -92,18 +91,12 @@ class AuthenticationController extends GetxController {
             uid: result.user!.uid,
             password: '',
           );
-          if (!context.mounted) return;
-          await handlePostAuth(
-            userId: result.user!.uid,
-            email: userCred.email,
-            context: context,
-            nextScreen: ReferralRegistrationScreen(),
-            isNewUser: true,
-          );
+          await zegoCloudController.handleInit();
+          ReferralRegistrationScreen().launch(context);
         }
       }
     } catch (error) {
-      log(error.toString());
+      print(error);
       toast("$error");
     } finally {
       googleSignin.value = false;
@@ -117,20 +110,23 @@ class AuthenticationController extends GetxController {
   }) async {
     isLoading.value = true;
     try {
+      final zegoCloudController = Get.find<ZegoCloudController>();
       await FirebaseAuth.instance.signOut();
       final value = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email.toLowerCase(),
         password: password,
       );
-      log(value.toString());
+      print(value);
       isLoading.value = false;
-      if (!context.mounted) return;
-      await handlePostAuth(
-        userId: value.user!.uid,
-        email: email,
-        context: context,
-        nextScreen: CreatePinScreen(),
-      );
+
+      var prefs = await SharedPreferences.getInstance();
+      prefs.setString("userId", value.user!.uid);
+      userController.userId.value = value.user!.uid;
+      getUserId();
+      await zegoCloudController.handleInit();
+      Get.find<LocationController>()
+          .handleGetMyLocation(isLogin: true, email: email);
+      CreatePinScreen().launch(context, isNewTask: true);
       toast("Login Successful");
     } on FirebaseAuthException catch (e) {
       isLoading.value = false;
@@ -148,11 +144,11 @@ class AuthenticationController extends GetxController {
         errorMessage = "Too many failed attempts. Please try again later.";
       }
       toast(errorMessage);
-      log(e.code);
+      print(e.code);
     } catch (err) {
       isLoading.value = false;
       toast("Something went wrong. Please try again.");
-      log(err.toString());
+      print(err);
     }
   }
 
@@ -166,6 +162,7 @@ class AuthenticationController extends GetxController {
     required String referredBy,
     required BuildContext context,
   }) async {
+    final zegoCloudController = Get.find<ZegoCloudController>();
     isLoading.value = true;
     var result = await authenticationService.createUser(
       firstname: firstname,
@@ -178,23 +175,17 @@ class AuthenticationController extends GetxController {
     );
     if (result) {
       isLoading.value = false;
-      if (!context.mounted) return;
-      await handlePostAuth(
-        userId: userController.userId.value,
-        email: email,
-        context: context,
-        nextScreen: const SuccessSignUp(),
-      );
+      await zegoCloudController.handleInit();
+      getUserId();
+      ReferralRegistrationScreen().launch(context);
     } else {
       isLoading.value = false;
-      if (!context.mounted) return;
-      errorSnackBar(context: context, title: "Something went wrong");
+      errorSnackBar(title: "Something went wrong", context: context);
     }
   }
 
   handleLogout(BuildContext context) async {
     FirebaseAuth.instance.signOut().then((value) async {
-      if (!context.mounted) return;
       const LoginScreen().launch(context, isNewTask: true);
       final zegoCloudController = Get.find<ZegoCloudController>();
       await _googleSignIn.signOut();
@@ -210,7 +201,6 @@ class AuthenticationController extends GetxController {
   }
 
   Future<void> handleSendOTP({
-    required BuildContext context,
     required String email,
     required String firstname,
     required String lastname,
@@ -222,18 +212,18 @@ class AuthenticationController extends GetxController {
   }) async {
     try {
       isLoading.value = true;
-      if (otpFor == OtpFor.login) {
-        try {
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
-            email: email.toLowerCase(),
-            password: password,
-          );
-        } catch (ere) {
-          if (!context.mounted) return;
-          errorSnackBar(context: context, title: "Invalid Email or Password");
-          return;
-        }
-      }
+      // if (otpFor == OtpFor.login) {
+      //   try {
+      //     await FirebaseAuth.instance.signInWithEmailAndPassword(
+      //       email: email.toLowerCase(),
+      //       password: password,
+      //     );
+      //   } catch (ere) {
+      //     errorSnackBar(
+      //         title: "Invalid Email or Password", context: Get.context!);
+      //     return;
+      //   }
+      // }
 
       // Store OTP stage and related data in SharedPreferences
       final prefs = await SharedPreferences.getInstance();
@@ -248,8 +238,7 @@ class AuthenticationController extends GetxController {
       await prefs.setString('otpReferredBy', referredBy);
 
       await authenticationService.handleSendOTP(email: email);
-      if (!context.mounted) return;
-      successSnackBar(context: context, title: "OTP sent successfully");
+      successSnackBar(title: "OTP sent successfully", context: Get.context!);
       OTPScreen(
         otpFor: otpFor,
         firstname: firstname,
@@ -298,7 +287,10 @@ class AuthenticationController extends GetxController {
   Future<void> handleAppleSignIn(BuildContext context,
       {required String referredBy}) async {
     try {
-      isLoading.value = true;
+      isLoading.value = true; // Start loading
+      final zegoCloudController = Get.find<ZegoCloudController>();
+
+      // Generate nonce for secure Apple Sign-In
       final rawNonce = generateNonce();
       final nonce = sha256ofString(rawNonce);
 
@@ -337,14 +329,17 @@ class AuthenticationController extends GetxController {
       // Check if user already exists in Firestore
       bool isNewUser = await handleCheckEmail(email);
 
-      if (!context.mounted) return;
-      await handlePostAuth(
-        userId: authResult.user!.uid,
-        email: email,
-        context: context,
-        nextScreen:
-            isNewUser ? ReferralRegistrationScreen() : CreatePinScreen(),
-      );
+      // Store user ID in SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString("userId", authResult.user!.uid);
+      userController.userId.value = authResult.user!.uid;
+
+      // Initialize ZegoCloud and location services
+      await zegoCloudController.handleInit();
+      Get.find<LocationController>()
+          .handleGetMyLocation(isLogin: true, email: email);
+
+      // Navigate to CreatePinScreen
       toast("Login Successful with Apple");
 
       // If user is new, add their details to Firestore
@@ -359,14 +354,12 @@ class AuthenticationController extends GetxController {
           uid: authResult.user!.uid,
           password: '',
         );
-        if (!context.mounted) return;
         ReferralRegistrationScreen().launch(context);
       } else {
-        if (!context.mounted) return;
         CreatePinScreen().launch(context);
       }
     } catch (error) {
-      log("Error during Apple Sign-In: $error");
+      print("Error during Apple Sign-In: $error");
       if (error is FirebaseAuthException &&
           error.code == 'invalid-credential') {
         toast("Apple Sign-In failed: Invalid credentials. Please try again.");
@@ -381,38 +374,6 @@ class AuthenticationController extends GetxController {
       }
     } finally {
       isLoading.value = false; // Stop loading
-    }
-  }
-
-  Future<void> handlePostAuth({
-    required String userId,
-    required String email,
-    required BuildContext context,
-    required Widget nextScreen,
-    bool isNewUser = false,
-  }) async {
-    try {
-      final zegoCloudController = Get.find<ZegoCloudController>();
-
-      // Save user ID
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString("userId", userId);
-      userController.userId.value = userId;
-
-      // Init services
-      await zegoCloudController.handleInit();
-
-      // Run location + currency in background (don't block UI)
-      Future.microtask(() async {
-        await Get.find<LocationController>()
-            .handleGetMyLocation(isLogin: true, email: email);
-      });
-
-      // Navigate
-      if (!context.mounted) return;
-      nextScreen.launch(context, isNewTask: true);
-    } catch (e) {
-      log("Post auth error: $e");
     }
   }
 }

@@ -7,7 +7,7 @@ class UserModel {
   String? lastName;
   String? email;
   String? country;
-  String? currency;
+  String? platform;
   String? phoneNumber;
   String? photoUrl;
   String? maritalStatus;
@@ -33,7 +33,7 @@ class UserModel {
   GeoPoint? location;
   String? address;
   String? otherLanguage;
-  int? referralBalance;
+  num? referralBalance;
   bool? referralProgramApplied;
   bool? referralEnabled;
   int? referralProgramAppliedAt;
@@ -48,7 +48,7 @@ class UserModel {
     this.country,
     this.address,
     this.location,
-    this.currency,
+    this.platform,
     this.phoneNumber,
     this.photoUrl,
     this.maritalStatus,
@@ -90,7 +90,7 @@ class UserModel {
       country: json['country'],
       address: json['address'],
       location: json['location'] ?? GeoPoint(0, 0),
-      currency: json['currency'] ?? 'USD',
+      platform: json['platform'],
       phoneNumber: json['phoneNumber'],
       photoUrl: json['photoUrl'],
       maritalStatus: json['maritalStatus'],
@@ -118,7 +118,10 @@ class UserModel {
           ? json['isTrialAvailable']
           : false,
       otherLanguage: json['otherLanguage'],
-
+      referralEnabled: json['referralEnabled'],
+      referralBalance: json['referralBalance'],
+      referralProgramApplied: json['referralProgramApplied'],
+      referralProgramAppliedAt: json['referralAppliedAt'],
     );
   }
 }

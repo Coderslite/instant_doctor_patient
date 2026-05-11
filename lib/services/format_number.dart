@@ -1,10 +1,14 @@
 import 'package:instant_doctor/services/GetUserId.dart';
+import 'package:instant_doctor/services/IAPService.dart';
 import 'package:intl/intl.dart';
+import 'package:get/get.dart';
 
 String formatAmount(int amount) {
+  final iapService = Get.find<IAPService>();
   String formattedAmount = NumberFormat.decimalPattern().format(amount);
-  final symbol =
-      userController.currency.value.toLowerCase() == 'ngn' ? '₦' : '\$';
+  final symbol = iapService.currentCurrency.toLowerCase() == 'ngn'
+      ? '₦'
+      : iapService.currentCurrency;
   return "$symbol$formattedAmount";
 }
 

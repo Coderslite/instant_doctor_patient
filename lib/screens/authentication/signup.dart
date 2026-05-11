@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:instant_doctor/constant/color.dart';
+import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/screens/authentication/password-screnn.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:nb_utils/nb_utils.dart';
+import '../../component/PremiumButton.dart';
 
 class SignUpScreen extends StatefulWidget {
   final String email;
@@ -20,11 +22,12 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  var gender = '';
-  var firstnameController = TextEditingController();
-  var lastnameController = TextEditingController();
-  var phoneController = TextEditingController();
-  var referredByController = TextEditingController();
+  String gender = '';
+  String completePhoneNumber = '';
+  final firstnameController = TextEditingController();
+  final lastnameController = TextEditingController();
+  final phoneController = TextEditingController();
+  final referredByController = TextEditingController();
 
   @override
   void initState() {
@@ -37,517 +40,291 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return KeyboardDismisser(
       child: Scaffold(
         backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: kText, size: 20),
+            onPressed: () => finish(context),
+          ),
+        ),
         body: SafeArea(
-          child: Stack(
-            children: [
-              // Decorative background elements
-              Positioned(
-                top: -50,
-                left: -50,
-                child: Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: kPrimary.withOpacity(0.08),
-                  ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                40.height,
+                const Text(
+                  'Complete Profile',
+                  style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: kText,
+                      letterSpacing: -1.0),
                 ),
-              ),
-              Positioned(
-                bottom: -80,
-                right: -50,
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: kPrimary.withOpacity(0.05),
-                  ),
+                12.height,
+                const Text(
+                  'Tell us a bit about yourself to personalize your healthcare experience.',
+                  style: TextStyle(fontSize: 15, color: kSub, height: 1.5),
                 ),
-              ),
-
-              SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Back button
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
+                48.height,
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      // Verified Email Banner
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.grey.shade100,
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFDCFCE7)),
                         ),
-                        child: const Icon(
-                          Icons.arrow_back_ios_rounded,
-                          size: 20,
-                          color: Colors.black54,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.verified_rounded,
+                                color: Color(0xFF16A34A), size: 20),
+                            12.width,
+                            Expanded(
+                              child: Text(
+                                widget.email,
+                                style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF16A34A)),
+                              ),
+                            ),
+                            const Text('Verified',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF16A34A))),
+                          ],
                         ),
                       ),
-                    ),
 
-                    // Header section
-                    const SizedBox(height: 20),
-                    Text(
-                      "Complete Your Profile",
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                        height: 1.2,
+                      24.height,
+
+                      _buildTextField(
+                        controller: firstnameController,
+                        label: 'First Name',
+                        hint: 'e.g. John',
+                        icon: Icons.person_outline_rounded,
+                        validator: (v) =>
+                            v!.isEmpty ? 'First name is required' : null,
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      "Please fill in the following details to continue",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey.shade600,
+                      24.height,
+                      _buildTextField(
+                        controller: lastnameController,
+                        label: 'Last Name',
+                        hint: 'e.g. Doe',
+                        icon: Icons.person_outline_rounded,
+                        validator: (v) =>
+                            v!.isEmpty ? 'Last name is required' : null,
                       ),
-                    ),
+                      24.height,
 
-                    const SizedBox(height: 40),
-
-                    // Form
-                    Form(
-                      key: _formKey,
-                      child: Column(
+                      // Phone Field
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Email field (disabled)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 18,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Colors.grey.shade200,
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.email_outlined,
-                                  color: Colors.grey.shade500,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    widget.email,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey.shade700,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: kPrimary.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    "Verified",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: kPrimary,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // First name field
-                          TextFormField(
-                            controller: firstnameController,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black87,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: "Enter your first name",
-                              hintStyle: TextStyle(
-                                color: Colors.grey.shade500,
-                              ),
-                              filled: true,
-                              fillColor: Colors.grey.shade50,
-                              prefixIcon: Icon(
-                                Icons.person_outline,
-                                color: kPrimary,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: kPrimary,
-                                  width: 2,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 18,
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your first name';
-                              }
-                              return null;
-                            },
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Last name field
-                          TextFormField(
-                            controller: lastnameController,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black87,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: "Enter your last name",
-                              hintStyle: TextStyle(
-                                color: Colors.grey.shade500,
-                              ),
-                              filled: true,
-                              fillColor: Colors.grey.shade50,
-                              prefixIcon: Icon(
-                                Icons.person_outline,
-                                color: kPrimary,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: kPrimary,
-                                  width: 2,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 18,
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your last name';
-                              }
-                              return null;
-                            },
-                          ),
-
-                          const SizedBox(height: 16),
-
-                          // Phone number field
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: IntlPhoneField(
-                              controller: phoneController,
+                          const Text('Phone Number',
                               style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black87,
-                              ),
-                              dropdownTextStyle: TextStyle(
-                                fontSize: 16,
-                                color: Colors.black87,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: "Phone Number",
-                                hintStyle: TextStyle(
-                                  color: Colors.grey.shade500,
-                                ),
-                                filled: true,
-                                fillColor: Colors.transparent,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide.none,
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide(
-                                    color: kPrimary,
-                                    width: 2,
-                                  ),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 18,
-                                ),
-                              ),
-                              initialCountryCode: 'NG',
-                              dropdownIconPosition: IconPosition.trailing,
-                              dropdownIcon: Icon(
-                                Icons.arrow_drop_down,
-                                color: Colors.grey.shade600,
-                              ),
-                              validator: (phone) {
-                                if (phone == null || !phone.isValidNumber()) {
-                                  return 'Please enter a valid phone number';
-                                }
-                                return null;
-                              },
-                            ),
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // Gender selection
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Gender",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  // Male option
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          gender = 'Male';
-                                        });
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 16,
-                                          horizontal: 12,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: gender == 'Male'
-                                              ? kPrimary.withOpacity(0.1)
-                                              : Colors.grey.shade50,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          border: Border.all(
-                                            color: gender == 'Male'
-                                                ? kPrimary
-                                                : Colors.grey.shade200,
-                                            width: 2,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.male,
-                                              color: gender == 'Male'
-                                                  ? kPrimary
-                                                  : Colors.grey.shade600,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              "Male",
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
-                                                color: gender == 'Male'
-                                                    ? kPrimary
-                                                    : Colors.black87,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  const SizedBox(width: 12),
-
-                                  // Female option
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          gender = 'Female';
-                                        });
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 16,
-                                          horizontal: 12,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: gender == 'Female'
-                                              ? kPrimary.withOpacity(0.1)
-                                              : Colors.grey.shade50,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          border: Border.all(
-                                            color: gender == 'Female'
-                                                ? kPrimary
-                                                : Colors.grey.shade200,
-                                            width: 2,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.female,
-                                              color: gender == 'Female'
-                                                  ? kPrimary
-                                                  : Colors.grey.shade600,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              "Female",
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
-                                                color: gender == 'Female'
-                                                    ? kPrimary
-                                                    : Colors.black87,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // Referral code field
-                          TextFormField(
-                            controller: referredByController,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black87,
-                            ),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: kText)),
+                          10.height,
+                          IntlPhoneField(
+                            controller: phoneController,
+                            initialCountryCode: 'US',
+                            onChanged: (phone) {
+                              completePhoneNumber = phone.completeNumber;
+                            },
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w500),
                             decoration: InputDecoration(
-                              hintText: "Referral code (optional)",
-                              hintStyle: TextStyle(
-                                color: Colors.grey.shade500,
-                              ),
+                              hintText: 'Phone Number',
+                              fillColor: const Color(0xFFF8FAFF),
                               filled: true,
-                              fillColor: Colors.grey.shade50,
-                              prefixIcon: Icon(
-                                Icons.card_giftcard_outlined,
-                                color: kPrimary,
-                              ),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide(
-                                  color: kPrimary,
-                                  width: 2,
-                                ),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 18,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 40),
-
-                          // Continue button
-                          SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  if (gender.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          "Please select your gender",
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        backgroundColor: Colors.red,
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                        ),
-                                      ),
-                                    );
-                                    return;
-                                  }
-
-                                  PasswordScreen(
-                                    email: widget.email,
-                                    firstname: firstnameController.text,
-                                    lastname: lastnameController.text,
-                                    phone: phoneController.text,
-                                    gender: gender,
-                                    isResetPassword: false,
-                                    referredBy: referredByController.text,
-                                  ).launch(context);
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: kPrimary,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                ),
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 16),
-                              ),
-                              child: const Text(
-                                "Continue",
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                                  borderSide: BorderSide.none),
+                              enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: BorderSide.none),
+                              focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                      color: kPrimary, width: 1.5)),
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 18),
                             ),
                           ),
-
-                          const SizedBox(height: 40),
                         ],
                       ),
-                    ),
-                  ],
+
+                      16.height,
+
+                      // Gender Selection
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Gender',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: kText)),
+                          12.height,
+                          Row(
+                            children: [
+                              Expanded(
+                                  child: _GenderOption(
+                                label: 'Male',
+                                icon: Icons.male_rounded,
+                                isSelected: gender == 'Male',
+                                onTap: () => setState(() => gender = 'Male'),
+                              )),
+                              16.width,
+                              Expanded(
+                                  child: _GenderOption(
+                                label: 'Female',
+                                icon: Icons.female_rounded,
+                                isSelected: gender == 'Female',
+                                onTap: () => setState(() => gender = 'Female'),
+                              )),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      32.height,
+
+                      _buildTextField(
+                        controller: referredByController,
+                        label: 'Referral Code (Optional)',
+                        hint: 'Enter code',
+                        icon: Icons.card_giftcard_rounded,
+                      ),
+
+                      48.height,
+
+                      PremiumButton(
+                        onTap: () {
+                          if (_formKey.currentState!.validate()) {
+                            if (gender.isEmpty) {
+                              toast("Please select your gender");
+                              return;
+                            }
+                            if (completePhoneNumber.isEmpty) {
+                              toast("Please enter a valid phone number");
+                              return;
+                            }
+                            PasswordScreen(
+                              email: widget.email,
+                              firstname: firstnameController.text,
+                              lastname: lastnameController.text,
+                              phone: completePhoneNumber,
+                              gender: gender,
+                              isResetPassword: false,
+                              referredBy: referredByController.text,
+                            ).launch(context);
+                          }
+                        },
+                        text: 'Continue',
+                      ),
+
+                      40.height,
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w800, color: kText)),
+        10.height,
+        TextFormField(
+          controller: controller,
+          validator: validator,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(color: kSub.withOpacity(0.4), fontSize: 14),
+            prefixIcon: Icon(icon, color: kPrimary.withOpacity(0.5), size: 20),
+            fillColor: const Color(0xFFF8FAFF),
+            filled: true,
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: kPrimary, width: 1.5)),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GenderOption extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _GenderOption(
+      {required this.label,
+      required this.icon,
+      required this.isSelected,
+      required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color:
+              isSelected ? kPrimary.withOpacity(0.05) : const Color(0xFFF8FAFF),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: isSelected ? kPrimary : kBorder.withOpacity(0.5),
+              width: isSelected ? 2 : 1),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: isSelected ? kPrimary : kSub, size: 24),
+            8.height,
+            Text(label,
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                    color: isSelected ? kPrimary : kSub)),
+          ],
         ),
       ),
     );

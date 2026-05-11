@@ -4,6 +4,7 @@ import 'package:nb_utils/nb_utils.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../constant/color.dart';
+import '../../component/PremiumButton.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -43,7 +44,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       body: Stack(
@@ -158,29 +158,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   // Navigation buttons
                   if (currentIndex == onboardingData.length - 1)
                     // Get Started button on last page
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          const EmailScreen().launch(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kPrimary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: const Text(
-                          "Get Started",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
+                    PremiumButton(
+                      onTap: () {
+                        const EmailScreen().launch(context);
+                      },
+                      text: "Get Started",
                     )
                   else
                     // Navigation buttons for other pages
@@ -202,24 +184,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
 
                         // Next button with icon
-                        ElevatedButton(
-                          onPressed: () {
+                        PremiumButton(
+                          onTap: () {
                             controller.nextPage(
                               duration: const Duration(milliseconds: 500),
                               curve: Curves.easeInOut,
                             );
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kPrimary,
-                            foregroundColor: Colors.white,
-                            shape: const CircleBorder(),
-                            padding: const EdgeInsets.all(16),
-                            elevation: 0,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 20,
-                          ),
+                          text: "",
+                          icon: Icons.arrow_forward_ios,
+                          color: kPrimary,
+                          borderRadius: 100,
                         ),
                       ],
                     ),

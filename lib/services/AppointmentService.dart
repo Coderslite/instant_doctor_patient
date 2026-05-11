@@ -5,6 +5,7 @@ import 'package:instant_doctor/models/AppointmentPricingModel.dart';
 import 'package:instant_doctor/services/CustomMailService.dart';
 import 'package:instant_doctor/services/DoctorService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
+import 'package:instant_doctor/services/IAPService.dart';
 import 'package:instant_doctor/services/ReferralService.dart';
 import 'package:instant_doctor/services/formatDate.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -28,6 +29,7 @@ class AppointmentService {
   final notificationService = Get.find<NotificationService>();
   var appointmentCollection = db.collection("Appointments");
   var appointmentPricingCollection = db.collection("AppointmentPricing");
+  var appointmentChargesCollection = db.collection("AppointmentCharges");
 
   AppointmentService() {
     _initializeNotifications();
@@ -168,11 +170,7 @@ class AppointmentService {
         int notificationId = (appointmentId.hashCode + i);
         await _notificationsPlugin.cancel(notificationId);
       }
-      toast("Appointment notifications canceled");
-    } catch (e) {
-      print("Error canceling appointment notifications: $e");
-      toast("Error canceling notifications: $e");
-    }
+    } catch (e) {}
   }
 
   Future<bool> isFirstTimeBooking() async {
@@ -254,6 +252,7 @@ class AppointmentService {
     required Timestamp endTime,
     required Timestamp startTime,
     required bool isTrial,
+    String? appointmentId,
   }) async {
     var data = {
       "doctorId": docId,
@@ -264,23 +263,33 @@ class AppointmentService {
       "startTime": startTime,
       "endTime": endTime,
       "price": price,
-      "currency": userController.currency.value,
+      "currency": Get.find<IAPService>().currentCurrency,
       "package": package,
       "createdAt": Timestamp.now(),
       "updatedAt": Timestamp.now(),
       "isPaid": false,
       "isTrial": isTrial,
     };
-    var result = await appointmentCollection.add(data);
-    await appointmentCollection.doc(result.id).update({
-      "id": result.id,
+
+    String finalId;
+    if (appointmentId != null && appointmentId.isNotEmpty) {
+      finalId = appointmentId;
+      await appointmentCollection.doc(finalId).set(data, SetOptions(merge: true));
+    } else {
+      var result = await appointmentCollection.add(data);
+      finalId = result.id;
+    }
+
+    await appointmentCollection.doc(finalId).update({
+      "id": finalId,
     });
-    return result.id;
+    return finalId;
   }
 
   Future<bool> updateAppointmentAfterPayment({
     required String appointmentId,
     required bool isTrial,
+    String? currency,
   }) async {
     final doctorService = Get.find<DoctorService>();
 
@@ -306,6 +315,7 @@ class AppointmentService {
 
       await appointmentCollection.doc(appointmentId).update({
         "isPaid": true,
+        "currency": currency ?? appointment.currency ?? Get.find<IAPService>().currentCurrency,
         "updatedAt": Timestamp.now(),
       });
 
@@ -364,8 +374,6 @@ class AppointmentService {
         "status": 'deleted',
         "updatedAt": Timestamp.now(),
       });
-
-      toast("Appointment deleted successfully");
     } catch (e) {
       print("Error deleting appointment: $e");
       toast("Error deleting appointment: $e");
@@ -574,7 +582,9 @@ class AppointmentService {
   }
 
   Future<List<Appointmentpricingmodel>> getAppointmentPrice() async {
-    var ref = await appointmentPricingCollection
+    var ref = await appointmentChargesCollection
+        .doc(Get.find<IAPService>().currentCurrency.toLowerCase())
+        .collection("packages")
         .orderBy('amount', descending: false)
         .get();
     return ref.docs

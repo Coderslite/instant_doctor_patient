@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:instant_doctor/component/backButton.dart';
+import 'package:instant_doctor/constant/color.dart';
+import 'package:instant_doctor/constant/constants.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../models/PrescriptionModel.dart';
@@ -13,52 +15,111 @@ class Prescriptiondetails extends StatefulWidget {
 }
 
 class _PrescriptiondetailsState extends State<Prescriptiondetails> {
-  var textController = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
-    textController.text = widget.prescription!.prescription.validate();
-
     return Scaffold(
+      backgroundColor: kBg,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Row(
                 children: [
                   backButton(context),
-                  Text(
+                  24.width,
+                  const Text(
                     "Prescribed Drug",
-                    style: boldTextStyle(
-                      size: 16,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: kText,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                  Text("     ")
                 ],
               ),
-              Expanded(
-                child: Card(
-                  color: context.cardColor,
-                  child: AppTextField(
-                    readOnly: true,
-                    controller: textController,
-                    textFieldType: TextFieldType.MULTILINE,
-                    autoFocus: true,
-                    decoration: InputDecoration(
-                      hintText:
-                          "Enter your drug prescription / recommendation here",
-                      hintStyle: secondaryTextStyle(size: 12),
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide.none,
+            ),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: kCard,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: kBorder),
+                        boxShadow: [
+                          BoxShadow(
+                            color: kText.withOpacity(0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: kPrimary.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.info_outline_rounded,
+                                    color: kPrimary, size: 20),
+                              ),
+                              12.width,
+                              const Text(
+                                "Drug Information",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: kPrimary,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                          24.height,
+                          Text(
+                            widget.prescription?.prescription.validate() ?? "",
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: kText,
+                              height: 1.6,
+                            ),
+                          ),
+                          32.height,
+                          const Divider(color: kBorder),
+                          16.height,
+                          const Text(
+                            "Please follow the dosage as recommended by your doctor for effective results.",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: kSub,
+                              height: 1.5,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

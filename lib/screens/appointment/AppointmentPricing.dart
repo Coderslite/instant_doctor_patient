@@ -1,12 +1,13 @@
-// ignore_for_file: unused_local_variable
-
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
-import 'package:instant_doctor/services/format_number.dart';
+import 'package:instant_doctor/services/IAPService.dart';
+import 'package:instant_doctor/services/PricingService.dart';
 import 'package:nb_utils/nb_utils.dart';
+import '../../component/PremiumButton.dart';
 
 class AppointmentPricingScreen extends StatefulWidget {
   final bool fromDocScreen;
@@ -19,31 +20,15 @@ class AppointmentPricingScreen extends StatefulWidget {
 
 class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
   BookingController bookingController = Get.put(BookingController());
+  final iapService = Get.find<IAPService>();
+  final pricingService = Get.find<PricingService>();
+
   String selectedPackage = '';
   bool isChecked = false;
   int? selectedPrice;
+
   @override
   Widget build(BuildContext context) {
-    List<Widget> prices = [
-      priceOptions(
-          name: "Basic",
-          image: "basic.png",
-          price: 5000,
-          duration: 30 * 60,
-          desc: "Chat with Doctor for 30 minutes"),
-      priceOptions(
-          name: "Standard",
-          image: "standard.png",
-          price: 9500,
-          duration: (30 * 2) * 60,
-          desc: "Chat with Doctor for 1 hour"),
-      priceOptions(
-          name: "Special",
-          image: "special.png",
-          price: 14000,
-          duration: (30 * 3) * 60,
-          desc: "Chat with Doctor for 1 hour with 30 minutes added."),
-    ];
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -66,11 +51,30 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
               ),
               20.height,
               Expanded(
-                child: GridView.count(
-                  mainAxisSpacing: 20,
+                child: ListView(
                   physics: const BouncingScrollPhysics(),
-                  crossAxisCount: 1,
-                  children: prices,
+                  children: [
+                    priceOptions(
+                        name: "Basic",
+                        id: 'appointment_basic',
+                        image: "basic.png",
+                        duration: 30 * 60,
+                        desc: "Chat with Doctor for 30 minutes"),
+                    20.height,
+                    priceOptions(
+                        name: "Standard",
+                        id: 'appointment_standard',
+                        image: "standard.png",
+                        duration: 60 * 60,
+                        desc: "Chat with Doctor for 1 hour"),
+                    20.height,
+                    priceOptions(
+                        name: "Special",
+                        id: 'appointment_special',
+                        image: "special.png",
+                        duration: 90 * 60,
+                        desc: "Detailed discussion and symptom review"),
+                  ],
                 ),
               ),
               Row(
@@ -90,20 +94,12 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
                 ],
               ),
               20.height,
-              AppButton(
+              PremiumButton(
                 onTap: () {
-                  // widget.fromDocScreen
-                  //     ? finish(context, selectedPrice)
-                  //     : const AllDoctorsScreen().launch(context);
                   finish(context, selectedPrice);
                 },
-                width: double.infinity,
-                color: kPrimary,
                 text: "Proceed",
                 enabled: isChecked && selectedPackage.isNotEmpty,
-                textColor: whiteColor,
-                disabledColor: dimGray,
-                disabledTextColor: white,
               )
             ],
           ),
@@ -112,14 +108,22 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
     );
   }
 
-  Obx priceOptions(
+  Widget priceOptions(
       {required String name,
+      required String id,
       required String image,
-      required int price,
       required int duration,
       required String desc}) {
     return Obx(() {
-      var x = bookingController.package.value;
+      // DEBUG: Print current state for this ID
+      final String displayPrice = Platform.isAndroid
+          ? iapService.getProductPrice(id)
+          : pricingService.getFormattedPrice(id);
+
+      final double rawPrice = Platform.isAndroid
+          ? iapService.getProductRawPrice(id)
+          : pricingService.getFinalPrice(id);
+
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -129,10 +133,10 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
               groupValue: bookingController.package.value,
               onChanged: (val) {
                 selectedPackage = val.toString();
-                bookingController.price.value = price;
+                bookingController.price.value = rawPrice.toInt();
                 bookingController.duration.value = duration;
-                bookingController.package.value = name;
-
+                bookingController.package.value = id;
+                selectedPrice = rawPrice.toInt();
                 setState(() {});
               }),
           Expanded(
@@ -151,7 +155,7 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    formatAmount(price),
+                    displayPrice,
                     textAlign: TextAlign.center,
                     style: boldTextStyle(
                       color: white,

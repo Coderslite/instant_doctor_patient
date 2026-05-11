@@ -219,7 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           onTap: () => _auth.handleLogout(context),
                         ),
 
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 160),
                       ]),
                     ),
                   ),

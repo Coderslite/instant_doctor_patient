@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/constant/color.dart';
+import 'package:instant_doctor/constant/constants.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 class AboutScreen extends StatefulWidget {
@@ -15,61 +16,143 @@ class _AboutScreenState extends State<AboutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage("assets/images/bg3.png"),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      backgroundColor: kBg,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Row(
                 children: [
                   backButton(context),
-                  Text(
-                    "About Us",
-                    style: boldTextStyle(),
+                  24.width,
+                  const Text(
+                    "About",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: kText,
+                      letterSpacing: -0.5,
+                    ),
                   ),
-                  const Text("   "),
                 ],
               ),
-              20.height,
-              Text(
-                "Instant Doctor",
-                style: primaryTextStyle(
-                  size: 30,
+            ),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    20.height,
+                    // App Logo Placeholder
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: kCard,
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: kPrimary.withOpacity(0.1),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Image.asset("assets/images/logo2.png"),
+                      ),
+                    ),
+                    32.height,
+                    const Text(
+                      "Instant Doctor",
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: kText,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    8.height,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: kPrimary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "Version ${widget.version}",
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: kPrimary,
+                        ),
+                      ),
+                    ),
+                    48.height,
+                    
+                    _buildInfoCard(
+                      title: "Our Mission",
+                      content: "Instant Doctor is a telehealth platform designed to bridge the gap between doctors and patients globally. We empower patients to manage their health journey with ease and confidence.",
+                    ),
+                    24.height,
+                    _buildInfoCard(
+                      title: "Key Features",
+                      content: "• Professional Consultations\n• Digital Prescriptions\n• Medication Tracker\n• Real-time Health Tips\n• Verified Medical Specialists",
+                    ),
+                    48.height,
+                    Text(
+                      "© ${DateTime.now().year} Instant Doctor. All rights reserved.",
+                      style: const TextStyle(fontSize: 12, color: kSub, fontWeight: FontWeight.w500),
+                    ),
+                    24.height,
+                  ],
                 ),
               ),
-              const SizedBox(
-                width: 200,
-                child: Divider(
-                  height: 5,
-                  color: kPrimary,
-                ),
-              ),
-              Text(
-                "Version",
-                style: primaryTextStyle(size: 14),
-              ),
-              Text(
-                widget.version,
-                style: primaryTextStyle(size: 14),
-              ),
-              20.height,
-              Text(
-                "Instant Doctor is a Telehealth app designed to bridge the gap between doctors and patients. With the app, patients can schedule appointments with their preferred doctors online and get prescriptions. Some exciting features in the app include: Free medication tracker. Health Tips Consultation with doctors",
-                style: primaryTextStyle(),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    ));
+    );
+  }
+
+  Widget _buildInfoCard({required String title, required String content}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: kCard,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: kBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: kText,
+            ),
+          ),
+          16.height,
+          Text(
+            content,
+            style: const TextStyle(
+              fontSize: 15,
+              color: kSub,
+              height: 1.6,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -4,17 +4,19 @@ import 'package:nb_utils/nb_utils.dart';
 
 import '../constant/color.dart';
 
-Card backButton(BuildContext context) {
-  return Card(
-    color: context.cardColor,
-    child: Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Icon(
-        Icons.arrow_back_ios_new,
-        color: kPrimary,
-      ),
-    ).onTap(() {
+import 'PremiumButton.dart';
+
+Widget backButton(BuildContext context) {
+  return PremiumButton(
+    onTap: () {
       Get.back();
-    }),
+    },
+    text: "",
+    icon: Icons.arrow_back_ios_new,
+    color: obsidian,
+    textColor: Colors.white,
+    borderRadius: 12,
+    width: 44,
+    height: 44,
   );
 }

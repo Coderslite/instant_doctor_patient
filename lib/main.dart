@@ -1,9 +1,8 @@
-// main.dart
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, User;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -17,6 +16,7 @@ import 'package:nb_utils/nb_utils.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'AppTheme.dart';
 import 'constant/constants.dart';
@@ -26,17 +26,17 @@ import 'controllers/SettingController.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
-
 User? user = FirebaseAuth.instance.currentUser;
 var db = FirebaseFirestore.instance;
 var firebaseStorage = FirebaseStorage.instance;
-
 SettingsController settingsController = Get.put(SettingsController());
 
+/// ✅ Background handler
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
   var payload = message.data;
 
   if (payload['type'] == 'Call') {
@@ -51,71 +51,51 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 }
 
+/// ✅ Theme init
 Future<void> initializeTheme() async {
   int themeModeIndex = getIntAsync(THEME_MODE_INDEX);
   settingsController.isDarkMode.value = themeModeIndex == ThemeModeDark;
+
   settingsController.setTheme(
     settingsController.isDarkMode.value ? ThemeMode.dark : ThemeMode.light,
   );
 }
 
-Future<void> initializeApp() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  FirebaseMessagings().handleInit();
-
-  ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(navigatorKey);
-  // await ZegoUIKit().initLog();
-  ZegoUIKitPrebuiltCallInvitationService().useSystemCallingUI([
-    ZegoUIKitSignalingPlugin(),
-  ]);
-
-  await initialize();
-  await initializeTheme();
-  settingsController.handleGetVideoCallKeys();
-}
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   tz.initializeTimeZones();
 
-  // ✅ Initialize Firebase safely
   try {
+    /// ✅ 1. Initialize Firebase FIRST
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
-    ).timeout(const Duration(seconds: 10));
-    print('🔥 Firebase initialized successfully');
-  } catch (e) {
-    print('❌ Firebase initialization failed: $e');
-  }
+    );
 
-  // Run the Flutter app first
-  runApp(MyApp(navigatorKey: navigatorKey));
+    /// ✅ 2. Register background handler
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-  // ✅ Then perform platform-dependent setups after runApp()
-  unawaited(_postRunInitialization());
-}
-
-Future<void> _postRunInitialization() async {
-  try {
-    // Initialize FCM handling
+    /// ✅ 3. Initialize messaging
     await FirebaseMessagings().handleInit();
 
-    // Initialize Zego calling service
+    /// ✅ 4. Initialize Zego calling
     ZegoUIKitPrebuiltCallInvitationService().setNavigatorKey(navigatorKey);
     ZegoUIKitPrebuiltCallInvitationService().useSystemCallingUI([
       ZegoUIKitSignalingPlugin(),
     ]);
 
-    // Load local app settings
+    /// ✅ 5. Load local services
     await initialize();
     await initializeTheme();
     settingsController.handleGetVideoCallKeys();
 
-    print('✅ Post-run initialization completed successfully');
+    print('🔥 App fully initialized');
   } catch (e) {
-    print('⚠️ Post-run initialization error: $e');
+    print('❌ Initialization error: $e');
   }
+
+  /// ✅ 6. Run app AFTER everything is ready
+  runApp(MyApp(navigatorKey: navigatorKey));
 }
 
 class MyApp extends StatefulWidget {
@@ -129,44 +109,43 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   late final AppLinks _appLinks;
 
-  Future<void> init() async {
+  @override
+  void initState() {
+    super.initState();
+    _initTheme();
+    _initAppLinks();
+  }
+
+  void _initTheme() {
     settingsController.setTheme(
       settingsController.isDarkMode.value ? ThemeMode.dark : ThemeMode.light,
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    init();
-    _initAppLinks(); // Initialize deep link listener
-  }
-
+  /// ✅ Deep link handling
   Future<void> _initAppLinks() async {
     _appLinks = AppLinks();
 
-    // When app is already running or in background
     _appLinks.uriLinkStream.listen((uri) {
-      print('🔗 App link detected (foreground): $uri');
+      print('🔗 Foreground link: $uri');
       _consumeLink(uri);
     });
 
-    // When app is opened from a terminated state
     final initialUri = await _appLinks.getInitialLink();
     if (initialUri != null) {
-      print('🚀 App opened via link: $initialUri');
+      print('🚀 Opened via link: $initialUri');
       _consumeLink(initialUri);
     }
   }
 
   void _consumeLink(Uri uri) {
-    // 👇 Do nothing except log it — this tells iOS that the app handled it
     print('✅ Consumed link: $uri');
   }
 
   @override
   Widget build(BuildContext context) {
     setOrientationPortrait();
+
     return Obx(() => GetMaterialApp(
           title: 'Instant Doctor',
           initialBinding: InitialBindings(),

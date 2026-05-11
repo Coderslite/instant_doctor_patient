@@ -3,11 +3,11 @@ import 'package:get/get.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/screens/prescription/PrescriptionDetails.dart';
 import 'package:instant_doctor/services/PresciptionService.dart';
-
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../component/ProfileImage.dart';
 import '../../constant/color.dart';
+import '../../constant/constants.dart';
 import '../../models/AppointmentModel.dart';
 import '../../models/PrescriptionModel.dart';
 import '../../models/UserModel.dart';
@@ -25,175 +25,242 @@ class PrescriptionScreen extends StatefulWidget {
 class _PrescriptionScreenState extends State<PrescriptionScreen> {
   final presciptionService = Get.find<PresciptionService>();
   final userService = Get.find<UserService>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: kBg,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Row(
                 children: [
                   backButton(context),
-                  Text(
+                  24.width,
+                  const Text(
                     "Prescriptions",
-                    style: boldTextStyle(
-                      size: 16,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: kText,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                  Text("     ")
                 ],
               ),
-              Card(
-                color: context.cardColor,
-                child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: StreamBuilder<UserModel>(
-                        stream: userService.getProfile(
-                            userId: widget.appointment.doctorId.validate()),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            var userData = snapshot.data!;
-                            return Row(
+            ),
+
+            // Doctor Profile Info
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: StreamBuilder<UserModel>(
+                stream: userService.getProfile(userId: widget.appointment.doctorId.validate()),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    var userData = snapshot.data!;
+                    return Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: kCard,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: kBorder),
+                        boxShadow: [
+                          BoxShadow(
+                            color: kText.withOpacity(0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          profileImage(userData, 56, 56, context: context),
+                          16.width,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                profileImage(userData, 50, 50,
-                                    context: context),
-                                10.width,
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "${userData.firstName} ${userData.lastName}",
-                                        style: boldTextStyle(
-                                          size: 16,
-                                        ),
-                                      ),
-                                      Text(
-                                        userData.speciality.validate(),
-                                        style: secondaryTextStyle(
-                                          size: 12,
-                                        ),
-                                      ),
-                                    ],
+                                Text(
+                                  "Dr. ${userData.firstName} ${userData.lastName}",
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w800,
+                                    color: kText,
+                                  ),
+                                ),
+                                4.height,
+                                Text(
+                                  userData.speciality.validate(),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: kSub,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ],
-                            );
-                          }
-                          return Loader();
-                        })),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const SizedBox(height: 80, child: Center(child: Loader()));
+                }
               ),
-              10.height,
-              Text(
-                "Doctors Prescriptions",
-                style: secondaryTextStyle(color: kPrimary),
+            ),
+            32.height,
+
+            // List Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: kPrimary,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  12.width,
+                  const Text(
+                    "Doctor's Prescriptions",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: kText,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(
-                width: 100,
-                child: Divider(),
-              ),
-              10.height,
-              Expanded(
-                  child: StreamBuilder<List<Prescriptionmodel>>(
-                      stream: presciptionService.getUserPrescription(
-                          appointmentId: widget.appointment.id.validate()),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          var data = snapshot.data!;
-                          return data.isEmpty
-                              ? Text(
-                                  "No prescription yet",
-                                  style: boldTextStyle(),
-                                ).center()
-                              : ListView.builder(
-                                  itemCount: data.length,
-                                  itemBuilder: (context, index) {
-                                    var prescription = data[index];
-                                    return Card(
-                                      color: context.cardColor,
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Row(
+            ),
+            16.height,
+
+            // Prescription List
+            Expanded(
+              child: StreamBuilder<List<Prescriptionmodel>>(
+                stream: presciptionService.getUserPrescription(
+                    appointmentId: widget.appointment.id.validate()),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    var data = snapshot.data!;
+                    if (data.isEmpty) {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.description_outlined, size: 64, color: kSub.withOpacity(0.3)),
+                          16.height,
+                          Text(
+                            "No prescriptions yet",
+                            style: TextStyle(color: kSub.withOpacity(0.5), fontSize: 16),
+                          ),
+                        ],
+                      ).center();
+                    }
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      itemCount: data.length,
+                      itemBuilder: (context, index) {
+                        var prescription = data[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: kCard,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: kBorder),
+                          ),
+                          child: InkWell(
+                            onTap: () {
+                              Prescriptiondetails(prescription: prescription).launch(context);
+                              if (!prescription.seen.validate()) {
+                                presciptionService.updatePrescription(
+                                  data: {"seen": true},
+                                  prescribeId: prescription.id.validate(),
+                                );
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: kPrimary.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: const Icon(Icons.medication_rounded, color: kPrimary),
+                                  ),
+                                  16.width,
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
                                           children: [
                                             Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Row(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Expanded(
-                                                        child: Text(
-                                                          prescription
-                                                              .prescription
-                                                              .validate(),
-                                                          maxLines: 1,
-                                                          style: boldTextStyle(
-                                                            size: 14,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Badge(
-                                                        backgroundColor:
-                                                            kPrimary,
-                                                        label: Text(
-                                                          "new",
-                                                          style: boldTextStyle(
-                                                              color: white,
-                                                              size: 10),
-                                                        ),
-                                                      ).visible(!prescription
-                                                          .seen
-                                                          .validate()),
-                                                    ],
-                                                  ),
-                                                  Text(
-                                                    formatDate(prescription
-                                                        .createdAt!
-                                                        .toDate()),
-                                                    maxLines: 1,
-                                                    style: secondaryTextStyle(
-                                                      size: 12,
-                                                    ),
-                                                  ),
-                                                ],
+                                              child: Text(
+                                                prescription.prescription.validate(),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: kText,
+                                                ),
                                               ),
                                             ),
-                                            Icon(
-                                              Icons.arrow_forward,
-                                              color: kPrimary,
-                                            ),
+                                            if (!prescription.seen.validate())
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: kPrimary,
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: const Text(
+                                                  "NEW",
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w900,
+                                                  ),
+                                                ),
+                                              ),
                                           ],
                                         ),
-                                      ),
-                                    ).onTap(
-                                      () {
-                                        Prescriptiondetails(
-                                          prescription: prescription,
-                                        ).launch(context);
-                                        if (!prescription.seen.validate()) {
-                                          presciptionService.updatePrescription(
-                                            data: {"seen": true},
-                                            prescribeId:
-                                                prescription.id.validate(),
-                                          );
-                                        }
-                                      },
-                                    );
-                                  });
-                        }
-                        return Loader();
-                      })),
-            ],
-          ),
+                                        4.height,
+                                        Text(
+                                          formatDate(prescription.createdAt!.toDate()),
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: kSub,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  8.width,
+                                  const Icon(Icons.chevron_right_rounded, color: kSub),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                    );
+                  }
+                  return const Center(child: Loader());
+                }
+              ),
+            ),
+          ],
         ),
       ),
     );

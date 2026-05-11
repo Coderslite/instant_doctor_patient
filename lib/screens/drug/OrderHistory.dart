@@ -137,7 +137,7 @@ class _OrderHistoryState extends State<OrderHistory>
               final data = snapshot.data!;
               return AnimationLimiter(
                 child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 160),
                   physics: const BouncingScrollPhysics(),
                   itemCount: data.length,
                   itemBuilder: (_, i) =>
@@ -179,6 +179,7 @@ class _OrderHistoryState extends State<OrderHistory>
               ),
             ),
             FloatingActionButton(
+              heroTag: 'order_fab',
               onPressed: () {
                 HapticFeedback.mediumImpact();
                 PharmaciesScreen().launch(context);

@@ -118,4 +118,5 @@ class UserService extends BaseService {
     locationController.longitude.value = lng;
     locationController.address.value = address;
   }
+
 }

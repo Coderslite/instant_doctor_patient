@@ -1,17 +1,17 @@
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:nb_utils/nb_utils.dart';
 import '../constant/constants.dart';
 import '../function/send_notification.dart';
 import '../services/AppointmentService.dart';
+import '../services/UserService.dart';
 import 'UserController.dart';
 
 class ChatController extends GetxController {
-  List files = [].obs;
-  List images = [].obs;
+  RxList files = [].obs;
+  RxList images = [].obs;
   final ImagePicker picker = ImagePicker();
   var isLoading = false.obs;
 
@@ -20,91 +20,97 @@ class ChatController extends GetxController {
 
   var msgType = MessageType.text.obs;
 
-  handleGetDoc() async {
-    images = [];
+  void handlePickImage({required bool isCamera}) async {
+    final XFile? result = await picker.pickImage(
+      source: isCamera ? ImageSource.camera : ImageSource.gallery,
+      imageQuality: 70,
+    );
+    if (result != null) {
+      msgType.value = MessageType.image;
+      images.add(File(result.path));
+    }
+  }
+
+  void handlePickFile() async {
     var result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowMultiple: true,
-      allowedExtensions: ['pdf'],
+      allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'png'],
     );
     if (result != null) {
       msgType.value = MessageType.file;
       for (var element in result.files) {
-        files.add(File(element.path.toString()));
+        if (element.path != null) {
+          files.add(File(element.path!));
+        }
       }
-    } else {}
-  }
-
-  handleRemoveDoc(int index) {
-    files.removeAt(index);
-  }
-
-  handleGetCamera() async {
-    files = [];
-    var result = await picker.pickImage(source: ImageSource.camera);
-    if (result != null) {
-      msgType.value = MessageType.image;
-      images.add(File(result.path));
     }
   }
 
-  handleGetGallery() async {
-    files = [];
-
-    var result = await picker.pickImage(source: ImageSource.gallery);
-    if (result != null) {
-      msgType.value = MessageType.image;
-
-      images.add(File(result.path));
-    }
-  }
-
-  handleRemoveImage(index) {
+  void handleRemoveImage(int index) {
     images.removeAt(index);
   }
 
-  Future<void> handleSendMessage({
+  void handleRemoveFile(int index) {
+    files.removeAt(index);
+  }
+
+  Future<void> handleSendChat({
     required String docId,
     required String appointmentId,
-    required String token,
     required String message,
-    required String myName,
     String? repliedTo,
-    String? repliedText,
-    String? repliedSender,
+    String? repliedMessageText,
+    String? repliedMessageSender,
+    String type = MessageType.text,
   }) async {
     try {
-      isLoading.value = files.isNotEmpty || images.isNotEmpty ? true : false;
-      var userController = Get.find<UserController>();
+      isLoading.value = true;
+      final userController = Get.find<UserController>();
       final appointmentService = Get.find<AppointmentService>();
+      final userService = Get.find<UserService>();
 
-      var senderId = userController.userId.value;
-      var receiverId = docId;
-      var msgId = await appointmentService.handleSendMessage(
+      final token = await userService.getUserToken(userId: docId);
+      final myProfile = await userService.getProfileById(userId: userController.userId.value);
+      final myName = '${myProfile.firstName.validate()} ${myProfile.lastName.validate()}';
+
+      final msgId = await appointmentService.handleSendMessage(
         appointmentId: appointmentId,
-        senderId: senderId,
-        receiverId: receiverId,
+        senderId: userController.userId.value,
+        receiverId: docId,
         files: msgType.value == MessageType.file
             ? files
             : msgType.value == MessageType.image
                 ? images
                 : [],
         message: message,
-        type:
-            files.isEmpty && images.isEmpty ? MessageType.text : msgType.value,
+        type: (files.isEmpty && images.isEmpty) ? MessageType.text : msgType.value,
         repliedTo: repliedTo,
-        repliedText: repliedText,
-        repliedSender: repliedSender,
+        repliedText: repliedMessageText,
+        repliedSender: repliedMessageSender,
       );
-      sendNotification(
-        [token],
-        myName,
-        msgType.value == MessageType.text ? message : "Sent a file",
-        msgId,
-        "Chat",
-      );
+
+      if (token.isNotEmpty) {
+        sendNotification(
+          [token],
+          myName,
+          images.isNotEmpty ? "📷 Sent a photo" : files.isNotEmpty ? "📄 Sent a file" : message,
+          msgId,
+          NotificationType.chat,
+        );
+      }
+
+      // Clear after success
+      images.clear();
+      files.clear();
+      msgType.value = MessageType.text;
+    } catch (e) {
+      toast('Failed to send message: $e');
     } finally {
       isLoading.value = false;
     }
   }
+
+  // Legacy support
+  handleGetCamera() => handlePickImage(isCamera: true);
+  handleGetGallery() => handlePickImage(isCamera: false);
 }

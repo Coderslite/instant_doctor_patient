@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'PremiumButton.dart';
 
 import '../constant/color.dart';
 import '../screens/home/Root.dart';
@@ -41,14 +42,11 @@ class _SuccessReportScreenState extends State<SuccessReportScreen> {
                 ),
               ),
               40.height,
-              AppButton(
+              PremiumButton(
                 onTap: () {
                   const Root().launch(context);
                 },
                 text: "Done",
-                width: double.infinity,
-                color: kPrimary,
-                textColor: white,
               ),
               20.height,
             ],

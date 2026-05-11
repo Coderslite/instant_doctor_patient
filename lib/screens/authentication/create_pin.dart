@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/screens/authentication/confirm_pin_screen.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:nb_utils/nb_utils.dart';
-
-import '../../component/DailPad.dart';
 import '../../constant/color.dart';
 
 class CreatePinScreen extends StatefulWidget {
@@ -44,107 +43,129 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
   Widget build(BuildContext context) {
     return KeyboardDismisser(
       child: Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [kPrimaryDark, kPrimary],
-            ),
-            image: const DecorationImage(
-              image: AssetImage("assets/images/sol_bg.png"),
-              fit: BoxFit.fitWidth,
-              alignment: Alignment.bottomCenter,
-              opacity: 0.03,
-            ),
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: kText, size: 20),
+            onPressed: () => finish(context),
           ),
-          child: SafeArea(
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Spacer(),
-                Text(
-                  'Create Your PIN',
-                  style: boldTextStyle(
-                    size: 32,
-                    color: Colors.white.withOpacity(0.9),
-                  ),
+                40.height,
+                const Text(
+                  'Security First',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: kText, letterSpacing: -1.0),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Enter a 5-digit PIN',
-                  style: primaryTextStyle(
-                    size: 16,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
+                12.height,
+                const Text(
+                  'Set up a 5-digit PIN to keep your health records secure and private.',
+                  style: TextStyle(fontSize: 15, color: kSub, height: 1.5),
                 ),
-                const SizedBox(height: 24),
-                // PIN display
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(5, (index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: AnimatedContainer(
+                64.height,
+
+                // PIN Dots
+                Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(5, (index) {
+                      final isActive = index < _pin.length;
+                      return AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        width: 16,
-                        height: 16,
+                        margin: const EdgeInsets.symmetric(horizontal: 10),
+                        width: 18,
+                        height: 18,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: index < _pin.length
-                              ? Colors.white
-                              : Colors.white.withOpacity(0.3),
+                          color: isActive ? kPrimary : const Color(0xFFF0F2F8),
+                          border: Border.all(
+                            color: isActive ? kPrimary : kBorder.withOpacity(0.5),
+                            width: 1,
+                          ),
+                          boxShadow: isActive ? [
+                            BoxShadow(color: kPrimary.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3)),
+                          ] : [],
                         ),
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 32),
-                // Dial pad
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  child: GridView.count(
-                    crossAxisCount: 3,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 1.2,
-                    children: [
-                      ...['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(
-                        (digit) => DialButton(
-                          text: digit,
-                          onPressed: () => _addPinDigit(digit),
-                        ),
-                      ),
-                      const SizedBox.shrink(),
-                      DialButton(
-                        text: '0',
-                        onPressed: () => _addPinDigit('0'),
-                      ),
-                      DialButton(
-                        icon: Icons.backspace,
-                        onPressed: _removePinDigit,
-                      ),
-                    ],
+                      );
+                    }),
                   ),
                 ),
-                SizedBox(
-                  width: 50,
-                  child: Image.asset(
-                    "assets/images/logo.png",
-                    fit: BoxFit.cover,
-                    color: white,
-                    opacity: AlwaysStoppedAnimation(0.6),
-                  ),
-                ),
-                Text(
-                  "Instant Doctor",
-                  style: secondaryTextStyle(size: 16, color: whiteSmoke),
-                ),
+
+                80.height,
+
+                // Dial Pad
+                _buildDialPad(),
+                
+                40.height,
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDialPad() {
+    return Column(
+      children: [
+        for (var row in [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']])
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: row.map((digit) => _DialButton(
+                text: digit,
+                onPressed: () => _addPinDigit(digit),
+              )).toList(),
+            ),
+          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            const SizedBox(width: 80),
+            _DialButton(text: '0', onPressed: () => _addPinDigit('0')),
+            _DialButton(
+              icon: Icons.backspace_outlined,
+              onPressed: _removePinDigit,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _DialButton extends StatelessWidget {
+  final String? text;
+  final IconData? icon;
+  final VoidCallback onPressed;
+
+  const _DialButton({this.text, this.icon, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(40),
+        child: Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: kBorder.withOpacity(0.3)),
+          ),
+          alignment: Alignment.center,
+          child: icon != null
+              ? Icon(icon, color: kText, size: 24)
+              : Text(text!, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: kText)),
         ),
       ),
     );

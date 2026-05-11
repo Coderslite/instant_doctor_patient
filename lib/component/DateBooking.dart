@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/screens/appointment/AppointmentPricing.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'PremiumButton.dart';
 
 import '../constant/color.dart';
 import '../controllers/BookingController.dart';
@@ -63,7 +64,7 @@ class _DateBookingState extends State<DateBooking> {
           const CircularProgressIndicator(
             color: kPrimary,
           ).center().visible(bookingController.isLoading.value),
-          AppButton(
+          PremiumButton(
             onTap: () {
               if (bookingController.price > 0) {
                 if (bookingController.complain.isEmpty) {
@@ -79,9 +80,6 @@ class _DateBookingState extends State<DateBooking> {
               }
             },
             text: bookingController.price > 0 ? "Continue" : "Select Package",
-            color: kPrimary,
-            textColor: white,
-            width: double.infinity,
           ).visible(!bookingController.isLoading.value),
         ],
       ),

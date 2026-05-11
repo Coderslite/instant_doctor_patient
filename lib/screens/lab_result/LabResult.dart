@@ -30,30 +30,43 @@ class _LabResultScreenState extends State<LabResultScreen> {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  backButton(context),
-                  Text(
-                    "Lab Result",
-                    style: boldTextStyle(
-                      size: 18,
-                      color: kPrimary,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    backButton(context),
+                    Text(
+                      "Lab Reports",
+                      style: boldTextStyle(size: 22, color: ink, letterSpacing: -0.5),
                     ),
-                  ),
-                  TextButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
-                    onPressed: () {
-                      const LabResultPricing().launch(context);
-                    },
-                    child: Text(
-                      "New",
-                      style: primaryTextStyle(
-                        color: white,
+                    GestureDetector(
+                      onTap: () => const LabResultPricing().launch(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: obsidian,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: obsidian.withOpacity(0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.add, color: white, size: 18),
+                            4.width,
+                            Text("New", style: boldTextStyle(color: white, size: 14)),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               10.height,
               Expanded(
@@ -111,111 +124,107 @@ class _LabResultScreenState extends State<LabResultScreen> {
                                           // ),
                                         ],
                                       ),
-                                      child: Card(
-                                        color: context.cardColor,
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Row(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                                      child: Container(
+                                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: white,
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(color: border),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: obsidian.withOpacity(0.02),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(20),
+                                            onTap: () {
+                                              if (labResult.status != 'Completed') {
+                                                errorSnackBar(
+                                                  context: context,
+                                                  title: "Interpreted Lab Result is not available yet");
+                                                return;
+                                              }
+                                              if (!labResult.opened.validate()) {
+                                                labResultService.updateOpened(
+                                                    id: labResult.id.validate());
+                                              }
+                                              LabResultAvailable(
+                                                labResult: labResult,
+                                              ).launch(context);
+                                            },
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(16.0),
+                                              child: Row(
                                                 children: [
-                                                  const Icon(
-                                                    Icons.file_copy,
-                                                    size: 26,
-                                                    color: kPrimary,
+                                                  Container(
+                                                    padding: const EdgeInsets.all(12),
+                                                    decoration: BoxDecoration(
+                                                      color: kPrimary.withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(14),
+                                                    ),
+                                                    child: const Icon(
+                                                      Icons.article_rounded,
+                                                      size: 24,
+                                                      color: kPrimary,
+                                                    ),
                                                   ),
-                                                  10.width,
-                                                  Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Row(
-                                                        children: [
-                                                          Text(
-                                                            "Lab Result ${index + 1}",
-                                                            style:
-                                                                boldTextStyle(
-                                                              size: 14,
-                                                              color: kPrimary,
+                                                  16.width,
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Row(
+                                                          children: [
+                                                            Text(
+                                                              "Lab Report #${index + 1}",
+                                                              style: boldTextStyle(size: 15, color: ink),
                                                             ),
-                                                          ),
-                                                          10.width,
-                                                          const Icon(
-                                                            Icons
-                                                                .notifications_active,
-                                                            color: fireBrick,
-                                                            size: 18,
-                                                          ).visible(!labResult
-                                                                  .opened
-                                                                  .validate() &&
-                                                              labResult.status
-                                                                      .validate() ==
-                                                                  'Completed'),
-                                                        ],
-                                                      ),
-                                                      Text(
-                                                        timeago.format(labResult
-                                                            .createdAt!
-                                                            .toDate()),
-                                                        style:
-                                                            secondaryTextStyle(
-                                                          size: 14,
+                                                            if (!labResult.opened.validate() && labResult.status.validate() == 'Completed') ...[
+                                                              8.width,
+                                                              Container(
+                                                                width: 8,
+                                                                height: 8,
+                                                                decoration: const BoxDecoration(
+                                                                  color: fireBrick,
+                                                                  shape: BoxShape.circle,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ],
                                                         ),
+                                                        4.height,
+                                                        Text(
+                                                          timeago.format(labResult.createdAt!.toDate()),
+                                                          style: secondaryTextStyle(size: 12, color: slate),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                    decoration: BoxDecoration(
+                                                      color: labResult.status.validate() == 'Completed'
+                                                          ? mediumSeaGreen.withOpacity(0.1)
+                                                          : amber.withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                    ),
+                                                    child: Text(
+                                                      labResult.status.validate() == 'Completed' ? "Completed" : "Pending",
+                                                      style: boldTextStyle(
+                                                        color: labResult.status.validate() == 'Completed' ? mediumSeaGreen : amber,
+                                                        size: 11,
                                                       ),
-                                                    ],
-                                                  )
+                                                    ),
+                                                  ),
                                                 ],
                                               ),
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.end,
-                                                children: [
-                                                  Text(
-                                                    "Status",
-                                                    style: secondaryTextStyle(
-                                                      size: 12,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    labResult.status
-                                                                .validate() ==
-                                                            'Completed'
-                                                        ? "Completed"
-                                                        : "Pending",
-                                                    style: primaryTextStyle(
-                                                      color: labResult.status
-                                                                  .validate() ==
-                                                              'Completed'
-                                                          ? mediumSeaGreen
-                                                          : null,
-                                                      size: 12,
-                                                    ),
-                                                  ),
-                                                ],
-                                              )
-                                            ],
-                                          ).onTap(() {
-                                            if (labResult.status !=
-                                                'Completed') {
-                                              errorSnackBar(
-                                                context: context,
-                                                  title:
-                                                      "Interpreted Lab Result is not available yet");
-                                              return;
-                                            }
-                                            if (!labResult.opened.validate()) {
-                                              labResultService.updateOpened(
-                                                  id: labResult.id.validate());
-                                            }
-                                            LabResultAvailable(
-                                              labResult: labResult,
-                                            ).launch(context);
-                                          }),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     );

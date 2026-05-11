@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -83,11 +84,11 @@ class AuthenticationService extends BaseService {
       "role": "User",
       "photoUrl": photoUrl,
       "password": password,
-      "currency": "NGN",
       "createdAt": Timestamp.now(),
       "lastSeen": Timestamp.now(),
       "isTrialAvailable": true,
       "referralBalance": 0,
+      "platform": Platform.isIOS ? 'ios' : 'android',
     };
     await userCol.doc(uid).set(data);
     await sendCustomMail(activityName: 'Registration');

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/screens/authentication/login_screen.dart';
 import 'package:nb_utils/nb_utils.dart';
+import '../../component/PremiumButton.dart';
 
 class SuccessPassReset extends StatefulWidget {
   const SuccessPassReset({super.key});
@@ -33,12 +34,13 @@ class _SuccessPassResetState extends State<SuccessPassReset> {
               style: boldTextStyle(color: whiteColor),
             ),
             20.height,
-            AppButton(
+            PremiumButton(
               onTap: () {
                 const LoginScreen().launch(context);
               },
               text: "Back to Sign in",
-              textColor: kPrimary,
+              color: white,
+              textColor: obsidian,
             )
           ],
         ),

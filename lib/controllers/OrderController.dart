@@ -176,7 +176,7 @@ class OrderController extends GetxController {
     }
   }
 
-  Future<void> makeOrder(BuildContext context, bool isPaystack) async {
+  Future<int> prepareOrderData() async {
     try {
       isLoading.value = true;
       orders.clear(); // Important to prevent multiple submissions
@@ -189,12 +189,6 @@ class OrderController extends GetxController {
         }
         pharmacyOrders[drug.pharmacyId!]!.add(drug);
       }
-
-      // Retrieve user profile
-      var user =
-          await userService.getProfileById(userId: userController.userId.value);
-
-      var email = user.email;
 
       for (var entry in pharmacyOrders.entries) {
         String pharmacyId = entry.key;
@@ -228,8 +222,32 @@ class OrderController extends GetxController {
         ));
       }
 
-      // Payment only for the overall total
-      int grandTotal = orders.fold(0, (sum, order) => sum + order.totalAmount!);
+      int total = 0;
+      for (var order in orders) {
+        total += order.totalAmount ?? 0;
+      }
+      return total;
+    } catch (e) {
+      print("Error preparing order: $e");
+      return 0;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> makeOrder(BuildContext context, bool isPaystack) async {
+    try {
+      isLoading.value = true;
+      int grandTotal = await prepareOrderData();
+
+      if (grandTotal == 0) {
+        errorSnackBar(context: context, title: "Failed to prepare order");
+        return;
+      }
+
+      var user =
+          await userService.getProfileById(userId: userController.userId.value);
+      var email = user.email;
 
       final paymentController = Get.find<PaymentController>();
       if (isPaystack) {

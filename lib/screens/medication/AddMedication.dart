@@ -9,6 +9,7 @@ import 'package:instant_doctor/services/formatTime.dart';
 import 'package:instant_doctor/models/MedicationModel.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../../component/check_internet.dart';
+import '../../component/PremiumButton.dart';
 import 'MedicationSummary.dart';
 
 class AddMedicationScreen extends StatefulWidget {
@@ -41,194 +42,208 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: Card(
-          color: context.cardColor,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Icon(
-              Icons.arrow_back_ios_new,
-              color: kPrimary,
-            ),
-          ).onTap(() {
-            Get.off(MedicationTracker());
-          }),
-        ),
-        title: Text("Add Medication", style: TextStyle(color: kPrimary)),
-        centerTitle: true,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              internetCheck(),
-
-              // Medication Info Card
-              _buildSectionCard(
-                title: "Medication Information",
+        backgroundColor: obsidian,
+        body: Column(children: [
+          // --- Premium Header ---
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              child: Row(
                 children: [
-                  _buildInputField(
-                    label: "Medication Name",
-                    hint: "e.g. Ibuprofen",
-                    validator: (value) =>
-                        value?.isEmpty ?? true ? "Required field" : null,
-                    onChanged: (value) => name = value,
+                  GestureDetector(
+                    onTap: () => Get.off(const MedicationTracker()),
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border:
+                            Border.all(color: white.withOpacity(0.1), width: 1),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          color: white, size: 18),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildInputField(
-                    label: "Instructions",
-                    hint: "e.g. Take 2 pills with water after meals",
-                    validator: (value) =>
-                        value?.isEmpty ?? true ? "Required field" : null,
-                    onChanged: (value) => prescription = value,
-                    maxLines: 3,
+                  const Spacer(),
+                  Text(
+                    "Add Medication",
+                    style: boldTextStyle(
+                        color: white, size: 18, letterSpacing: -0.5),
                   ),
+                  const Spacer(),
+                  const SizedBox(width: 40),
                 ],
               ),
+            ),
+          ),
 
-              const SizedBox(height: 20),
-
-              // Schedule Card
-              _buildSectionCard(
-                title: "Medication Schedule",
-                children: [
-                  // Date Range Picker
-                  Row(
+          // --- Form Content ---
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: pageGray,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 32, 20, 40),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: _buildDatePicker(
-                          label: "Start Date",
-                          value: startTime?.toDate(),
-                          onSelected: (date) {
-                            setState(() {
-                              startTime = Timestamp.fromDate(date);
-                              // Auto-set end date to 1 week later if not set
-                              endTime ??= Timestamp.fromDate(
-                                  date.add(const Duration(days: 3)));
-                            });
-                          },
-                        ),
+                      internetCheck(),
+
+                      // Medication Info Card
+                      _buildSectionCard(
+                        title: "Medication Information",
+                        children: [
+                          _buildInputField(
+                            label: "Medication Name",
+                            hint: "e.g. Ibuprofen",
+                            validator: (value) => value?.isEmpty ?? true
+                                ? "Required field"
+                                : null,
+                            onChanged: (value) => name = value,
+                          ),
+                          const SizedBox(height: 16),
+                          _buildInputField(
+                            label: "Instructions",
+                            hint: "e.g. Take 2 pills with water after meals",
+                            validator: (value) => value?.isEmpty ?? true
+                                ? "Required field"
+                                : null,
+                            onChanged: (value) => prescription = value,
+                            maxLines: 3,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildDatePicker(
-                          label: "End Date",
-                          value: endTime?.toDate(),
-                          onSelected: (date) {
-                            setState(() => endTime = Timestamp.fromDate(
-                                DateTime(date.year, date.month, date.day, 23,
-                                    59, 59, 999)));
-                          },
-                        ),
+
+                      const SizedBox(height: 20),
+
+                      // Schedule Card
+                      _buildSectionCard(
+                        title: "Medication Schedule",
+                        children: [
+                          // Date Range Picker
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildDatePicker(
+                                  label: "Start Date",
+                                  value: startTime?.toDate(),
+                                  onSelected: (date) {
+                                    setState(() {
+                                      startTime = Timestamp.fromDate(date);
+                                      // Auto-set end date to 1 week later if not set
+                                      endTime ??= Timestamp.fromDate(
+                                          date.add(const Duration(days: 3)));
+                                    });
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildDatePicker(
+                                  label: "End Date",
+                                  value: endTime?.toDate(),
+                                  onSelected: (date) {
+                                    setState(() => endTime = Timestamp.fromDate(
+                                        DateTime(date.year, date.month,
+                                            date.day, 23, 59, 59, 999)));
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Frequency Selection
+                          Text("Dosage Times", style: boldTextStyle(size: 24)),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: List.generate(3, (index) {
+                              return ChoiceChip(
+                                label: Text(frequencyLabels[index]),
+                                selected: frequencySelection[index],
+                                onSelected: (selected) {
+                                  setState(() {
+                                    frequencySelection[index] = selected;
+                                    if (selected &&
+                                        frequencyTimes[index] == null) {
+                                      // Set default time if none selected
+                                      frequencyTimes[index] = TimeOfDay(
+                                        hour: index == 0
+                                            ? 8
+                                            : index == 1
+                                                ? 12
+                                                : 18,
+                                        minute: 0,
+                                      );
+                                      _updateTimeFields();
+                                    } else if (!selected) {
+                                      frequencyTimes[index] = null;
+                                      _updateTimeFields();
+                                    }
+                                  });
+                                },
+                                selectedColor: kPrimary,
+                                labelStyle: TextStyle(
+                                  color: frequencySelection[index]
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              );
+                            }),
+                          ),
+
+                          // Time Pickers for selected frequencies
+                          if (frequencySelection.any((element) => element)) ...[
+                            const SizedBox(height: 16),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: List.generate(3, (index) {
+                                if (!frequencySelection[index]) {
+                                  return const SizedBox.shrink();
+                                }
+
+                                return _buildTimePicker(
+                                  label: frequencyLabels[index],
+                                  time: frequencyTimes[index],
+                                  onSelected: (time) {
+                                    setState(() {
+                                      frequencyTimes[index] = time;
+                                      _updateTimeFields();
+                                    });
+                                  },
+                                );
+                              }),
+                            ),
+                          ],
+                        ],
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      const SizedBox(height: 40),
+
+                      // Continue Button
+                      PremiumButton(
+                        onTap: _validateAndContinue,
+                        isLoading: isLoading,
+                        text: "Continue to Summary",
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // Frequency Selection
-                  Text("Dosage Times", style: boldTextStyle(size: 24)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: List.generate(3, (index) {
-                      return ChoiceChip(
-                        label: Text(frequencyLabels[index]),
-                        selected: frequencySelection[index],
-                        onSelected: (selected) {
-                          setState(() {
-                            frequencySelection[index] = selected;
-                            if (selected && frequencyTimes[index] == null) {
-                              // Set default time if none selected
-                              frequencyTimes[index] = TimeOfDay(
-                                hour: index == 0
-                                    ? 8
-                                    : index == 1
-                                        ? 12
-                                        : 18,
-                                minute: 0,
-                              );
-                              _updateTimeFields();
-                            } else if (!selected) {
-                              frequencyTimes[index] = null;
-                              _updateTimeFields();
-                            }
-                          });
-                        },
-                        selectedColor: kPrimary,
-                        labelStyle: TextStyle(
-                          color: frequencySelection[index]
-                              ? Colors.white
-                              : Colors.black,
-                        ),
-                      );
-                    }),
-                  ),
-
-                  // Time Pickers for selected frequencies
-                  if (frequencySelection.any((element) => element)) ...[
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: List.generate(3, (index) {
-                        if (!frequencySelection[index]) {
-                          return const SizedBox.shrink();
-                        }
-
-                        return _buildTimePicker(
-                          label: frequencyLabels[index],
-                          time: frequencyTimes[index],
-                          onSelected: (time) {
-                            setState(() {
-                              frequencyTimes[index] = time;
-                              _updateTimeFields();
-                            });
-                          },
-                        );
-                      }),
-                    ),
-                  ],
-                ],
-              ),
-
-              const SizedBox(height: 32),
-
-              // Continue Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    // primary: kPrimary,
-                    backgroundColor: kPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: _validateAndContinue,
-                  child: isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          "Continue",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
+            ),
+          )
+        ]));
   }
 
   Widget _buildSectionCard(

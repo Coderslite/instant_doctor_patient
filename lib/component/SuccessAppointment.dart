@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'PremiumButton.dart';
 
 import '../constant/color.dart';
 import '../screens/home/Root.dart';
@@ -35,20 +36,25 @@ class _SuccessScreenState extends State<SuccessScreen> {
               ),
               0.height,
               Text(
-                " Appointment Booked",
+                "Payment Successful!",
                 style: primaryTextStyle(
-                  size: 16,
+                  size: 18,
+                  color: greenColor,
+                ),
+              ),
+              4.height,
+              Text(
+                "Your appointment has been booked",
+                style: secondaryTextStyle(
+                  size: 14,
                 ),
               ),
               40.height,
-              AppButton(
+              PremiumButton(
                 onTap: () {
                   const Root().launch(context);
                 },
                 text: "Done",
-                width: double.infinity,
-                color: kPrimary,
-                textColor: white,
               ),
               20.height,
             ],

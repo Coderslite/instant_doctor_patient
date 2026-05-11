@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:instant_doctor/main.dart';
 import 'package:instant_doctor/screens/appointment/NewAppointment.dart';
 import 'package:lottie/lottie.dart';
+import '../../component/PremiumButton.dart';
 
 class TrialNotificationModal extends StatelessWidget {
   const TrialNotificationModal({super.key});
@@ -102,51 +103,24 @@ class TrialNotificationModal extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
+                        child: PremiumButton(
+                          onTap: () {
                             settingsController.trialAvailable.value = false;
                             Navigator.pop(context);
                           },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            side: BorderSide(
-                              color: Theme.of(context).primaryColor,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            "Maybe Later",
-                            style: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          text: "Maybe Later",
+                          color: Colors.white,
+                          textColor: Theme.of(context).primaryColor,
                         ),
                       ),
                       const SizedBox(width: 15),
                       Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
+                        child: PremiumButton(
+                          onTap: () {
                             Navigator.pop(context);
                             Get.to(() => const NewAppointment());
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).primaryColor,
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 2,
-                          ),
-                          child: const Text(
-                            "Book Now",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          text: "Book Now",
                         ),
                       ),
                     ],

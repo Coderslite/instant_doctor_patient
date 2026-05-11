@@ -3,6 +3,7 @@ import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/screens/medication/MedicationTracker.dart';
 import 'package:nb_utils/nb_utils.dart';
+import '../../component/PremiumButton.dart';
 
 class IntroMedicationTracker extends StatefulWidget {
   const IntroMedicationTracker({super.key});
@@ -49,14 +50,11 @@ class _IntroMedicationTrackerState extends State<IntroMedicationTracker> {
                       ),
                     ],
                   ),
-                  AppButton(
-                    width: double.infinity,
+                  PremiumButton(
                     onTap: () {
                       const MedicationTracker().launch(context);
                     },
                     text: "Continue",
-                    textColor: white,
-                    color: kPrimary,
                   )
                 ],
               ))

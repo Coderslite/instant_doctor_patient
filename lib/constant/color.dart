@@ -13,3 +13,17 @@ const grayColor = Color(0xFF757575);
 const mobileBackgroundColor = Color(0xffE5E5E5);
 const mobileBackgroundColor2 = Color.fromARGB(255, 243, 243, 243);
 const gradientOptions = [];
+
+// ─── Palette ───────────────────────────────────────────────────────────────────
+const obsidian = Color(0xFF0A1628);
+const charcoal = Color(0xFF142035);
+const pageGray = Color(0xFFF0F4FA);
+const ink = Color(0xFF0F2744);
+const slate = Color(0xFF5E7A99);
+const border = Color(0xFFE5EAF4);
+const green = Color(0xFF10B981);
+const greenSoft = Color(0xFFD1FAE5);
+const amber = Color(0xFFF59E0B);
+const amberSoft = Color(0xFFFEF3C7);
+const redSoft = Color(0xFFFFEDED);
+const redText = Color(0xFFDC2626);

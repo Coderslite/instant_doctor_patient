@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/component/PremiumButton.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/models/DrugModel.dart';
@@ -77,32 +78,34 @@ class _MedicineHomeState extends State<MedicineHome> {
                       alignment: Alignment.topRight,
                       clipBehavior: Clip.none,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: kPrimary,
-                          ),
-                          child: Icon(
-                            Icons.shopping_cart_checkout,
-                            color: white,
-                          ),
+                        PremiumButton(
+                          onTap: () {
+                            CartScreen().launch(context);
+                          },
+                          text: "",
+                          icon: Icons.shopping_cart_checkout,
+                          color: obsidian,
+                          textColor: Colors.white,
+                          borderRadius: 100,
+                          width: 44,
+                          height: 44,
                         ),
-                        Positioned(
-                          top: -5,
-                          right: -5,
-                          child: Badge(
-                            label: Text(
-                              "${orderController.cart.length}",
-                              style: secondaryTextStyle(size: 12, color: white),
+                        if (orderController.cart.isNotEmpty)
+                          Positioned(
+                            top: -2,
+                            right: -2,
+                            child: Badge(
+                              label: Text(
+                                "${orderController.cart.length}",
+                                style:
+                                    secondaryTextStyle(size: 10, color: white),
+                                textAlign: TextAlign.center,
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
-                  ).onTap(() {
-                    CartScreen().launch(context);
-                  }),
+                  ),
                 ],
               ),
               Card(

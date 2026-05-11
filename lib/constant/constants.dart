@@ -2,6 +2,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 const ThemeModeLight = 0;
 const ThemeModeDark = 1;
@@ -13,17 +14,12 @@ const ONLINE = 'online';
 const OFFLINE = 'offline';
 
 class PaystackKey {
-  // test credentials
-  // static String publicKey = "pk_test_d2811bea5f8ee3c81b0d10ec65f856a28aa47966";
-  // static String secretKey = "sk_test_5a009cc631c4d56e7c8b7dccdfdf471ebc4a8cba";
-  // static String doctorSubAccount = "ACCT_ex1om07101xar4a";
-  // static String pharmcySubAccount = "ACCT_lkl4dx60ww8d9fj";
-
-  // live credentials
-  static String publicKey = "pk_live_fa9a859fed46fd231e65483c85f9611c98f0d173";
-  static String secretKey = "sk_live_c07e9ad43ea5365e467383dab49c9dcefc1975cf";
-  static String doctorSubAccount = "ACCT_nenif14vxnosrkr";
-  static String pharmcySubAccount = "ACCT_bvv49eeitxemvaa";
+  static String publicKey = dotenv.env['PAYSTACK_PUBLIC_KEY'] ?? "";
+  static String secretKey = dotenv.env['PAYSTACK_SECRET_KEY'] ?? "";
+  static String doctorSubAccount =
+      dotenv.env['PAYSTACK_DOCTOR_SUBACCOUNT'] ?? "";
+  static String pharmcySubAccount =
+      dotenv.env['PAYSTACK_PHARMACY_SUBACCOUNT'] ?? "";
 }
 
 const TRIAL_DOCTOR_ID = "p3rzihnMKVQVU6pIroy1nQ5anXK2";
@@ -57,7 +53,7 @@ class OtpFor {
 
 // const FIREBASE_URL = "https://instant-doctor.onrender.com";
 
-const FIREBASE_URL =
+final String FIREBASE_URL = dotenv.env['FIREBASE_BASE_URL'] ??
     "https://us-central1-instant-doctor-a4e4c.cloudfunctions.net/api";
 
 class NotificationType {
@@ -174,4 +170,3 @@ const monthNames = [
   'Dec'
 ];
 const stepLabels = ['Package', 'Schedule', 'Symptoms', 'Review'];
-

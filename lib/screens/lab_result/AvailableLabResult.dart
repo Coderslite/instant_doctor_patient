@@ -7,7 +7,7 @@ import 'package:nb_utils/nb_utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:http/http.dart' as http;
-
+import '../../component/PremiumButton.dart';
 import '../../models/LapResultModel.dart';
 
 class LabResultAvailable extends StatefulWidget {
@@ -124,22 +124,24 @@ class _LabResultAvailableState extends State<LabResultAvailable> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   backButton(context),
                   Text(
-                    "Lab Result Preview",
-                    style: primaryTextStyle(color: kPrimary),
+                    "Report Preview",
+                    style: boldTextStyle(size: 20, color: ink, letterSpacing: -0.5),
                   ),
-                  IconButton(
-                    onPressed: () {
-                      downloadFile();
-                    },
-                    icon: const Icon(
-                      Icons.download,
-                      color: kPrimary,
+                  GestureDetector(
+                    onTap: downloadFile,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: obsidian.withOpacity(0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.file_download_outlined, color: obsidian, size: 24),
                     ),
                   ),
                 ],
@@ -191,17 +193,25 @@ class _LabResultAvailableState extends State<LabResultAvailable> {
                               },
                             ),
                             Positioned(
-                              bottom: 20,
-                              child: AppButton(
-                                onTap: () {},
-                                text: "Download",
-                                color: kPrimary,
-                                textColor: white,
+                              bottom: 32,
+                              left: 24,
+                              right: 24,
+                              child: PremiumButton(
+                                onTap: downloadFile,
+                                text: "Save to Device",
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.file_download, color: white, size: 20),
+                                    8.width,
+                                    Text("Save to Device", style: boldTextStyle(color: white)),
+                                  ],
+                                ),
                               ),
                             )
                           ],
                         )
-                      :  Loader().center(),
+                      : const Loader().center(),
             ),
             if (errorMessage.isNotEmpty)
               Text(
@@ -209,10 +219,32 @@ class _LabResultAvailableState extends State<LabResultAvailable> {
                 style: const TextStyle(color: Colors.red),
               ),
             if (isDownloading)
-              LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.grey[300],
-                minHeight: 8,
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  color: white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Text("Downloading report...", style: boldTextStyle(size: 14)),
+                        const Spacer(),
+                        Text("${(progress * 100).toInt()}%", style: boldTextStyle(color: obsidian)),
+                      ],
+                    ),
+                    12.height,
+                    LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: border.withOpacity(0.5),
+                      color: obsidian,
+                      minHeight: 8,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ],
+                ),
               ),
           ],
         ),

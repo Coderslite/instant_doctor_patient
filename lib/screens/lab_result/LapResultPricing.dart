@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/AnimatedCard.dart';
@@ -5,10 +6,13 @@ import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/models/LabresultPricingModel.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
+import '../../component/PremiumButton.dart';
 
 import '../../constant/color.dart';
 import '../../services/LabResultService.dart';
 import '../../services/format_number.dart';
+import 'package:instant_doctor/services/IAPService.dart';
+import 'package:instant_doctor/services/PricingService.dart';
 import 'UploadLabResult.dart';
 
 class LabResultPricing extends StatefulWidget {
@@ -24,6 +28,7 @@ class _LabResultPricingState extends State<LabResultPricing> {
   String type = '';
   bool isLoading = true;
   final labResultService = Get.find<LabResultService>();
+  final iapService = Get.find<IAPService>();
 
   @override
   void initState() {
@@ -66,89 +71,117 @@ class _LabResultPricingState extends State<LabResultPricing> {
             ),
             30.height,
             Expanded(
-                child: isLoading
-                    ? Loader().center()
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Our lab result interpretation service offers comprehensive analysis and insights for your medical test results, all conveniently accessible through our mobile app.",
-                            style: secondaryTextStyle(),
-                          ),
-                          AnimatedCard(
-                            color1: kPrimary,
-                            color2: kPrimaryDark,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                50.height,
-                                Text(
-                                  formatAmount(
-                                      locationController.myCountry.value ==
-                                              'nigeria'
-                                          ? price!.amount.validate()
-                                          : price!.dollarAmount.validate()),
-                                  style: boldTextStyle(
-                                    color: white,
-                                    size: 30,
-                                  ),
-                                ),
-                                50.height,
-                                Text(
-                                  "Allow our professional to interpret your lab result",
-                                  style: secondaryTextStyle(
-                                      size: 12, color: white),
-                                ),
-                                50.height,
-                              ],
-                            ),
-                          ),
-                          Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Checkbox(
-                                      value: isChecked,
-                                      activeColor: kPrimary,
-                                      checkColor: white,
-                                      onChanged: (val) {
-                                        isChecked = !isChecked;
-                                        setState(() {});
-                                      }),
-                                  Expanded(
-                                    child: Text(
-                                      "End user agreement to pricing policy",
-                                      style: primaryTextStyle(),
-                                    ),
-                                  )
-                                ],
-                              ),
-                              AppButton(
-                                color: kPrimary,
-                                width: double.infinity,
-                                text: "Continue",
-                                enabled: isChecked,
-                                textColor: white,
-                                disabledColor: dimGray,
-                                disabledTextColor: white,
-                                onTap: () {
-                                  if (!isChecked) {
-                                    toast("please accept policy to continue");
-                                  } else {
-                                    UploadLabResult(
-                                      amount:
-                                          locationController.myCountry.value ==
-                                                  'nigeria'
-                                              ? price!.amount.validate()
-                                              : price!.dollarAmount.validate(),
-                                    ).launch(context);
-                                  }
-                                },
+              child: isLoading
+                  ? const Loader().center()
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Our lab result interpretation service offers comprehensive analysis and insights for your medical test results, all conveniently accessible through our mobile app.",
+                          style: secondaryTextStyle(color: slate, height: 1.5),
+                        ),
+
+                        // Premium Pricing Card
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(32),
+                          decoration: BoxDecoration(
+                            color: obsidian,
+                            borderRadius: BorderRadius.circular(32),
+                            boxShadow: [
+                              BoxShadow(
+                                color: obsidian.withOpacity(0.2),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
                               ),
                             ],
-                          )
-                        ],
-                      ))
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: white.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.biotech_rounded,
+                                    color: white, size: 32),
+                              ),
+                                Obx(() {
+                                  final pricingService =
+                                      Get.find<PricingService>();
+                                  const String productId = 'lab_result_standard';
+
+                                  final String displayPrice = Platform.isAndroid
+                                      ? iapService.getProductPrice(productId)
+                                      : pricingService.getFormattedPrice(productId);
+
+                                  return Text(
+                                    displayPrice,
+                                    style: boldTextStyle(
+                                        color: white,
+                                        size: 36,
+                                        letterSpacing: -1),
+                                  );
+                                }),
+                              12.height,
+                              Text(
+                                "Professional interpretation by our medical team",
+                                textAlign: TextAlign.center,
+                                style: secondaryTextStyle(
+                                    color: white.withOpacity(0.6), size: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        Column(
+                          children: [
+                            Row(
+                              children: [
+                                Checkbox(
+                                    value: isChecked,
+                                    activeColor: obsidian,
+                                    checkColor: white,
+                                    side: const BorderSide(
+                                        color: obsidian, width: 2),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(4)),
+                                    onChanged: (val) {
+                                      setState(() => isChecked = val ?? false);
+                                    }),
+                                Expanded(
+                                  child: Text(
+                                    "I agree to the pricing and service policy",
+                                    style: primaryTextStyle(
+                                        color: slate, size: 14),
+                                  ),
+                                )
+                              ],
+                            ),
+                            16.height,
+                            PremiumButton(
+                              text: "Continue to Upload",
+                              enabled: isChecked,
+                              onTap: () {
+                                  final pricingService = Get.find<PricingService>();
+                                  const String productId = 'lab_result_standard';
+                                  final double amount = Platform.isAndroid 
+                                      ? iapService.getProductRawPrice(productId)
+                                      : pricingService.getFinalPrice(productId);
+
+                                  UploadLabResult(
+                                    amount: amount.toInt(),
+                                  ).launch(context);
+                              },
+                            ),
+                            24.height,
+                          ],
+                        )
+                      ],
+                    ),
+            ),
           ],
         ),
       )),

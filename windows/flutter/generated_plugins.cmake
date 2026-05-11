@@ -10,6 +10,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
   firebase_auth
   firebase_core
+  firebase_database
   firebase_storage
   flutter_inappwebview_windows
   flutter_timezone
@@ -17,6 +18,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   local_auth_windows
   nb_utils
   permission_handler_windows
+  screen_brightness_windows
   share_plus
   url_launcher_windows
   zego_express_engine
@@ -24,6 +26,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  jni
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

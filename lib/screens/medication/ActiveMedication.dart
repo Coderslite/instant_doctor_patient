@@ -9,6 +9,7 @@ import '../../component/check_country.dart';
 import '../../component/check_internet.dart';
 import '../../constant/color.dart';
 import '../../services/formatTime.dart';
+import '../../component/PremiumButton.dart';
 
 class ActiveMedicationScreen extends StatefulWidget {
   final MedicationModel medication;
@@ -206,36 +207,19 @@ class _ActiveMedicationScreenState extends State<ActiveMedicationScreen> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          onPressed: () => _markAsTaken(time),
-                          child: const Text(
-                            'Mark as Taken',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                        child: PremiumButton(
+                          onTap: () => _markAsTaken(time),
+                          text: 'Mark as Taken',
+                          color: Colors.green,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.red),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          onPressed: () => _markAsMissed(time),
-                          child: const Text(
-                            'Mark as Missed',
-                            style: TextStyle(color: Colors.red),
-                          ),
+                        child: PremiumButton(
+                          onTap: () => _markAsMissed(time),
+                          text: 'Mark as Missed',
+                          color: Colors.white,
+                          textColor: Colors.red,
                         ),
                       ),
                     ],

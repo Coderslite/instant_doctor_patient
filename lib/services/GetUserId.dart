@@ -24,7 +24,6 @@ getUserId() async {
     locationController.longitude.value = userProf.location!.longitude;
     locationController.address.value = userProf.address.validate();
     locationController.myCountry.value = userProf.country.validate();
-    userController.currency.value = userProf.currency.validate();
     settingsController.trialAvailable.value =
         userProf.isTrialAvailable.validate();
     userController.isFirstTime.value =
@@ -35,7 +34,8 @@ getUserId() async {
     userController.fullName.value =
         "${userProf.firstName.validate()} ${userProf.lastName.validate()}";
     userController.phone.value = userProf.phoneNumber.validate();
-    userController.referralBalance.value = userProf.referralBalance.validate();
+    userController.referralBalance.value =
+        userProf.referralBalance.validate().toInt();
     userController.referralProgramApplied.value =
         userProf.referralProgramApplied.validate();
     userController.referralEnabled.value = userProf.referralEnabled.validate();

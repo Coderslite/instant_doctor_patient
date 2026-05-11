@@ -30,6 +30,7 @@ class BookingController extends GetxController {
   RxString userToken = ''.obs;
   Timestamp? startTime;
   Timestamp? endTime;
+  RxString currentAppointmentId = ''.obs;
 
   late StreamController<void> updateStreamController;
   final userService = Get.find<UserService>();
@@ -42,25 +43,31 @@ class BookingController extends GetxController {
     required bool isPaystack,
     required BuildContext context,
   }) async {
+    // If the doctor changes, we should create a NEW appointment record
+    if (docId.value != doctorId) {
+      currentAppointmentId.value = '';
+    }
     docId.value = doctorId;
     try {
       isLoading.value = true;
 
       // Validate package selection
       if (package.value.isEmpty) {
+        isLoading.value = false;
         errorSnackBar(context: context, title: "Please select a valid package");
         return false;
       }
 
       // Validate symptoms/complaint
-      if (complain.value.isEmpty) {
-        errorSnackBar(context: context, title: "Please describe your symptoms");
-        return false;
-      }
+      // if (complain.value.isEmpty) {
+      //   errorSnackBar(context: context, title: "Please describe your symptoms");
+      //   return false;
+      // }
 
       // Validate date/time (must be at least 5 minutes ahead of current time)
       final minAllowedTime = DateTime.now().add(Duration(minutes: 5));
       if (selectedDate.isBefore(minAllowedTime)) {
+        isLoading.value = false;
         errorSnackBar(
             context: context,
             title:
@@ -81,7 +88,9 @@ class BookingController extends GetxController {
       var userInfo =
           await userService.getProfileById(userId: userController.userId.value);
       var email = userInfo.email.validate();
+      // REUSE EXISTING ID IF AVAILABLE (To avoid duplicates on cancel/retry)
       var appointmentId = await newBooking(isTrial);
+      currentAppointmentId.value = appointmentId;
 
       // Skip payment for trial appointments
       if (isTrial) {
@@ -96,26 +105,9 @@ class BookingController extends GetxController {
             userId: userController.userId.value);
         await updateAppointmentAfterPayment(context, appointmentId, isTrial);
       } else {
-        // Proceed with payment for regular appointments
-        // if (isPaystack) {
-        //   await paymentController.makePaystackPayment(
-        //     email: email,
-        //     context: Get.context!,
-        //     amount: price.value,
-        //     paymentFor: PaymentFor.appointment,
-        //     productId: appointmentId,
-        //   );
-        // } else {
-        //   await paymentController.makeFlutterwavePayment(
-        //     email: email,
-        //     context: Get.context!,
-        //     amount: price.value,
-        //     paymentFor: PaymentFor.appointment,
-        //     productId: appointmentId,
-        //   );
-        // }
         var appt = await appointmentService.getAppointment(
             appointmentId: appointmentId);
+        isLoading.value = false;
         handleShowPaymentOption(context, appointment: appt);
       }
     } catch (err) {
@@ -139,6 +131,7 @@ class BookingController extends GetxController {
       startTime: startTime!,
       endTime: endTime!,
       isTrial: isTrial,
+      appointmentId: currentAppointmentId.value, // Pass existing ID if any
     );
 
     if (res != null) {
@@ -149,21 +142,28 @@ class BookingController extends GetxController {
   }
 
   Future<void> updateAppointmentAfterPayment(
-      BuildContext context, String appointmentId, bool isTrial) async {
-    var res = await appointmentService.updateAppointmentAfterPayment(
-        appointmentId: appointmentId, isTrial: isTrial);
+      BuildContext context, String appointmentId, bool isTrial,
+      {String? currency}) async {
+    try {
+      var res = await appointmentService.updateAppointmentAfterPayment(
+          appointmentId: appointmentId, isTrial: isTrial, currency: currency);
 
-    if (res) {
-      isLoading.value = false;
-      selectedDate = DateTime.now();
-      complain.value = '';
-      price.value = 0;
-      package.value = '';
-      duration.value = 0;
-      selectedSymptoms.value = [];
-      SuccessScreen().launch(Get.context!);
-    } else {
-      errorSnackBar(context: context, title: "Something went wrong");
+      if (res) {
+        // Reset booking state on success
+        currentAppointmentId.value = '';
+        selectedDate = DateTime.now();
+        complain.value = '';
+        price.value = 0;
+        package.value = '';
+        duration.value = 0;
+        selectedSymptoms.value = [];
+        SuccessScreen().launch(Get.context!);
+      } else {
+        errorSnackBar(context: context, title: "Something went wrong");
+      }
+    } catch (e) {
+      errorSnackBar(context: context, title: "Failed to update appointment");
+    } finally {
       isLoading.value = false;
     }
   }

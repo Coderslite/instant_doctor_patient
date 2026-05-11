@@ -1,11 +1,11 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/controllers/ReferController.dart';
 import 'package:instant_doctor/screens/authentication/success_signup.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:nb_utils/nb_utils.dart';
+import '../../component/PremiumButton.dart';
 
 import '../../constant/color.dart';
 
@@ -20,85 +20,159 @@ class ReferralRegistrationScreen extends StatefulWidget {
 
 class _ReferralRegistrationScreenState
     extends State<ReferralRegistrationScreen> {
-  var referalController = TextEditingController();
-  var referralController = Get.find<ReferralController>();
+  final referalController = TextEditingController();
+  final referralController = Get.find<ReferralController>();
+
   @override
   Widget build(BuildContext context) {
     return KeyboardDismisser(
       child: Scaffold(
-        body: Container(
-          height: MediaQuery.of(context).size.height,
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage("assets/images/bg3.png"),
-              // colorFilter: ColorFilter.mode(kPrimary, BlendMode.color),
-              fit: BoxFit.cover,
-            ),
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: kText, size: 20),
+            onPressed: () => finish(context),
           ),
+        ),
+        body: SafeArea(
           child: Obx(
             () => SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  50.height,
-                  SizedBox(
-                    width: 100,
-                    height: 100,
-                    child: Image.asset(
-                      "assets/images/logo.png",
+                  40.height,
+                  // Gift Icon Header
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: kPrimary.withOpacity(0.08),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.card_giftcard_rounded,
+                        color: kPrimary,
+                        size: 48,
+                      ),
                     ),
                   ),
-                  30.height,
-                  Row(
+                  40.height,
+                  const Text(
+                    "Have a Referral\nCode?",
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: kText,
+                      letterSpacing: -1.0,
+                      height: 1.1,
+                    ),
+                  ),
+                  12.height,
+                  const Text(
+                    "Enter your friend's referral code to unlock special benefits and rewards.",
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: kSub,
+                      height: 1.5,
+                    ),
+                  ),
+                  48.height,
+
+                  // Referral Input
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Referred By",
-                        style: boldTextStyle(
-                          size: 32,
-                          weight: FontWeight.bold,
+                      const Text(
+                        "Referral Code",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: kText,
+                        ),
+                      ),
+                      10.height,
+                      TextFormField(
+                        controller: referalController,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: kText,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: "e.g. HEALTH2024",
+                          hintStyle: TextStyle(
+                            color: kSub.withOpacity(0.4),
+                            fontSize: 14,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.local_offer_outlined,
+                            color: kPrimary.withOpacity(0.5),
+                            size: 20,
+                          ),
+                          fillColor: const Color(0xFFF8FAFF),
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(
+                              color: kPrimary,
+                              width: 1.5,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 18,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  20.height,
-                  AppTextField(
-                    controller: referalController,
-                    textFieldType: TextFieldType.OTHER,
-                    textStyle: primaryTextStyle(),
-                    decoration: InputDecoration(
-                      label: Text(
-                        "Referral Code (optional)",
-                        style: primaryTextStyle(),
-                      ),
-                      contentPadding: const EdgeInsetsDirectional.symmetric(
-                          vertical: 10, horizontal: 10),
-                      focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: const BorderSide(color: kPrimary)),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(color: kPrimary),
-                      ),
-                    ),
-                  ),
-                  30.height,
-                  Loader().center().visible(referralController.isLoading.value),
-                  AppButton(
-                    width: double.infinity,
-                    textColor: kPrimary,
+                  64.height,
+
+                  // Action Button
+                  PremiumButton(
                     onTap: () async {
                       if (referalController.text.isEmpty) {
-                        SuccessSignUp().launch(context);
+                        const SuccessSignUp().launch(context);
                       } else {
                         referralController.handleNewReferral(
-                            referralCode: referalController.text);
-                        SuccessSignUp().launch(context);
+                          referralCode: referalController.text,
+                        );
+                        const SuccessSignUp().launch(context);
                       }
                     },
-                    text: "Continue", 
-                  ).visible(!referralController.isLoading.value),
+                    isLoading: referralController.isLoading.value,
+                    text: referalController.text.isEmpty
+                        ? "Skip for now"
+                        : "Apply & Continue",
+                  ),
+                  24.height,
+                  if (referalController.text.isNotEmpty)
+                    Center(
+                      child: TextButton(
+                        onPressed: () => const SuccessSignUp().launch(context),
+                        child: const Text(
+                          "Skip",
+                          style: TextStyle(
+                            color: kSub,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  40.height,
                 ],
               ),
             ),
