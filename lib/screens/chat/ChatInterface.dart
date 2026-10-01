@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -26,6 +25,7 @@ import '../../services/AppointmentService.dart';
 import '../../services/DoctorService.dart';
 import '../../services/SecurityHelper.dart';
 import '../../services/ReviewService.dart';
+import '../../services/PricingService.dart';
 
 class ChatInterface extends StatefulWidget {
   final String docId;
@@ -213,6 +213,15 @@ class _ChatInterfaceState extends State<ChatInterface>
   }
 
   Future<void> handleSendMessage() async {
+    final pricingService = Get.find<PricingService>();
+    final isExpired = pricingService.isAppointmentExpired(widget.appointment);
+    final isYetToStart = pricingService.isAppointmentYetToStart(widget.appointment);
+    final isOngoing = pricingService.isAppointmentOngoing(widget.appointment);
+
+    if (isExpired || isYetToStart || !isOngoing) {
+      return;
+    }
+
     if (messageController.text.trim().isEmpty && chatController.images.isEmpty)
       return;
     final text = messageController.text.trim();
@@ -293,11 +302,10 @@ class _ChatInterfaceState extends State<ChatInterface>
 
   @override
   Widget build(BuildContext context) {
-    final now = Timestamp.now();
-    final startTime = widget.appointment.startTime;
-    final endTime = widget.appointment.endTime;
-    final isExpired = now.compareTo(endTime!) > 0;
-    final isYetToStart = now.compareTo(startTime!) < 0;
+    final pricingService = Get.find<PricingService>();
+    final isExpired = pricingService.isAppointmentExpired(widget.appointment);
+    final isYetToStart =
+        pricingService.isAppointmentYetToStart(widget.appointment);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F4FA),

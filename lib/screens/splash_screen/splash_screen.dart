@@ -12,12 +12,10 @@ import '../../main.dart';
 import '../../services/GetUserId.dart';
 
 // ── Premium Medical Palette ──────────────────────────────────────────────────
-const _bgTop = Color(0xFFF0F7FF); // Very soft medical blue
-const _bgBot = Color(0xFFFFFFFF); // Pure white
-const _ink = Color(0xFF1A2138); // Premium deep navy
-const _slate = Color(0xFF64748B); // Slate gray
-const _green = Color(0xFF10B981); // Emerald
-const _greenSoft = Color(0xFFD1FAE5); // Mint soft
+const _bg = kPrimary;             // Brand Primary Blue solid background
+const _ink = Colors.white;        // White for high contrast text
+const _slate = Color(0xFFC7EFFE); // Soft sky-blue for subtext
+const _green = Color(0xFF00FFCC); // Vibrant neon green/mint for "online" dot
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -51,7 +49,8 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
     ));
 
     _logoCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
@@ -144,13 +143,7 @@ class _SplashScreenState extends State<SplashScreen>
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [_bgTop, _bgBot],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        color: _bg,
         child: Stack(
           children: [
             // Decorative background elements
@@ -162,7 +155,29 @@ class _SplashScreenState extends State<SplashScreen>
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: kPrimary.withOpacity(0.03),
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.15),
+                      Colors.white.withOpacity(0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -150,
+              left: -150,
+              child: Container(
+                width: 350,
+                height: 350,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.1),
+                      Colors.white.withOpacity(0.0),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -207,14 +222,14 @@ class _SplashScreenState extends State<SplashScreen>
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: kPrimary.withOpacity(0.12),
-                                    blurRadius: 40,
+                                    color: Colors.black.withOpacity(0.15),
+                                    blurRadius: 30,
                                     offset: const Offset(0, 15),
                                   ),
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+                                    color: Colors.white.withOpacity(0.1),
+                                    blurRadius: 20,
+                                    spreadRadius: -5,
                                   ),
                                 ],
                               ),
@@ -276,8 +291,12 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: _greenSoft,
+                        color: Colors.white.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                          width: 1.2,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -288,6 +307,13 @@ class _SplashScreenState extends State<SplashScreen>
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
                               color: _green,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _green,
+                                  blurRadius: 6,
+                                  spreadRadius: 1,
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -296,7 +322,7 @@ class _SplashScreenState extends State<SplashScreen>
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: _green,
+                              color: Colors.white,
                             ),
                           ),
                         ],
@@ -316,7 +342,7 @@ class _SplashScreenState extends State<SplashScreen>
                         builder: (_, __) => CustomPaint(
                           painter: _HeartbeatPainter(
                             progress: _heartProgress.value,
-                            color: kPrimary.withOpacity(0.5),
+                            color: Colors.white.withOpacity(0.3),
                           ),
                           size: const Size(double.infinity, 50),
                         ),
@@ -336,7 +362,7 @@ class _SplashScreenState extends State<SplashScreen>
                         width: _activeDot == i ? 24 : 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color: _activeDot == i ? kPrimary : kPrimary.withOpacity(0.15),
+                          color: _activeDot == i ? Colors.white : Colors.white.withOpacity(0.3),
                           borderRadius: BorderRadius.circular(10),
                         ),
                       );

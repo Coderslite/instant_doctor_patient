@@ -274,7 +274,7 @@ class _MedicationTrackerState extends State<MedicationTracker> {
                             const SizedBox(width: 4),
                             Text(
                               isExpired
-                                  ? "Course Completed"
+                                  ? "Medication Completed"
                                   : "Day $currentDay of $totalDays",
                               style: secondaryTextStyle(
                                   size: 12,

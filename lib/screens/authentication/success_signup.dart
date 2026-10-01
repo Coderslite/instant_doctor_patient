@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/screens/authentication/create_pin.dart';
+import 'package:instant_doctor/screens/authentication/select_country_currency.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../../component/PremiumButton.dart';
@@ -83,7 +84,7 @@ class _SuccessSignUpState extends State<SuccessSignUp> {
                 // Continue Button
                 PremiumButton(
                   onTap: () {
-                    const CreatePinScreen().launch(context, isNewTask: true);
+                    const SelectCountryCurrencyScreen(isSignupFlow: true).launch(context, isNewTask: true);
                   },
                   text: "Get Started",
                 ),

@@ -1,17 +1,12 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:instant_doctor/component/AnimatedCard.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/models/LabresultPricingModel.dart';
-import 'package:instant_doctor/services/GetUserId.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../../component/PremiumButton.dart';
 
 import '../../constant/color.dart';
 import '../../services/LabResultService.dart';
-import '../../services/format_number.dart';
-import 'package:instant_doctor/services/IAPService.dart';
 import 'package:instant_doctor/services/PricingService.dart';
 import 'UploadLabResult.dart';
 
@@ -28,7 +23,6 @@ class _LabResultPricingState extends State<LabResultPricing> {
   String type = '';
   bool isLoading = true;
   final labResultService = Get.find<LabResultService>();
-  final iapService = Get.find<IAPService>();
 
   @override
   void initState() {
@@ -113,9 +107,7 @@ class _LabResultPricingState extends State<LabResultPricing> {
                                       Get.find<PricingService>();
                                   const String productId = 'lab_result_standard';
 
-                                  final String displayPrice = Platform.isAndroid
-                                      ? iapService.getProductPrice(productId)
-                                      : pricingService.getFormattedPrice(productId);
+                                  final String displayPrice = pricingService.getFormattedPrice(productId);
 
                                   return Text(
                                     displayPrice,
@@ -167,9 +159,7 @@ class _LabResultPricingState extends State<LabResultPricing> {
                               onTap: () {
                                   final pricingService = Get.find<PricingService>();
                                   const String productId = 'lab_result_standard';
-                                  final double amount = Platform.isAndroid 
-                                      ? iapService.getProductRawPrice(productId)
-                                      : pricingService.getFinalPrice(productId);
+                                  final double amount = pricingService.getFinalPrice(productId);
 
                                   UploadLabResult(
                                     amount: amount.toInt(),

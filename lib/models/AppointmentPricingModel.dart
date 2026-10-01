@@ -4,6 +4,7 @@ class Appointmentpricingmodel {
   int? amount;
   String? desc;
   int? duration;
+  String? type;
 
   Appointmentpricingmodel({
     this.id,
@@ -11,6 +12,7 @@ class Appointmentpricingmodel {
     this.amount,
     this.desc,
     this.duration,
+    this.type,
   });
 
   factory Appointmentpricingmodel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class Appointmentpricingmodel {
       amount: json['amount'],
       desc: json['description'],
       duration: json['duration'],
+      type: json['type'],
     );
   }
 }

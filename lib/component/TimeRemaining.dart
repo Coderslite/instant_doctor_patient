@@ -1,13 +1,12 @@
 import 'dart:async';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/models/AppointmentModel.dart';
+import 'package:instant_doctor/services/PricingService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../controllers/BookingController.dart';
-import '../services/formatDuration.dart';
 
 class TimeRemaining extends StatefulWidget {
   final AppointmentModel appointment;
@@ -37,14 +36,9 @@ class _TimeRemainingState extends State<TimeRemaining> {
 
   @override
   Widget build(BuildContext context) {
-    var startTime = widget.appointment.startTime;
-    var endTime = widget.appointment.endTime;
-    var now = Timestamp.now();
-    var isExpired = now.compareTo(endTime!) > 0;
-    var isOngoing =
-        now.compareTo(startTime!) >= 0 && now.compareTo(endTime) <= 0;
-    var timeRemaining = startTime.toDate().difference(DateTime.now());
-    var timeRemaining2 = endTime.toDate().difference(DateTime.now());
+    final pricingService = Get.find<PricingService>();
+    final isOngoing = pricingService.isAppointmentOngoing(widget.appointment);
+    final statusText = pricingService.getAppointmentStatusText(widget.appointment);
 
     return Row(
       children: [
@@ -55,11 +49,7 @@ class _TimeRemainingState extends State<TimeRemaining> {
         ),
         5.width,
         Text(
-          isOngoing
-              ? "Ongoing ${formatDuration(timeRemaining2)}"
-              : isExpired
-                  ? "Expired Session"
-                  : "Starts in ${formatDuration(timeRemaining)}",
+          statusText,
           style: secondaryTextStyle(
               size: 10, color: isOngoing ? mediumSeaGreen : null),
         ),

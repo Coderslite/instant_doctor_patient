@@ -25,6 +25,7 @@ import '../../controllers/SettingController.dart';
 import '../../controllers/showPayment.dart';
 import '../../services/AppointmentService.dart';
 import '../../services/UserService.dart';
+import '../../services/PricingService.dart';
 import '../chat/ChatInterface.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -112,10 +113,9 @@ class _AppointmentScreenState extends State<AppointmentScreen>
                   itemCount: data.length,
                   itemBuilder: (_, i) {
                     final appt = data[i];
-                    final now = Timestamp.now();
-                    final isExp = now.compareTo(appt.endTime!) > 0;
-                    final isOng = now.compareTo(appt.startTime!) >= 0 &&
-                        now.compareTo(appt.endTime!) <= 0;
+                    final pricingService = Get.find<PricingService>();
+                    final isExp = pricingService.isAppointmentExpired(appt);
+                    final isOng = pricingService.isAppointmentOngoing(appt);
                     return AnimationConfiguration.staggeredList(
                       position: i,
                       duration: const Duration(milliseconds: 420),
@@ -187,6 +187,7 @@ class _AppointmentScreenState extends State<AppointmentScreen>
           context: context, title: 'Appointment not yet assigned to a doctor');
       return;
     }
+    log('Opening chat for appointment ${appt.id} with doctor ${appt.doctorId}');
     ChatInterface(
       appointmentId: appt.id!,
       docId: appt.doctorId!,
@@ -276,7 +277,8 @@ class _AppointmentHeader extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: white.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: white.withOpacity(0.12), width: 1),
+                    border:
+                        Border.all(color: white.withOpacity(0.12), width: 1),
                   ),
                   child: Icon(Icons.calendar_month_rounded,
                       color: white.withOpacity(0.8), size: 20),
@@ -330,13 +332,17 @@ class _AppointmentCard extends StatelessWidget {
 
   String get _statusLabel {
     if (isOngoing) return 'In Progress';
-    if (isExpired) return 'Completed';
+    if (isExpired)
+      return appointment.isPaid.validate() ? 'Completed' : 'Expired';
     return 'Upcoming';
   }
 
   IconData get _statusIcon {
     if (isOngoing) return Icons.circle_rounded;
-    if (isExpired) return Icons.check_circle_outline_rounded;
+    if (isExpired)
+      return appointment.isPaid.validate()
+          ? Icons.check_circle_outline_rounded
+          : Icons.timer_off_outlined;
     return Icons.schedule_rounded;
   }
 
@@ -495,11 +501,15 @@ class _AppointmentCard extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "Pending Payment",
+                                    isExpired
+                                        ? "Appointment Expired"
+                                        : "Pending Payment",
                                     style: boldTextStyle(),
                                   ),
                                   Text(
-                                    "please complete your payment for this appointment",
+                                    isExpired
+                                        ? "This appointment slot has passed and expired"
+                                        : "please complete your payment for this appointment",
                                     style: secondaryTextStyle(size: 12),
                                   ),
                                 ],
@@ -518,7 +528,9 @@ class _AppointmentCard extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: appointment.isPaid.validate()
                                   ? greenSoft
-                                  : redSoft,
+                                  : isExpired
+                                      ? const Color(0xFFF1F5F9)
+                                      : redSoft,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -527,23 +539,31 @@ class _AppointmentCard extends StatelessWidget {
                                 Icon(
                                   appointment.isPaid.validate()
                                       ? Icons.check_rounded
-                                      : Icons.lock_outline_rounded,
+                                      : isExpired
+                                          ? Icons.history_rounded
+                                          : Icons.lock_outline_rounded,
                                   size: 11,
                                   color: appointment.isPaid.validate()
                                       ? green
-                                      : redText,
+                                      : isExpired
+                                          ? slate
+                                          : redText,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   appointment.isPaid.validate()
                                       ? 'Paid'
-                                      : 'Payment Pending',
+                                      : isExpired
+                                          ? 'Expired'
+                                          : 'Payment Pending',
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
                                     color: appointment.isPaid.validate()
                                         ? green
-                                        : redText,
+                                        : isExpired
+                                            ? slate
+                                            : redText,
                                   ),
                                 ),
                               ],
@@ -557,8 +577,11 @@ class _AppointmentCard extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: (!appointment.isPaid.validate() && !appointment.isTrial.validate())
-                                  ? redSoft
+                              color: (!appointment.isPaid.validate() &&
+                                      !appointment.isTrial.validate())
+                                  ? (isExpired
+                                      ? const Color(0xFFF1F5F9)
+                                      : redSoft)
                                   : isExpired
                                       ? const Color(0xFFF1F5F9)
                                       : kPrimary,
@@ -568,16 +591,18 @@ class _AppointmentCard extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  (!appointment.isPaid.validate() && !appointment.isTrial.validate())
-                                      ? 'Pay Now'
+                                  (!appointment.isPaid.validate() &&
+                                          !appointment.isTrial.validate())
+                                      ? (isExpired ? 'Expired' : 'Pay Now')
                                       : isExpired
                                           ? 'View'
                                           : 'Open Chat',
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: (!appointment.isPaid.validate() && !appointment.isTrial.validate())
-                                        ? redText
+                                    color: (!appointment.isPaid.validate() &&
+                                            !appointment.isTrial.validate())
+                                        ? (isExpired ? slate : redText)
                                         : isExpired
                                             ? slate
                                             : white,
@@ -585,14 +610,18 @@ class _AppointmentCard extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Icon(
-                                  (!appointment.isPaid.validate() && !appointment.isTrial.validate())
-                                      ? Icons.payment_rounded
+                                  (!appointment.isPaid.validate() &&
+                                          !appointment.isTrial.validate())
+                                      ? (isExpired
+                                          ? Icons.timer_off_outlined
+                                          : Icons.payment_rounded)
                                       : isExpired
                                           ? Icons.arrow_forward_ios_rounded
                                           : Icons.chat_bubble_outline_rounded,
                                   size: 10,
-                                  color: (!appointment.isPaid.validate() && !appointment.isTrial.validate())
-                                      ? redText
+                                  color: (!appointment.isPaid.validate() &&
+                                          !appointment.isTrial.validate())
+                                      ? (isExpired ? slate : redText)
                                       : isExpired
                                           ? slate
                                           : white,
@@ -912,6 +941,7 @@ class _DeleteDialog extends StatelessWidget {
     );
   }
 }
+
 class _PaymentSummarySheet extends StatelessWidget {
   final AppointmentModel appt;
   final VoidCallback onPay;
@@ -1006,18 +1036,23 @@ class _PaymentSummarySheet extends StatelessWidget {
                           color: kPrimary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(Icons.medical_services_rounded, color: kPrimary),
+                        child: const Icon(Icons.medical_services_rounded,
+                            color: kPrimary),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(appt.package.validate().isEmpty ? 'Consultation' : appt.package.validate(),
+                            Text(
+                                appt.package.validate().isEmpty
+                                    ? 'Consultation'
+                                    : '${appt.package.validate().capitalizeFirst} Package',
                                 style: boldTextStyle(size: 15, color: ink)),
                             const SizedBox(height: 2),
                             Text('Specialist Appointment',
-                                style: secondaryTextStyle(size: 11, color: slate)),
+                                style:
+                                    secondaryTextStyle(size: 11, color: slate)),
                           ],
                         ),
                       ),
@@ -1036,7 +1071,8 @@ class _PaymentSummarySheet extends StatelessWidget {
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Pay Later', style: secondaryTextStyle(color: slate)),
+                  child: Text('Pay Later',
+                      style: secondaryTextStyle(color: slate)),
                 ),
                 const SizedBox(height: 24),
               ],

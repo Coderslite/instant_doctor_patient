@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
+import 'package:instant_doctor/controllers/PaymentController.dart';
 import 'package:instant_doctor/services/IAPService.dart';
 import 'package:instant_doctor/services/PricingService.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -26,12 +27,12 @@ class NewAppointment extends StatefulWidget {
 class _NewAppointmentState extends State<NewAppointment> {
   final PageController _pageController = PageController();
   final BookingController _booking = Get.find<BookingController>();
-  final IAPService _iapService = Get.find<IAPService>();
   final PricingService pricingService = Get.find<PricingService>();
   final TextEditingController _complaintController = TextEditingController();
 
   int _currentStep = 0;
-  dynamic _selectedProduct; // Changed to handle product ID (String) or IAP ProductDetails
+  dynamic
+      _selectedProduct; // Changed to handle product ID (String) or IAP ProductDetails
   DateTime _selectedDate = DateTime.now();
   String? _selectedTime;
   final Set<String> _selectedSymptoms = {};
@@ -79,18 +80,19 @@ class _NewAppointmentState extends State<NewAppointment> {
     // Synchronize selected data with BookingController
     _booking.complain.value = _complaintController.text;
     _booking.selectedSymptoms.value = _selectedSymptoms.toList();
-    
+
     // Get ID and Price
-    final String productId = (_selectedProduct is String) ? _selectedProduct : _selectedProduct.id;
-    final double finalPrice = (_selectedProduct is String) 
-        ? pricingService.getFinalPrice(productId) 
+    final String productId =
+        (_selectedProduct is String) ? _selectedProduct : _selectedProduct.id;
+    final double finalPrice = (_selectedProduct is String)
+        ? pricingService.getFinalPrice(productId)
         : _selectedProduct.rawPrice.toDouble();
-
+    log("final price $finalPrice");
     _booking.price.value = finalPrice.toInt();
-    _booking.package.value = productId;
+    _booking.package.value = pricingService.getPackageType(productId);
 
-    // Get duration from metadata if available
-    final metadata = _iapService.getMetadata(productId);
+    // Get duration from product metadata
+    final metadata = Get.find<IAPService>().getMetadata(productId);
     _booking.duration.value = metadata?['duration'] ?? 30 * 60;
     // Parse time string (e.g., "09:00 AM")
     final timeParts = _selectedTime!.split(' '); // ["09:00", "AM"]
@@ -185,8 +187,8 @@ class _NewAppointmentState extends State<NewAppointment> {
                   SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
                     child: BookingSummary(
-                      selectedProduct: (_selectedProduct is String) 
-                          ? _selectedProduct 
+                      selectedProduct: (_selectedProduct is String)
+                          ? _selectedProduct
                           : (_selectedProduct?.id ?? ""),
                       selectedDate: _selectedDate,
                       selectedTime: _selectedTime!,
@@ -306,11 +308,13 @@ class _NewAppointmentState extends State<NewAppointment> {
       child: SafeArea(
         top: false,
         child: Obx(() {
+          final paymentController = Get.find<PaymentController>();
           final loading = _booking.isLoading.value;
+          final isPaying = paymentController.isLoading.value;
           return PremiumButton(
-            onTap: loading ? null : _nextStep,
-            enabled: _isNextEnabled() && !loading,
-            isLoading: loading,
+            onTap: loading || isPaying ? null : _nextStep,
+            enabled: _isNextEnabled() && !loading && !isPaying,
+            isLoading: loading || isPaying,
             text: _currentStep == 3 ? 'Confirm & Pay' : 'Continue',
           );
         }),

@@ -107,7 +107,7 @@ class BookingController extends GetxController {
       } else {
         var appt = await appointmentService.getAppointment(
             appointmentId: appointmentId);
-        isLoading.value = false;
+        // isLoading.value = true;
         handleShowPaymentOption(context, appointment: appt);
       }
     } catch (err) {

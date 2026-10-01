@@ -1,9 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
-import 'package:instant_doctor/services/PricingService.dart';
 import 'package:instant_doctor/services/IAPService.dart';
+import 'package:instant_doctor/services/PricingService.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 class BookingSummary extends StatelessWidget {
@@ -25,11 +24,13 @@ class BookingSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pricingService = Get.find<PricingService>();
-    final iapService = Get.find<IAPService>();
-    final metadata = iapService.getMetadata(selectedProduct);
-    final String displayPrice = Platform.isAndroid
-        ? iapService.getProductPrice(selectedProduct)
-        : pricingService.getFormattedPrice(selectedProduct);
+    // Look up the package name from the dynamic Firebase packages
+    final matchingPkg = pricingService.appointmentPackages
+        .firstWhereOrNull((p) => p.id == selectedProduct);
+    final String packageName = matchingPkg?.name ??
+        selectedProduct.split('_').last.capitalizeFirstLetter();
+    final String displayPrice =
+        pricingService.getFormattedPrice(selectedProduct);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,7 +56,7 @@ class BookingSummary extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  metadata?['name'] ?? selectedProduct.split('_').last.capitalizeFirstLetter(),
+                  packageName,
                   style: boldTextStyle(size: 16, color: ink),
                 ),
               ),
@@ -105,13 +106,15 @@ class BookingSummary extends StatelessWidget {
                     runSpacing: 6,
                     children: symptoms
                         .map((s) => Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
                                 color: kPrimary.withOpacity(0.08),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(s,
-                                  style: boldTextStyle(size: 11, color: kPrimary)),
+                                  style:
+                                      boldTextStyle(size: 11, color: kPrimary)),
                             ))
                         .toList(),
                   ),
@@ -119,7 +122,8 @@ class BookingSummary extends StatelessWidget {
                 if (complaint.isNotEmpty)
                   Text(
                     complaint,
-                    style: secondaryTextStyle(color: slate, size: 13, height: 1.4),
+                    style:
+                        secondaryTextStyle(color: slate, size: 13, height: 1.4),
                   ),
               ],
             ),
@@ -148,7 +152,8 @@ class BookingSummary extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Total Amount',
-                      style: secondaryTextStyle(color: white.withOpacity(0.5), size: 12)),
+                      style: secondaryTextStyle(
+                          color: white.withOpacity(0.5), size: 12)),
                   const SizedBox(height: 4),
                   const Text('Secured Payment',
                       style: TextStyle(
@@ -159,7 +164,8 @@ class BookingSummary extends StatelessWidget {
               ),
               Text(
                 displayPrice,
-                style: boldTextStyle(color: white, size: 24, letterSpacing: -0.5),
+                style:
+                    boldTextStyle(color: white, size: 24, letterSpacing: -0.5),
               ),
             ],
           ),

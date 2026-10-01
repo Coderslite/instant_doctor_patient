@@ -1,10 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/component/backButton.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
-import 'package:instant_doctor/services/IAPService.dart';
 import 'package:instant_doctor/services/PricingService.dart';
 import 'package:nb_utils/nb_utils.dart';
 import '../../component/PremiumButton.dart';
@@ -20,10 +18,9 @@ class AppointmentPricingScreen extends StatefulWidget {
 
 class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
   BookingController bookingController = Get.put(BookingController());
-  final iapService = Get.find<IAPService>();
   final pricingService = Get.find<PricingService>();
 
-  String selectedPackage = '';
+  String selectedPackageId = '';
   bool isChecked = false;
   int? selectedPrice;
 
@@ -51,31 +48,32 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
               ),
               20.height,
               Expanded(
-                child: ListView(
-                  physics: const BouncingScrollPhysics(),
-                  children: [
-                    priceOptions(
-                        name: "Basic",
-                        id: 'appointment_basic',
-                        image: "basic.png",
-                        duration: 30 * 60,
-                        desc: "Chat with Doctor for 30 minutes"),
-                    20.height,
-                    priceOptions(
-                        name: "Standard",
-                        id: 'appointment_standard',
-                        image: "standard.png",
-                        duration: 60 * 60,
-                        desc: "Chat with Doctor for 1 hour"),
-                    20.height,
-                    priceOptions(
-                        name: "Special",
-                        id: 'appointment_special',
-                        image: "special.png",
-                        duration: 90 * 60,
-                        desc: "Detailed discussion and symptom review"),
-                  ],
-                ),
+                child: Obx(() {
+                  final packages = pricingService.appointmentPackages;
+
+                  if (pricingService.isLoading.value && packages.isEmpty) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (packages.isEmpty) {
+                    return Center(
+                      child: Text(
+                        "No pricing packages available",
+                        style: secondaryTextStyle(size: 16),
+                      ),
+                    );
+                  }
+
+                  return ListView.separated(
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: packages.length,
+                    separatorBuilder: (_, __) => 20.height,
+                    itemBuilder: (context, index) {
+                      final pkg = packages[index];
+                      return _priceOption(pkg);
+                    },
+                  );
+                }),
               ),
               Row(
                 children: [
@@ -99,7 +97,7 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
                   finish(context, selectedPrice);
                 },
                 text: "Proceed",
-                enabled: isChecked && selectedPackage.isNotEmpty,
+                enabled: isChecked && selectedPackageId.isNotEmpty,
               )
             ],
           ),
@@ -108,34 +106,33 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
     );
   }
 
-  Widget priceOptions(
-      {required String name,
-      required String id,
-      required String image,
-      required int duration,
-      required String desc}) {
-    return Obx(() {
-      // DEBUG: Print current state for this ID
-      final String displayPrice = Platform.isAndroid
-          ? iapService.getProductPrice(id)
-          : pricingService.getFormattedPrice(id);
+  Widget _priceOption(dynamic pkg) {
+    final String pkgId = pkg.id ?? '';
+    final String pkgName = pkg.name ?? 'Package';
+    final String pkgDesc = pkg.desc ?? '';
+    final int pkgDuration = pkg.duration ?? 0;
 
-      final double rawPrice = Platform.isAndroid
-          ? iapService.getProductRawPrice(id)
-          : pricingService.getFinalPrice(id);
+    return Obx(() {
+      final String displayPrice = pricingService.getFormattedPrice(pkgId);
+      final double rawPrice = pricingService.getFinalPrice(pkgId);
+
+      // Pick an image based on index position
+      final int idx = pricingService.appointmentPackages.indexOf(pkg);
+      final images = ["basic.png", "standard.png", "special.png"];
+      final image = images[idx % images.length];
 
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Radio(
               activeColor: kPrimary,
-              value: name,
-              groupValue: bookingController.package.value,
+              value: pkgId,
+              groupValue: selectedPackageId,
               onChanged: (val) {
-                selectedPackage = val.toString();
+                selectedPackageId = val.toString();
                 bookingController.price.value = rawPrice.toInt();
-                bookingController.duration.value = duration;
-                bookingController.package.value = id;
+                bookingController.duration.value = pkgDuration;
+                bookingController.package.value = pricingService.getPackageType(pkgId);
                 selectedPrice = rawPrice.toInt();
                 setState(() {});
               }),
@@ -155,6 +152,15 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
+                    pkgName,
+                    textAlign: TextAlign.center,
+                    style: boldTextStyle(
+                      color: white,
+                      size: 18,
+                    ),
+                  ),
+                  6.height,
+                  Text(
                     displayPrice,
                     textAlign: TextAlign.center,
                     style: boldTextStyle(
@@ -164,7 +170,7 @@ class _AppointmentPricingScreenState extends State<AppointmentPricingScreen> {
                   ),
                   10.height,
                   Text(
-                    desc,
+                    pkgDesc,
                     textAlign: TextAlign.center,
                     style: secondaryTextStyle(size: 12, color: white),
                   )

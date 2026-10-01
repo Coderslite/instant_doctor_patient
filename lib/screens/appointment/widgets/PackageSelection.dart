@@ -1,9 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/services/PricingService.dart';
-import 'package:instant_doctor/services/IAPService.dart';
 import 'package:instant_doctor/services/formatDuration.dart';
 import 'package:nb_utils/nb_utils.dart';
 
@@ -17,18 +15,58 @@ class PackageSelection extends StatelessWidget {
     required this.onSelected,
   });
 
+  /// Maps package index to an icon for visual variety
+  IconData _iconForIndex(int index) {
+    const icons = [
+      Icons.chat_bubble_outline_rounded,
+      Icons.video_call_rounded,
+      Icons.health_and_safety_rounded,
+      Icons.medical_services_rounded,
+      Icons.local_hospital_rounded,
+      Icons.healing_rounded,
+    ];
+    return icons[index % icons.length];
+  }
+
+  Widget _buildFeatureItem(String text, IconData icon, Color iconColor) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: iconColor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: secondaryTextStyle(size: 13, color: slate, weight: FontWeight.w500),
+            ),
+          ),
+          Icon(Icons.check_circle_rounded, size: 16, color: green),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final pricingService = Get.find<PricingService>();
-    final iapService = Get.find<IAPService>();
 
     return Obx(() {
-      if (pricingService.isLoading.value) {
+      if (pricingService.isLoading.value && pricingService.appointmentPackages.isEmpty) {
         return const Center(child: CircularProgressIndicator());
       }
 
-      // We use the product IDs defined in PricingService
-      final packageIds = ['appointment_basic', 'appointment_standard', 'appointment_special'];
+      final packages = pricingService.appointmentPackages;
+
+      if (packages.isEmpty) {
+        return Center(
+          child: Text(
+            'No consultation packages available',
+            style: secondaryTextStyle(size: 14, color: slate),
+          ),
+        );
+      }
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,24 +81,38 @@ class PackageSelection extends StatelessWidget {
             style: secondaryTextStyle(size: 13, color: slate, height: 1.4),
           ),
           24.height,
-          ...packageIds.map((id) {
-            final metadata = iapService.getMetadata(id);
-            final isSelected = (selectedProduct is String) 
-                ? selectedProduct == id 
-                : (selectedProduct?.id == id);
-            
-            final String displayPrice = Platform.isAndroid
-                ? iapService.getProductPrice(id)
-                : pricingService.getFormattedPrice(id);
+          ...packages.asMap().entries.map((entry) {
+            final index = entry.key;
+            final pkg = entry.value;
+            final String pkgId = pkg.id ?? '';
+            final String pkgName = pkg.name ?? 'Package';
+            final String pkgDesc = pkg.desc ?? '';
+            final int pkgDuration = pkg.duration ?? 0;
+
+            final isSelected = (selectedProduct is String)
+                ? selectedProduct == pkgId
+                : (selectedProduct?.id == pkgId);
+
+            final String displayPrice = pricingService.getFormattedPrice(pkgId);
+            final String pkgType = pricingService.getPackageType(pkgId);
+
+            List<Widget> features = [];
+            features.add(_buildFeatureItem('Chat consultation', Icons.chat_bubble_rounded, kPrimary));
+            if (pkgType == 'standard' || pkgType == 'special') {
+              features.add(_buildFeatureItem('Video call consultation', Icons.videocam_rounded, kPrimary));
+            }
+            if (pkgType == 'special') {
+              features.add(_buildFeatureItem('7 days follow up of 1hr daily', Icons.event_repeat_rounded, Colors.orange));
+            }
 
             return GestureDetector(
-              onTap: () => onSelected(id),
+              onTap: () => onSelected(pkgId),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: isSelected ? kPrimary.withOpacity(0.05) : white,
+                  color: isSelected ? kPrimary.withOpacity(0.04) : white,
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
                     color: isSelected ? kPrimary : border,
@@ -69,72 +121,99 @@ class PackageSelection extends StatelessWidget {
                   boxShadow: [
                     if (isSelected)
                       BoxShadow(
-                        color: kPrimary.withOpacity(0.15),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+                        color: kPrimary.withOpacity(0.12),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
                       )
                     else
                       BoxShadow(
                         color: obsidian.withOpacity(0.02),
-                        blurRadius: 10,
+                        blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
                   ],
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color:
-                            isSelected ? kPrimary.withOpacity(0.1) : pageGray,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Icon(
-                        metadata?['icon'] ?? Icons.medical_services_rounded,
-                        color: kPrimary,
-                        size: 28,
-                      ),
-                    ),
-                    20.width,
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            metadata?['name'] ?? id.split('_').last.capitalizeFirstLetter(),
-                            style: boldTextStyle(size: 16, color: ink),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 52,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: isSelected ? kPrimary.withOpacity(0.1) : pageGray,
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          4.height,
-                          Text(
-                            metadata?['desc'] ?? '',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: secondaryTextStyle(
-                                size: 12, color: slate, height: 1.3),
+                          child: Icon(
+                            _iconForIndex(index),
+                            color: kPrimary,
+                            size: 26,
                           ),
-                          12.height,
-                          Row(
+                        ),
+                        16.width,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.timer_outlined,
-                                  size: 14, color: kPrimary),
-                              6.width,
                               Text(
-                                formatDuration(Duration(
-                                    seconds: metadata?['duration'] ?? 0)),
-                                style: boldTextStyle(size: 11, color: kPrimary),
+                                pkgName,
+                                style: boldTextStyle(size: 17, color: ink),
+                              ),
+                              4.height,
+                              Text(
+                                pkgDesc,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: secondaryTextStyle(
+                                    size: 12, color: slate, height: 1.3),
                               ),
                             ],
                           ),
-                        ],
+                        ),
+                        12.width,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              displayPrice,
+                              style: boldTextStyle(size: 18, color: green),
+                            ),
+                            if (pkgDuration > 0) ...[
+                              6.height,
+                              Row(
+                                children: [
+                                  const Icon(Icons.timer_outlined,
+                                      size: 14, color: slate),
+                                  4.width,
+                                  Text(
+                                    formatDuration(Duration(seconds: pkgDuration)),
+                                    style: secondaryTextStyle(size: 11, color: slate, weight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                    if (features.isNotEmpty) ...[
+                      20.height,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: isSelected ? white : pageGray.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected ? kPrimary.withOpacity(0.1) : border.withOpacity(0.5),
+                          ),
+                        ),
+                        child: Column(
+                          children: features,
+                        ),
                       ),
-                    ),
-                    12.width,
-                    Text(
-                      displayPrice,
-                      style: boldTextStyle(size: 18, color: green),
-                    ),
+                    ],
                   ],
                 ),
               ),

@@ -1,13 +1,20 @@
 import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:nb_utils/nb_utils.dart';
 import '../main.dart';
+import 'package:instant_doctor/controllers/UserController.dart';
+import 'package:instant_doctor/services/UserService.dart';
+import 'package:instant_doctor/models/AppointmentPricingModel.dart';
+import 'package:instant_doctor/models/AppointmentModel.dart';
+import 'package:instant_doctor/services/formatDuration.dart';
 
 class PricingService extends GetxService {
-  // ── Base Prices (USD) - Fetched from Firestore ────────────────────────
+  // ── Appointment Packages (fetched from Firestore) ──────────────────────
+  final RxList<Appointmentpricingmodel> appointmentPackages =
+      <Appointmentpricingmodel>[].obs;
+
+  // ── Base Prices (USD) - Populated from AppointmentPricing collection ──
   final RxMap<String, double> basePrices = <String, double>{}.obs;
 
   // ── State ────────────────────────────────────────────────────────────────
@@ -29,73 +36,45 @@ class PricingService extends GetxService {
   void onInit() {
     super.onInit();
     initPricing();
-    _listenToFirestorePrices();
+    _listenToAppointmentPricing();
   }
 
-  void _listenToFirestorePrices() {
-    db.collection('AppConfig').doc('Prices').snapshots().listen((snapshot) {
-      if (snapshot.exists) {
-        final data = snapshot.data();
-        if (data != null) {
-          data.forEach((key, value) {
-            basePrices[key] = (value as num).toDouble();
-          });
-          print("🔥 Firestore Prices Updated: $basePrices");
-        }
+  /// Listens to the AppointmentPricing Firestore collection for dynamic pricing.
+  /// Each document has: id, name, amount (USD), description, duration.
+  void _listenToAppointmentPricing() {
+    db.collection('AppointmentPricing')
+        .orderBy('amount', descending: false)
+        .snapshots()
+        .listen((snapshot) {
+      appointmentPackages.value = snapshot.docs
+          .map((doc) => Appointmentpricingmodel.fromJson(doc.data()))
+          .toList();
+
+      // Populate basePrices keyed by document ID
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final id = data['id'] ?? doc.id;
+        basePrices[id] = (data['amount'] as num).toDouble();
       }
+
+      print("🔥 Appointment Pricing Updated: ${appointmentPackages.length} packages | basePrices: $basePrices");
     }, onError: (e) {
-      log('Firestore Pricing Error: $e');
+      log('Appointment Pricing Error: $e');
     });
   }
 
   Future<void> initPricing() async {
     isLoading.value = true;
     try {
-      // 1. Detect Country Automatically (Multiple Sources)
-      try {
-        final locationResponse =
-            await http.get(Uri.parse('https://ipapi.co/json/'))
-                .timeout(const Duration(seconds: 5));
-        if (locationResponse.statusCode == 200) {
-          final locData = json.decode(locationResponse.body);
-          // Try 'country' or 'country_code'
-          userCountry.value = locData['country'] ?? locData['country_code'] ?? 'US';
-          print("🌍 Source 1 (IPAPI) Detected: ${userCountry.value}");
-        } else {
-          // Try Source 2: ip-api.com
-          final locResp2 = await http.get(Uri.parse('http://ip-api.com/json'))
-              .timeout(const Duration(seconds: 5));
-          if (locResp2.statusCode == 200) {
-            final locData2 = json.decode(locResp2.body);
-            userCountry.value = locData2['countryCode'] ?? 'US';
-            print("🌍 Source 2 (IP-API) Detected: ${userCountry.value}");
-          } else {
-            throw Exception("IP Lookups failed");
-          }
-        }
-      } catch (e) {
-        // Fallback 3: Device Locale
-        userCountry.value = Get.deviceLocale?.countryCode ?? 'US';
-        print("🌍 Source 3 (Locale) Fallback: ${userCountry.value}");
-      }
+      // 1. Load Country and Currency from SharedPreferences cache
+      final prefs = await SharedPreferences.getInstance();
+      userCountry.value = prefs.getString('userCountry') ?? 'US';
+      userCurrency.value = prefs.getString('userCurrency') ?? 'USD';
+      
+      print("🌍 Initial Cached Region: ${userCountry.value} | Currency: ${userCurrency.value}");
 
-      // 2. Map Currency
-      userCurrency.value = _getCurrencyFromCountry(userCountry.value);
-      print("💰 Initial Currency Mapped: ${userCurrency.value}");
-
-      // 3. Fetch Exchange Rate (Free API: open.er-api.com)
-      final response =
-          await http.get(Uri.parse('https://open.er-api.com/v6/latest/USD'));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final rates = data['rates'] as Map<String, dynamic>;
-
-        // Determine currency from country (Simplified mapping)
-        userCurrency.value = _getCurrencyFromCountry(userCountry.value);
-        exchangeRate.value = (rates[userCurrency.value] ?? 1.0).toDouble();
-        print(
-            "💰 Currency: ${userCurrency.value} | Rate: ${exchangeRate.value}");
-      }
+      // 2. Fetch Exchange Rate
+      await fetchExchangeRate();
     } catch (e) {
       log('Pricing Init Error: $e');
     } finally {
@@ -103,7 +82,55 @@ class PricingService extends GetxService {
     }
   }
 
-  String _getCurrencyFromCountry(String countryCode) {
+  Future<void> fetchExchangeRate() async {
+    try {
+      final response =
+          await http.get(Uri.parse('https://open.er-api.com/v6/latest/USD')).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final rates = data['rates'] as Map<String, dynamic>;
+
+        exchangeRate.value = (rates[userCurrency.value] ?? 1.0).toDouble();
+        print(
+            "💰 Exchange Rate Fetched: 1 USD = ${exchangeRate.value} ${userCurrency.value}");
+      }
+    } catch (e) {
+      log('Failed to fetch exchange rates: $e');
+    }
+  }
+
+  Future<void> updateCountryAndCurrency(String countryCode, String currencyCode) async {
+    userCountry.value = countryCode;
+    userCurrency.value = currencyCode;
+
+    // Cache locally
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userCountry', countryCode);
+    await prefs.setString('userCurrency', currencyCode);
+
+    // Update Firestore user document if logged in
+    try {
+      final userController = Get.find<UserController>();
+      if (userController.userId.value.isNotEmpty) {
+        final userService = Get.find<UserService>();
+        await userService.updateProfile(
+          data: {
+            "country": countryCode,
+            "currency": currencyCode,
+          },
+          userId: userController.userId.value,
+        );
+        print("🔥 Updated country & currency in Firestore for user ${userController.userId.value}");
+      }
+    } catch (e) {
+      log("Error updating user profile country/currency in Firestore: $e");
+    }
+
+    // Refresh exchange rate
+    await fetchExchangeRate();
+  }
+
+  String getCurrencyFromCountry(String countryCode) {
     Map<String, String> mapping = {
       // Africa
       'NG': 'NGN', 'GH': 'GHS', 'KE': 'KES', 'ZA': 'ZAR', 'TZ': 'TZS',
@@ -124,18 +151,73 @@ class PricingService extends GetxService {
 
   // ── Price Calculation Logic ──────────────────────────────────────────────
 
-  /// Calculates the final price for a specific product ID
-  /// Applies African discount (50%) and current exchange rate
-  double getFinalPrice(String productId) {
-    double price = basePrices[productId] ?? 0.0;
+  double _roundUp(double price, String currency) {
+    if (price <= 0) return 0.0;
+    
+    switch (currency.toUpperCase()) {
+      case 'NGN':
+        return ((price / 100).ceil() * 100).toDouble();
+      case 'UGX':
+      case 'TZS':
+      case 'RWF':
+      case 'KRW':
+        return ((price / 1000).ceil() * 1000).toDouble();
+      case 'JPY':
+        return ((price / 100).ceil() * 100).toDouble();
+      case 'INR':
+      case 'KES':
+      case 'GHS':
+      case 'ZAR':
+      case 'EGP':
+      case 'TRY':
+        return ((price / 10).ceil() * 10).toDouble();
+      default:
+        return price.ceilToDouble();
+    }
+  }
+
+  /// Calculates the final price for a specific product ID (in user's local currency).
+  /// Applies African discount (50%), current exchange rate, and rounds up.
+  /// Calculates the final price for a specific product ID or type (in user's local currency).
+  /// Applies African discount (50%), current exchange rate, and rounds up.
+  double getFinalPrice(String packageIdOrType) {
+    double price = basePrices[packageIdOrType] ?? 0.0;
+    if (price == 0.0) {
+      final pkg = appointmentPackages.firstWhereOrNull(
+        (p) => p.type?.toLowerCase() == packageIdOrType.toLowerCase() || p.id == packageIdOrType,
+      );
+      if (pkg != null && pkg.id != null) {
+        price = basePrices[pkg.id!] ?? 0.0;
+      }
+    }
 
     // Apply 50% discount for African countries
     if (africanCountries.contains(userCountry.value)) {
       price = price * 0.5;
     }
 
-    // Apply exchange rate
-    return price * exchangeRate.value;
+    // Apply exchange rate and round up the final local price
+    return _roundUp(price * exchangeRate.value, userCurrency.value);
+  }
+
+  /// Calculates the price in USD (applies African discount but not exchange rate)
+  double getPriceInUSD(String packageIdOrType) {
+    double price = basePrices[packageIdOrType] ?? 0.0;
+    if (price == 0.0) {
+      final pkg = appointmentPackages.firstWhereOrNull(
+        (p) => p.type?.toLowerCase() == packageIdOrType.toLowerCase() || p.id == packageIdOrType,
+      );
+      if (pkg != null && pkg.id != null) {
+        price = basePrices[pkg.id!] ?? 0.0;
+      }
+    }
+
+    // Apply 50% discount for African countries
+    if (africanCountries.contains(userCountry.value)) {
+      price = price * 0.5;
+    }
+
+    return price;
   }
 
   String getFormattedPrice(String productId) {
@@ -151,5 +233,104 @@ class PricingService extends GetxService {
     return '${userCurrency.value} ${price.toStringAsFixed(2)}';
   }
 
-  bool isAfrican() => africanCountries.contains(userCountry.value);
+  bool isAfrican() => africanCountries.contains(userCountry.value.trim().toUpperCase());
+
+  String getPackageType(String? packageIdOrType) {
+    if (packageIdOrType.isEmptyOrNull) return 'standard';
+    final lower = packageIdOrType!.toLowerCase().trim();
+    if (lower == 'basic' || lower == 'standard' || lower == 'special') {
+      return lower;
+    }
+    final matchingPkg = appointmentPackages.firstWhereOrNull((p) => p.id == packageIdOrType);
+    if (matchingPkg != null && matchingPkg.type.validate().isNotEmpty) {
+      return matchingPkg.type!.toLowerCase();
+    }
+    // Fallback based on ID name
+    if (lower.contains('basic')) return 'basic';
+    if (lower.contains('premium') || lower.contains('special')) return 'special';
+    return 'standard';
+  }
+
+  bool isAppointmentExpired(AppointmentModel appt) {
+    if (appt.endTime == null) return true;
+    final now = DateTime.now();
+    final type = getPackageType(appt.package);
+
+    if (type == 'special' && appt.startTime != null) {
+      final start = appt.startTime!.toDate();
+      final end7Days = start.add(const Duration(days: 7));
+      return now.isAfter(end7Days);
+    }
+
+    // Default standard/basic behavior
+    return now.isAfter(appt.endTime!.toDate());
+  }
+
+  bool isAppointmentYetToStart(AppointmentModel appt) {
+    if (appt.startTime == null) return false;
+    final now = DateTime.now();
+    return now.isBefore(appt.startTime!.toDate());
+  }
+
+  bool isAppointmentOngoing(AppointmentModel appt) {
+    if (appt.startTime == null || appt.endTime == null) return false;
+    final now = DateTime.now();
+    final type = getPackageType(appt.package);
+
+    if (type == 'special') {
+      final start = appt.startTime!.toDate();
+      final end7Days = start.add(const Duration(days: 7));
+      if (now.isAfter(start) && now.isBefore(end7Days)) {
+        final startToday = DateTime(now.year, now.month, now.day, start.hour, start.minute);
+        final endToday = startToday.add(const Duration(hours: 1));
+        return now.isAfter(startToday) && now.isBefore(endToday);
+      }
+      return false;
+    }
+
+    // Default standard/basic behavior
+    final start = appt.startTime!.toDate();
+    final end = appt.endTime!.toDate();
+    return now.isAfter(start) && now.isBefore(end);
+  }
+
+  String getAppointmentStatusText(AppointmentModel appt) {
+    if (appt.startTime == null || appt.endTime == null) return "Expired Session";
+    final now = DateTime.now();
+    final type = getPackageType(appt.package);
+    final start = appt.startTime!.toDate();
+    final end = appt.endTime!.toDate();
+
+    if (type == 'special') {
+      final diffDays = now.difference(start).inDays;
+      if (diffDays >= 0 && diffDays <= 7) {
+        final startToday = DateTime(now.year, now.month, now.day, start.hour, start.minute);
+        final endToday = startToday.add(const Duration(hours: 1));
+        if (now.isAfter(startToday) && now.isBefore(endToday)) {
+          final timeRemaining = endToday.difference(now);
+          return "Ongoing Follow-up (${formatDuration(timeRemaining)})";
+        } else if (now.isBefore(startToday)) {
+          final timeRemaining = startToday.difference(now);
+          return "Starts in ${formatDuration(timeRemaining)} (Daily Follow-up)";
+        } else {
+          // If today's slot has passed, show next day's slot
+          final nextStart = startToday.add(const Duration(days: 1));
+          final timeRemaining = nextStart.difference(now);
+          if (diffDays < 7) {
+            return "Next follow-up in ${formatDuration(timeRemaining)}";
+          }
+        }
+      }
+      return "Expired 7-day Session";
+    }
+
+    // Default standard/basic behavior
+    if (now.isBefore(start)) {
+      return "Starts in ${formatDuration(start.difference(now))}";
+    } else if (now.isAfter(start) && now.isBefore(end)) {
+      return "Ongoing ${formatDuration(end.difference(now))}";
+    } else {
+      return "Expired Session";
+    }
+  }
 }

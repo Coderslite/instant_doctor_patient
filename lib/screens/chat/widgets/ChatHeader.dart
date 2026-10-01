@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:instant_doctor/component/snackBar.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:zego_uikit/zego_uikit.dart';
@@ -13,6 +14,8 @@ import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/screens/doctors/SingleDoctor.dart';
 import 'package:instant_doctor/screens/prescription/Prescription.dart';
 import 'package:instant_doctor/screens/profile/help/LiveChat.dart';
+import 'package:get/get.dart';
+import 'package:instant_doctor/services/PricingService.dart';
 
 class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
   final String docId;
@@ -176,9 +179,21 @@ class ChatHeader extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
             _HeaderIconBtn(
-              icon: Icons.call_outlined,
-              onTap: () => _showCallSheet(context),
-            ),
+                icon: Icons.call_outlined,
+                onTap: () {
+                  final packageType = (appointment.package.validate().isNotEmpty
+                      ? Get.find<PricingService>()
+                          .getPackageType(appointment.package)
+                      : 'standard');
+                  final bool canVideoCall = packageType != 'basic';
+                  if (!canVideoCall) {
+                    return errorSnackBar(
+                      context: context,
+                      title: "You cannot make a call with this package",
+                    );
+                  }
+                  _showCallSheet(context);
+                }),
             const SizedBox(width: 4),
             PopupMenuButton(
               color: obsidian,
@@ -299,6 +314,7 @@ class _CallSheet extends StatelessWidget {
         !isExpired && appointment.isPaid.validate() && !isYetToStart;
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
         color: white,
@@ -318,31 +334,33 @@ class _CallSheet extends StatelessWidget {
                 color: ink,
                 letterSpacing: -0.3)),
         const SizedBox(height: 24),
-        _CallOption(
-          icon: Icons.videocam_rounded,
-          label: 'Video Call',
-          color: kPrimary,
-          enabled: canCall,
-          invitees: [
-            ZegoUIKitUser(id: appointment.doctorId.validate(), name: 'Doctor')
-          ],
-          isVideo: true,
-          appointmentId: appointmentId,
-          onGuard: () => _guard(context),
-        ),
-        const SizedBox(height: 12),
-        _CallOption(
-          icon: Icons.call_rounded,
-          label: 'Audio Call',
-          color: green,
-          enabled: canCall,
-          invitees: [
-            ZegoUIKitUser(id: appointment.doctorId.validate(), name: 'Doctor')
-          ],
-          isVideo: false,
-          appointmentId: appointmentId,
-          onGuard: () => _guard(context),
-        ),
+        ...[
+          _CallOption(
+            icon: Icons.videocam_rounded,
+            label: 'Video Call',
+            color: kPrimary,
+            enabled: canCall,
+            invitees: [
+              ZegoUIKitUser(id: appointment.doctorId.validate(), name: 'Doctor')
+            ],
+            isVideo: true,
+            appointmentId: appointmentId,
+            onGuard: () => _guard(context),
+          ),
+          const SizedBox(height: 12),
+          _CallOption(
+            icon: Icons.call_rounded,
+            label: 'Audio Call',
+            color: green,
+            enabled: canCall,
+            invitees: [
+              ZegoUIKitUser(id: appointment.doctorId.validate(), name: 'Doctor')
+            ],
+            isVideo: false,
+            appointmentId: appointmentId,
+            onGuard: () => _guard(context),
+          ),
+        ],
         SizedBox(height: MediaQuery.of(context).padding.bottom + 12),
       ]),
     );

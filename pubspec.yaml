@@ -16,7 +16,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.2.15+43
+version: 1.2.17+46
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -44,7 +44,7 @@ dependencies:
   sliding_up_panel: ^2.0.0+1
   pay: ^3.3.0
   intl: ^0.20.2
-  # flutter_stripe: ^9.5.0+1
+  flutter_stripe: ^13.0.0
   # agora_rtc_engine: ^6.2.6
   # permission_handler: ^11.0.1
   chat_bubbles: ^1.4.0
@@ -118,7 +118,6 @@ dependencies:
   badges: ^3.1.2
   marquee: ^2.3.0
   avatar_glow: ^3.0.1
-  sign_in_apple: ^2.0.0
   crypto: ^3.0.6
   app_links: ^6.4.1
   fwfh_cached_network_image: ^0.14.3
@@ -127,7 +126,6 @@ dependencies:
   flutter_native_splash: ^2.4.7
   haptic_feedback: ^0.6.4+3
   flutter_dotenv: ^6.0.0
-  in_app_purchase: ^3.2.0
   zego_uikit_signaling_plugin: ^2.8.20
 
 dependency_overrides:

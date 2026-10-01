@@ -3,7 +3,6 @@
 import 'dart:convert';
 import 'package:http/http.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_paystack_plus/flutter_paystack_plus.dart';
 import 'package:flutterwave_standard/flutterwave.dart';
 import 'package:get/get.dart';
@@ -11,49 +10,35 @@ import 'package:instant_doctor/component/snackBar.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
 import 'package:instant_doctor/controllers/LabResultController.dart';
+import 'package:instant_doctor/controllers/OrderController.dart';
 import 'package:instant_doctor/services/AppointmentService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
+import 'package:instant_doctor/services/PricingService.dart';
+import 'package:instant_doctor/services/StripeService.dart';
 import 'package:instant_doctor/services/WalletService.dart';
-import 'package:instant_doctor/services/IAPService.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../services/UserService.dart';
-import 'OrderController.dart';
 
 class PaymentController extends GetxController {
   var amount = '0'.obs;
   var isLoading = false.obs;
   final walletService = Get.find<WalletService>();
   final userService = Get.find<UserService>();
-  final iapService = Get.find<IAPService>();
-  bool get _isUsd => iapService.currentCurrency == 'USD';
+  final pricingService = Get.find<PricingService>();
+  final stripeService = Get.find<StripeService>();
 
-  // double getGatewayCharge(double amount) {
-  //   double fee = amount * 0.014;
-  //   double cap = _isUsd ? 2.0 : 2000.0;
-  //   return fee > cap ? cap : fee;
-  // }
+  bool get _isUsd => pricingService.userCurrency.value == 'USD';
+
   double getGatewayCharge(double amount) {
     double fee = amount * 0.014;
     double cap = _isUsd ? 2.0 : 2000.0;
-    return 0;
+    return 0; // Currently waived; re-enable by returning fee > cap ? cap : fee
   }
 
-  // int getTransferFee(double amount) {
-  //   if (_isUsd) {
-  //     if (amount <= 5) return 1;
-  //     if (amount <= 50) return 2;
-  //     return 3;
-  //   } else {
-  //     if (amount <= 5000) return 10;
-  //     if (amount <= 50000) return 25;
-  //     return 50;
-  //   }
-  // }
-
   int getTransferFee(double amount) {
-    return 0;
+    return 0; // Currently waived
   }
 
 // ── Order surcharge (2% user surcharge + gateway fee) ────────────────────────
@@ -78,7 +63,6 @@ class PaymentController extends GetxController {
     double gatewayFee = getGatewayCharge(transactionAmount);
     double platformFee = (transactionAmount - deliveryFee) * platformFeeRate;
     double userSurcharge = (transactionAmount - deliveryFee) * surchargeRate;
-    // Multiply by 100 → kobo for NGN, cents for USD (both handled the same way downstream)
     return (platformFee + userSurcharge + gatewayFee) * 100;
   }
 
@@ -92,7 +76,7 @@ class PaymentController extends GetxController {
 
   // Flutterwave transaction fee (1.4% capped at ₦2000)
   double getFlutterwaveCharge(double amount) {
-    double percentageFee = amount * 0.014; // 1.4% fee
+    double percentageFee = amount * 0.014;
     double totalFee = percentageFee;
     if (totalFee > 2000) {
       return 2000; // Cap at ₦2000
@@ -138,6 +122,75 @@ class PaymentController extends GetxController {
     successSnackBar(context: context, title: "Payment Successful");
   }
 
+  // ── Stripe Payment (replaces makeInAppPurchase on Android) ─────────────────
+  Future<void> makeStripePayment({
+    required BuildContext context,
+    required double amount,
+    required String paymentFor,
+    String? productId,
+    String? currency,
+    bool? isTrial,
+    String? customerEmail,
+  }) async {
+    if (isLoading.value) return;
+    isLoading.value = true;
+
+    final bookingController = Get.find<BookingController>();
+    final orderController = Get.find<OrderController>();
+    final labResultController = Get.find<LabResultController>();
+
+    try {
+      final String resolvedCurrency =
+          currency ?? pricingService.userCurrency.value;
+
+      // Convert to smallest unit (cents, pence, kobo, etc.)
+      final int amountInMinorUnits =
+          StripeService.toMinorUnits(amount, resolvedCurrency);
+
+      final bool success = await stripeService.makeStripePayment(
+        context: context,
+        amountInMinorUnits: amountInMinorUnits,
+        currency: resolvedCurrency,
+        customerEmail: customerEmail,
+        description: _descriptionFor(paymentFor),
+      );
+
+      if (success) {
+        await handlePaymentSuccess(
+          context: context,
+          paymentFor: paymentFor,
+          amount: amount.toInt(),
+          productId: productId,
+          currency: resolvedCurrency,
+          isTrial: isTrial,
+        );
+      } else {
+        errorSnackBar(context: context, title: "Payment Cancelled");
+        _resetLoadingStates(paymentFor, bookingController, orderController,
+            labResultController);
+      }
+    } catch (e) {
+      log("❌ Stripe Payment Error: $e");
+      errorSnackBar(context: context, title: "Payment Error");
+      _resetLoadingStates(
+          paymentFor, bookingController, orderController, labResultController);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  String _descriptionFor(String paymentFor) {
+    if (paymentFor == PaymentFor.appointment) {
+      return 'Medical Consultation — Instant Doctor';
+    } else if (paymentFor == PaymentFor.labResult) {
+      return 'Lab Result Interpretation — Instant Doctor';
+    } else if (paymentFor == PaymentFor.order) {
+      return 'Medication Order — Instant Doctor';
+    }
+    return 'Payment — Instant Doctor';
+  }
+
+  // ── Flutterwave (kept for African currencies: NGN, GHS, KES, etc.) ─────────
   Future makeFlutterwavePayment({
     required String email,
     required BuildContext context,
@@ -179,7 +232,7 @@ class PaymentController extends GetxController {
         customization: Customization(title: "Instant Doctor"),
         redirectUrl: "https://instantdoctor.co",
         isTestMode: false,
-        currency: currency ?? iapService.currentCurrency,
+        currency: currency ?? pricingService.userCurrency.value,
       );
 
       final ChargeResponse response = await flutterwave.charge(context);
@@ -190,7 +243,7 @@ class PaymentController extends GetxController {
           paymentFor: paymentFor,
           amount: amount,
           productId: productId,
-          currency: currency ?? iapService.currentCurrency,
+          currency: currency ?? pricingService.userCurrency.value,
           isTrial: isTrial,
           surcharge: surcharge,
         );
@@ -236,8 +289,7 @@ class PaymentController extends GetxController {
       await initialize();
 
       var surcharge = paymentFor == PaymentFor.order
-          ? surChargeOrder(
-              amount.toDouble(), 0) // Placeholder for order surcharge
+          ? surChargeOrder(amount.toDouble(), 0)
           : paymentFor == PaymentFor.appointment
               ? surChargeAppointment(amount.toDouble())
               : surChargeLabresult(amount.toDouble());
@@ -249,14 +301,14 @@ class PaymentController extends GetxController {
         reference: DateTime.now().millisecondsSinceEpoch.toString(),
         secretKey: 'sk_live_c07e9ad43ea5365e467383dab49c9dcefc1975cf',
         callBackUrl: 'https://instantdoctor.co',
-        currency: currency ?? iapService.currentCurrency,
+        currency: currency ?? pricingService.userCurrency.value,
         onSuccess: () async {
           await handlePaymentSuccess(
             context: context,
             paymentFor: paymentFor,
             amount: amount,
             productId: productId,
-            currency: currency ?? iapService.currentCurrency,
+            currency: currency ?? pricingService.userCurrency.value,
             isTrial: isTrial,
             surcharge: surcharge,
           );
@@ -286,44 +338,6 @@ class PaymentController extends GetxController {
     }
   }
 
-  Future<void> makeInAppPurchase({
-    required BuildContext context,
-    required String productId,
-    required String paymentFor,
-    required int amount,
-    String? currency,
-    bool? isTrial,
-  }) async {
-    if (isLoading.value) return;
-    isLoading.value = true;
-
-    try {
-      // Set success callback
-      iapService.onPurchaseSuccess = (purchaseDetails) async {
-        await handlePaymentSuccess(
-          context: context,
-          paymentFor: paymentFor,
-          amount: amount,
-          productId: productId,
-          currency: currency ?? iapService.currentCurrency,
-          isTrial: isTrial,
-        );
-        isLoading.value = false;
-      };
-
-      iapService.onPurchaseError = () {
-        isLoading.value = false;
-        errorSnackBar(context: context, title: "Payment Cancelled");
-      };
-
-      // Trigger native store flow
-      await iapService.buyProduct(productId);
-    } catch (e) {
-      log("🍎 IAP Error: $e");
-      isLoading.value = false;
-    }
-  }
-
   Future<void> chargeNativePayment({
     required BuildContext context,
     required int amount,
@@ -341,14 +355,11 @@ class PaymentController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 1. Prepare data for our backend
       final user =
           await userService.getProfileById(userId: userController.userId.value);
       final txRef =
           "ID-${user.lastName.validate()}-${DateTime.now().millisecondsSinceEpoch}";
 
-      // Extract the actual token string from the Apple Pay result
-      // Flutterwave expects the token content
       log("🍎 Raw Apple Pay Result: $paymentToken");
 
       String? actualToken;
@@ -359,19 +370,17 @@ class PaymentController extends GetxController {
       }
 
       if (actualToken == null || actualToken.isEmpty) {
-        // Fallback: try to find it in nested data if using a different pay version
         actualToken = jsonEncode(paymentToken);
       }
 
       final body = {
         "amount": amount,
-        "currency": currency ?? iapService.currentCurrency,
+        "currency": currency ?? pricingService.userCurrency.value,
         "email": user.email.validate(),
         "tx_ref": txRef,
         "applepay_token": actualToken,
       };
 
-      // 2. Call your Production Backend (Firebase)
       final response = await post(
         Uri.parse("$FIREBASE_URL/payment/charge-applepay"),
         headers: {"Content-Type": "application/json"},
@@ -381,13 +390,12 @@ class PaymentController extends GetxController {
       final result = jsonDecode(response.body);
 
       if (response.statusCode == 200 && result['status'] == 'success') {
-        // 3. Handle success locally
         await handlePaymentSuccess(
           context: context,
           paymentFor: paymentFor,
           amount: amount,
           productId: productId,
-          currency: currency ?? iapService.currentCurrency,
+          currency: currency ?? pricingService.userCurrency.value,
           isTrial: isTrial,
         );
       } else {
@@ -414,7 +422,7 @@ class PaymentController extends GetxController {
     if (paymentFor == PaymentFor.labResult) l.isUpload.value = false;
   }
 
-  // Restored for Google Pay (Android)
+  // Restored for Google Pay/Apple Pay native (order flow)
   Future<void> makeNativePayPayment({
     required BuildContext context,
     required int amount,

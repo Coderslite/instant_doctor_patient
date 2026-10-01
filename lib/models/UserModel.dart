@@ -7,6 +7,7 @@ class UserModel {
   String? lastName;
   String? email;
   String? country;
+  String? currency;
   String? platform;
   String? phoneNumber;
   String? photoUrl;
@@ -46,6 +47,7 @@ class UserModel {
     this.lastName,
     this.email,
     this.country,
+    this.currency,
     this.address,
     this.location,
     this.platform,
@@ -88,6 +90,7 @@ class UserModel {
       lastName: json['lastname'],
       email: json['email'],
       country: json['country'],
+      currency: json['currency'],
       address: json['address'],
       location: json['location'] ?? GeoPoint(0, 0),
       platform: json['platform'],

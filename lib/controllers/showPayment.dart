@@ -2,18 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-// IAP removed as per user request
 import 'package:instant_doctor/constant/PaymentConfig.dart';
 import 'package:instant_doctor/constant/color.dart';
 import 'package:instant_doctor/constant/constants.dart';
 import 'package:instant_doctor/controllers/BookingController.dart';
-import 'package:instant_doctor/controllers/LabResultController.dart';
-import 'package:instant_doctor/controllers/OrderController.dart';
 import 'package:instant_doctor/controllers/PaymentController.dart';
 import 'package:instant_doctor/controllers/UserController.dart';
 import 'package:instant_doctor/models/AppointmentModel.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
-import 'package:instant_doctor/services/IAPService.dart';
 import 'package:instant_doctor/services/PricingService.dart';
 import 'package:instant_doctor/services/UserService.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -21,11 +17,10 @@ import 'package:pay/pay.dart';
 
 import '../component/PremiumButton.dart';
 
+// ── Appointment Payment Sheet ─────────────────────────────────────────────────
 handleShowPaymentOption(BuildContext context,
     {required AppointmentModel appointment}) async {
-  final bookingController = Get.find<BookingController>();
   final paymentController = Get.find<PaymentController>();
-  final iapService = Get.find<IAPService>();
   final pricingService = Get.find<PricingService>();
 
   showModalBottomSheet(
@@ -123,98 +118,57 @@ handleShowPaymentOption(BuildContext context,
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
                 child: Column(
                   children: [
-                    // 1. Native One-Tap Payments (Global)
-                    if (Platform.isIOS)
-                      Builder(builder: (builderContext) {
-                        final String displayAmount = pricingService
-                            .getFinalPrice(appointment.package.validate())
-                            .toStringAsFixed(2);
-                        final String displayCurrency =
+                    // 2. Stripe (works on both iOS + Android — card, Google Pay, etc.)
+                    _PaymentOptionCard(
+                      title: 'Pay with Card',
+                      subtitle: 'Visa, Mastercard, Apple Pay, Google Pay',
+                      icon: Icons.credit_card_rounded,
+                      color: const Color(0xFF6772E5), // Stripe brand purple
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        final userInfo = await Get.find<UserService>()
+                            .getProfileById(
+                                userId: userController.userId.value);
+                        final String productId = appointment.package.validate();
+                        final String userCurrency =
                             pricingService.userCurrency.value;
 
-                        // Dynamically update the config JSON with the correct currency and country
-                        String dynamicAppleConfig = defaultApplePayConfigString
-                            .replaceAll('"USD"', '"$displayCurrency"');
+                        final bool isSupported = stripeSupportedCurrencies
+                            .contains(userCurrency.toUpperCase());
+                        final String stripeCurrency =
+                            isSupported ? userCurrency : 'USD';
+                        final double stripeAmount = isSupported
+                            ? pricingService.getFinalPrice(productId)
+                            : pricingService.getPriceInUSD(productId);
 
-                        // if (displayCurrency == 'NGN') {
-                        //   dynamicAppleConfig = dynamicAppleConfig.replaceAll('"US"', '"NG"');
-                        // }
-
-                        return ApplePayButton(
-                          buttonProvider: PayProvider.apple_pay,
-                          paymentConfiguration:
-                              PaymentConfiguration.fromJsonString(
-                                  dynamicAppleConfig),
-                          paymentItems: [
-                            PaymentItem(
-                              label: 'Medical Consultation',
-                              amount: displayAmount,
-                              status: PaymentItemStatus.final_price,
-                            )
-                          ],
-                          style: ApplePayButtonStyle.whiteOutline,
-                          width: double.infinity,
-                          height: 56,
-                          type: ApplePayButtonType.buy,
-                          margin: const EdgeInsets.only(bottom: 16),
-                          onPaymentResult: (result) async {
-                            log("Payment Result from apple: $result");
-                            // Don't pop yet, let the loader show in this sheet
-                            await paymentController.chargeNativePayment(
-                              context: context,
-                              amount: (double.parse(displayAmount)).toInt(),
-                              currency: displayCurrency,
-                              paymentFor: PaymentFor.appointment,
-                              productId: appointment.id,
-                              paymentToken: result,
-                            );
-                            // Only pop after successful chargeNativePayment or handle inside chargeNativePayment
-                          },
-                          loadingIndicator:
-                              const Center(child: CircularProgressIndicator()),
-                          onError: (error) {
-                            print("🍎 APPLE PAY DIAGNOSTIC: $error");
-                          },
+                        paymentController.makeStripePayment(
+                          context: context,
+                          amount: stripeAmount,
+                          currency: stripeCurrency,
+                          paymentFor: PaymentFor.appointment,
+                          productId: appointment.id,
+                          customerEmail: userInfo.email.validate(),
                         );
-                      })
-                    else if (Platform.isAndroid)
-                      Builder(builder: (builderContext) {
-                        final String productId = appointment.package.validate();
-                        final String displayPrice = iapService.getProductPrice(productId);
-                        final double rawPrice = iapService.getProductRawPrice(productId);
-
-                        return PremiumButton(
-                          onTap: () async {
-                            await paymentController.makeInAppPurchase(
-                              context: context,
-                              productId: productId,
-                              paymentFor: PaymentFor.appointment,
-                              amount: rawPrice.toInt(),
-                              currency: pricingService.userCurrency.value,
-                              isTrial: false,
-                            );
-                          },
-                          text: "Pay $displayPrice with Google Play",
-                        );
-                      }),
+                      },
+                    ),
 
                     const SizedBox(height: 8),
- 
-                    // Regional Option (Backup for Africa)
+
+                    // 3. Flutterwave — backup for African currencies
                     if (pricingService.isAfrican())
                       _PaymentOptionCard(
                         title: 'Local Card Payment',
-                        subtitle: 'Pay via Flutterwave/Card',
+                        subtitle: 'Pay via Flutterwave — USSD, Card, Transfer',
                         imagePath: 'assets/images/flutterwave.png',
                         onTap: () async {
                           Navigator.pop(sheetContext);
                           final userInfo = await Get.find<UserService>()
                               .getProfileById(
                                   userId: userController.userId.value);
-                          final String productId = appointment.package.validate();
-                          final double amount = Platform.isAndroid 
-                              ? iapService.getProductRawPrice(productId)
-                              : pricingService.getFinalPrice(productId);
+                          final String productId =
+                              appointment.package.validate();
+                          final double amount =
+                              pricingService.getFinalPrice(productId);
 
                           paymentController.makeFlutterwavePayment(
                             email: userInfo.email.validate(),
@@ -237,6 +191,7 @@ handleShowPaymentOption(BuildContext context,
   );
 }
 
+// ── Shared Payment Option Card Widget ────────────────────────────────────────
 class _PaymentOptionCard extends StatelessWidget {
   final String title;
   final String subtitle;
@@ -308,11 +263,10 @@ class _PaymentOptionCard extends StatelessWidget {
   }
 }
 
+// ── Booking Appointment (legacy kept, simplified) ────────────────────────────
 handleShowPaymentOptionBook(BuildContext context) async {
-  // This method seems redundant if it calls handleBookAppointment which then calls handleShowPaymentOption
-  // But I'll keep it updated just in case it's used directly
   final bookingController = Get.find<BookingController>();
-  final iapService = Get.find<IAPService>();
+  final pricingService = Get.find<PricingService>();
   showModalBottomSheet(
       context: context,
       backgroundColor: context.scaffoldBackgroundColor,
@@ -322,8 +276,7 @@ handleShowPaymentOptionBook(BuildContext context) async {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (supportedAfricanCurrencies
-                  .contains(iapService.currentCurrency))
+              if (pricingService.isAfrican())
                 PremiumButton(
                   onTap: () async {
                     Navigator.pop(sheetContext);
@@ -346,11 +299,10 @@ handleShowPaymentOptionBook(BuildContext context) async {
       });
 }
 
+// ── Lab Result Payment Sheet ──────────────────────────────────────────────────
 handleShowPaymentOptionLab(BuildContext context,
     {required int amount, required String email}) async {
   final paymentController = Get.find<PaymentController>();
-  final labResultController = Get.find<LabResultController>();
-  final iapService = Get.find<IAPService>();
   final pricingService = Get.find<PricingService>();
 
   showModalBottomSheet(
@@ -438,18 +390,15 @@ handleShowPaymentOptionLab(BuildContext context,
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    // 1. Native One-Tap Payments (Global)
+                    // 1. Apple Pay (iOS native one-tap)
                     if (Platform.isIOS)
                       Builder(builder: (builderContext) {
-                        // Use base price (USD) and apply 50% African discount manually
                         double priceInUSD =
                             pricingService.basePrices['lab_result_standard'] ??
                                 5.0;
                         if (pricingService.isAfrican()) priceInUSD *= 0.5;
                         final String displayAmount =
                             priceInUSD.toStringAsFixed(2);
-
-                        // Forcing USD for maximum compatibility on real devices
                         String dynamicAppleConfig = defaultApplePayConfigString;
 
                         return ApplePayButton(
@@ -471,7 +420,7 @@ handleShowPaymentOptionLab(BuildContext context,
                           onPaymentResult: (result) async {
                             await paymentController.chargeNativePayment(
                               context: context,
-                              amount: (priceInUSD * 100).toInt(), // Cents
+                              amount: (priceInUSD * 100).toInt(),
                               currency: 'USD',
                               paymentFor: PaymentFor.labResult,
                               paymentToken: result,
@@ -480,49 +429,77 @@ handleShowPaymentOptionLab(BuildContext context,
                           loadingIndicator:
                               const Center(child: CircularProgressIndicator()),
                         );
-                      })
-                    else if (Platform.isAndroid)
-                      Builder(builder: (builderContext) {
-                        const String productId = 'lab_result_standard';
-                        final String displayPrice = iapService.getProductPrice(productId);
-                        final double rawPrice = iapService.getProductRawPrice(productId);
-
-                        return PremiumButton(
-                          onTap: () async {
-                            await paymentController.makeInAppPurchase(
-                              context: context,
-                              productId: productId,
-                              paymentFor: PaymentFor.labResult,
-                              amount: rawPrice.toInt(),
-                              currency: pricingService.userCurrency.value,
-                            );
-                          },
-                          text: "Pay $displayPrice with Google Play",
-                        );
                       }),
 
                     const SizedBox(height: 8),
 
-                    // Regional Option (Backup for Africa)
+                    // 2. Stripe (both platforms)
+                    _PaymentOptionCard(
+                      title: 'Pay with Card',
+                      subtitle: 'Visa, Mastercard, Apple Pay, Google Pay',
+                      icon: Icons.credit_card_rounded,
+                      color: const Color(0xFF6772E5),
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        final String userCurrency =
+                            pricingService.userCurrency.value;
+                        final List<String> stripeSupportedCurrencies = [
+                          'USD',
+                          'EUR',
+                          'GBP',
+                          'CAD',
+                          'AUD',
+                          'NZD',
+                          'CHF',
+                          'JPY',
+                          'SGD',
+                          'HKD',
+                          'SEK',
+                          'NOK',
+                          'KRW',
+                          'TRY',
+                          'INR',
+                          'MXN',
+                          'ZAR'
+                        ];
+                        final bool isSupported = stripeSupportedCurrencies
+                            .contains(userCurrency.toUpperCase());
+                        final String stripeCurrency =
+                            isSupported ? userCurrency : 'USD';
+                        final double stripeAmount = isSupported
+                            ? pricingService
+                                .getFinalPrice('lab_result_standard')
+                            : pricingService
+                                .getPriceInUSD('lab_result_standard');
+
+                        paymentController.makeStripePayment(
+                          context: context,
+                          amount: stripeAmount,
+                          currency: stripeCurrency,
+                          paymentFor: PaymentFor.labResult,
+                          productId: 'lab_result_standard',
+                          customerEmail: email,
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // 3. Flutterwave for African currencies
                     if (pricingService.isAfrican())
                       _PaymentOptionCard(
                         title: 'Local Card Payment',
-                        subtitle: 'Pay via Flutterwave/Card',
+                        subtitle: 'Pay via Flutterwave — USSD, Card, Transfer',
                         imagePath: 'assets/images/flutterwave.png',
                         onTap: () async {
                           Navigator.pop(sheetContext);
-                          final userInfo = await Get.find<UserService>()
-                              .getProfileById(
-                                  userId: userController.userId.value);
-                          const String productId = 'lab_result_standard';
-                          final double amount = Platform.isAndroid 
-                              ? iapService.getProductRawPrice(productId)
-                              : pricingService.getFinalPrice(productId);
+                          final double finalPrice = pricingService
+                              .getFinalPrice('lab_result_standard');
 
                           paymentController.makeFlutterwavePayment(
-                            email: userInfo.email.validate(),
+                            email: email,
                             context: context,
-                            amount: amount.toInt(),
+                            amount: finalPrice.toInt(),
                             currency: pricingService.userCurrency.value,
                             paymentFor: PaymentFor.labResult,
                             productId: 'lab_result_standard',
@@ -540,12 +517,10 @@ handleShowPaymentOptionLab(BuildContext context,
   );
 }
 
+// ── Order Payment Sheet ───────────────────────────────────────────────────────
 handleShowPaymentOptionOrder(BuildContext context,
     {required int amount}) async {
-  // ignore: unused_local_variable
-  final orderController = Get.find<OrderController>();
   final paymentController = Get.find<PaymentController>();
-  final iapService = Get.find<IAPService>();
   final pricingService = Get.find<PricingService>();
   final userService = Get.find<UserService>();
   final userController = Get.find<UserController>();
@@ -636,16 +611,13 @@ handleShowPaymentOptionOrder(BuildContext context,
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                    // Native Pay (Global)
+                    // 1. Apple Pay (iOS native one-tap)
                     if (Platform.isIOS)
                       Builder(builder: (builderContext) {
-                        // Convert local amount back to USD for native pay sheet
                         double priceInUSD =
                             amount / pricingService.exchangeRate.value;
                         final String displayAmount =
                             priceInUSD.toStringAsFixed(2);
-
-                        // Forcing USD for maximum compatibility on real devices
                         String dynamicAppleConfig = defaultApplePayConfigString;
 
                         return SizedBox(
@@ -669,8 +641,7 @@ handleShowPaymentOptionOrder(BuildContext context,
                             onPaymentResult: (result) async {
                               await paymentController.chargeNativePayment(
                                 context: context,
-                                amount:
-                                    (priceInUSD * 100).toInt(), // Cents for USD
+                                amount: (priceInUSD * 100).toInt(),
                                 currency: 'USD',
                                 paymentFor: PaymentFor.order,
                                 paymentToken: result,
@@ -680,55 +651,70 @@ handleShowPaymentOptionOrder(BuildContext context,
                                 child: CircularProgressIndicator()),
                           ),
                         );
-                      })
-                    else if (Platform.isAndroid)
-                      Builder(builder: (builderContext) {
-                        final String displayAmount =
-                            amount.toDouble().toStringAsFixed(2);
-                        final String displayCurrency =
-                            pricingService.userCurrency.value;
-
-                        final String dynamicGoogleConfig =
-                            defaultGooglePayConfigString.replaceAll(
-                                '"USD"', '"$displayCurrency"');
-
-                        return SizedBox(
-                          width: double.infinity,
-                          child: GooglePayButton(
-                            paymentConfiguration:
-                                PaymentConfiguration.fromJsonString(
-                                    dynamicGoogleConfig),
-                            paymentItems: [
-                              PaymentItem(
-                                label: 'Medication Order',
-                                amount: displayAmount,
-                                status: PaymentItemStatus.final_price,
-                              )
-                            ],
-                            type: GooglePayButtonType.buy,
-                            margin: const EdgeInsets.only(bottom: 16),
-                            onPaymentResult: (result) async {
-                              await paymentController.makeNativePayPayment(
-                                context: context,
-                                amount: amount,
-                                paymentFor: PaymentFor.order,
-                                currency: displayCurrency,
-                              );
-                            },
-                            loadingIndicator: const Center(
-                                child: CircularProgressIndicator()),
-                          ),
-                        );
                       }),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
 
-                    // Regional Option (Backup for Africa)
-                    if (supportedAfricanCurrencies
-                        .contains(iapService.currentCurrency))
+                    // 2. Stripe (both platforms)
+                    _PaymentOptionCard(
+                      title: 'Pay with Card',
+                      subtitle: 'Visa, Mastercard, Apple Pay, Google Pay',
+                      icon: Icons.credit_card_rounded,
+                      color: const Color(0xFF6772E5),
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        final user = await userService.getProfileById(
+                            userId: userController.userId.value);
+
+                        final String userCurrency =
+                            pricingService.userCurrency.value;
+                        final List<String> stripeSupportedCurrencies = [
+                          'USD',
+                          'EUR',
+                          'GBP',
+                          'CAD',
+                          'AUD',
+                          'NZD',
+                          'CHF',
+                          'JPY',
+                          'SGD',
+                          'HKD',
+                          'SEK',
+                          'NOK',
+                          'KRW',
+                          'TRY',
+                          'INR',
+                          'MXN',
+                          'ZAR'
+                        ];
+                        final bool isSupported = stripeSupportedCurrencies
+                            .contains(userCurrency.toUpperCase());
+                        final String stripeCurrency =
+                            isSupported ? userCurrency : 'USD';
+                        final double stripeAmount = isSupported
+                            ? amount.toDouble()
+                            : (amount /
+                                (pricingService.exchangeRate.value > 0
+                                    ? pricingService.exchangeRate.value
+                                    : 1.0));
+
+                        paymentController.makeStripePayment(
+                          context: context,
+                          amount: stripeAmount,
+                          currency: stripeCurrency,
+                          paymentFor: PaymentFor.order,
+                          customerEmail: user.email.validate(),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // 3. Flutterwave for African currencies
+                    if (pricingService.isAfrican())
                       _PaymentOptionCard(
                         title: 'Local Card Payment',
-                        subtitle: 'Pay via Flutterwave/Card',
+                        subtitle: 'Pay via Flutterwave — USSD, Card, Transfer',
                         imagePath: 'assets/images/flutterwave.png',
                         onTap: () async {
                           Navigator.pop(sheetContext);

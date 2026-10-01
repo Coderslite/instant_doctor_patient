@@ -5,7 +5,7 @@ import 'package:instant_doctor/models/AppointmentPricingModel.dart';
 import 'package:instant_doctor/services/CustomMailService.dart';
 import 'package:instant_doctor/services/DoctorService.dart';
 import 'package:instant_doctor/services/GetUserId.dart';
-import 'package:instant_doctor/services/IAPService.dart';
+import 'package:instant_doctor/services/PricingService.dart';
 import 'package:instant_doctor/services/ReferralService.dart';
 import 'package:instant_doctor/services/formatDate.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -263,7 +263,7 @@ class AppointmentService {
       "startTime": startTime,
       "endTime": endTime,
       "price": price,
-      "currency": Get.find<IAPService>().currentCurrency,
+      "currency": Get.find<PricingService>().userCurrency.value,
       "package": package,
       "createdAt": Timestamp.now(),
       "updatedAt": Timestamp.now(),
@@ -315,7 +315,7 @@ class AppointmentService {
 
       await appointmentCollection.doc(appointmentId).update({
         "isPaid": true,
-        "currency": currency ?? appointment.currency ?? Get.find<IAPService>().currentCurrency,
+        "currency": currency ?? appointment.currency ?? Get.find<PricingService>().userCurrency.value,
         "updatedAt": Timestamp.now(),
       });
 
@@ -581,10 +581,10 @@ class AppointmentService {
     });
   }
 
+  /// Fetches appointment pricing packages from the AppointmentPricing collection.
+  /// Amounts are in USD base currency. Conversion is handled by PricingService.
   Future<List<Appointmentpricingmodel>> getAppointmentPrice() async {
-    var ref = await appointmentChargesCollection
-        .doc(Get.find<IAPService>().currentCurrency.toLowerCase())
-        .collection("packages")
+    var ref = await db.collection('AppointmentPricing')
         .orderBy('amount', descending: false)
         .get();
     return ref.docs

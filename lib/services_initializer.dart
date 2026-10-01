@@ -32,6 +32,7 @@ import 'package:instant_doctor/services/AuthenticationService.dart';
 import 'package:instant_doctor/services/MedicationService.dart';
 import 'package:instant_doctor/services/PresciptionService.dart';
 import 'package:instant_doctor/services/IAPService.dart';
+import 'package:instant_doctor/services/StripeService.dart';
 import 'package:instant_doctor/services/UserService.dart';
 import 'package:instant_doctor/controllers/ChatController.dart';
 import 'package:instant_doctor/controllers/LabResultController.dart';
@@ -60,7 +61,8 @@ class InitialBindings extends Bindings {
     Get.lazyPut(() => WaitlistController());
 
     // Services
-    Get.put(IAPService());
+    Get.put(StripeService());
+    Get.lazyPut(() => IAPService());
     Get.lazyPut(() => WalletService());
     Get.lazyPut(() => UserService());
     Get.lazyPut(() => NotificationService());

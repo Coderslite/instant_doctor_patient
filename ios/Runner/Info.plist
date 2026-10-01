@@ -74,6 +74,10 @@
 			<string>UIInterfaceOrientationLandscapeLeft</string>
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
+		<key>NSCameraUsageDescription</key>
+		<string>Scan your card to add it automatically</string>
+		<key>NSCameraUsageDescription</key>
+		<string>To scan cards</string>
 		<!-- 🗺 Google Services -->
 		<key>GIDClientID</key>
 		<string>127248616649-tbh8pb8t6nl2ughnth8u50vee0nqvt17.apps.googleusercontent.com</string>
